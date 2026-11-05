@@ -1,0 +1,11 @@
+# CLAUDE_API_KEY=
+#
+# Oh, hi there. 👋
+#
+# You came all the way to the commit history looking for an API key.
+# Bold move. Unfortunately for you, the only thing left here is this comment
+# and the slight embarrassment of being caught digging through a stranger's
+# dotfiles.
+#
+# Since you're here anyway, enjoy the desktop mode.
+# Pro tip: Super+Alt+D. That one's free.
