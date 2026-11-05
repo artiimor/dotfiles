@@ -1,0 +1,68 @@
+{
+  "name": "Gruvbox",
+  "ui": {
+    "bg": "#1d2021",
+    "surface": "#282828",
+    "fg": "#ebdbb2",
+    "muted": "#928374",
+    "accent": "#fabd2f",
+    "accent2": "#83a598",
+    "accentDim": "#665c54",
+    "ok": "#b8bb26",
+    "red": "#fb4934",
+    "yellow": "#fabd2f",
+    "pink": "#d3869b",
+    "cyan": "#8ec07c",
+    "peach": "#fe8019",
+    "butter": "#fabd2f",
+    "mint": "#8ec07c",
+    "border": "#fabd2f",
+    "launcherBg": "#282828",
+    "launcherSel": "#3c3836"
+  },
+  "hypr": {
+    "border": [
+      "#fabd2f",
+      "#fe8019",
+      "#d3869b"
+    ],
+    "inactive": "#665c5488",
+    "group": "#83a598"
+  },
+  "term": {
+    "background": "#282828",
+    "foreground": "#ebdbb2",
+    "cursor": "#ebdbb2",
+    "selection_background": "#504945",
+    "selection_foreground": "#ebdbb2",
+    "colors": [
+      "#282828",
+      "#cc241d",
+      "#98971a",
+      "#d79921",
+      "#458588",
+      "#b16286",
+      "#689d6a",
+      "#a89984",
+      "#928374",
+      "#fb4934",
+      "#b8bb26",
+      "#fabd2f",
+      "#83a598",
+      "#d3869b",
+      "#8ec07c",
+      "#ebdbb2"
+    ]
+  },
+  "gtk": {
+    "accent": "#fabd2f",
+    "accentBg": "#665c54",
+    "accentFg": "#ebdbb2",
+    "window": "#282828",
+    "fg": "#ebdbb2",
+    "view": "#1d2021",
+    "headerbar": "#1d2021",
+    "card": "#3c3836"
+  },
+  "nvim": "gruvbox"
+}

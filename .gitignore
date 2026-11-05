@@ -1,0 +1,21 @@
+# Credentials and secrets
+.ssh/
+.gnupg/
+.netrc
+.git-credentials
+.config/gh/
+.config/rclone/
+.aws/
+.docker/config.json
+.kube/
+.npmrc
+.pypirc
+.env
+.env.*
+*.pem
+*.key
+id_rsa*
+id_ed25519*
+
+# Local backups
+*.bak

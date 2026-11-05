@@ -1,0 +1,68 @@
+{
+  "name": "Miami night",
+  "ui": {
+    "bg": "#0d0b12",
+    "surface": "#1c1826",
+    "fg": "#f0eff1",
+    "muted": "#5d6088",
+    "accent": "#848bbd",
+    "accent2": "#36f9f6",
+    "accentDim": "#6b6789",
+    "ok": "#72f1b8",
+    "red": "#fe4450",
+    "yellow": "#fede5d",
+    "pink": "#e89bd0",
+    "cyan": "#86d4dc",
+    "peach": "#f2b8a0",
+    "butter": "#f0d99a",
+    "mint": "#9fdcc0",
+    "border": "#b893ce",
+    "launcherBg": "#1c2030",
+    "launcherSel": "#2a3045"
+  },
+  "hypr": {
+    "border": [
+      "#848bbd",
+      "#e89bd0",
+      "#86d4dc"
+    ],
+    "inactive": "#b893ce88",
+    "group": "#36f9f6"
+  },
+  "term": {
+    "background": "#221d33",
+    "foreground": "#d9d6e6",
+    "cursor": "#848bbd",
+    "selection_background": "#3d3558",
+    "selection_foreground": "#e6e3ef",
+    "colors": [
+      "#2e2945",
+      "#e8798a",
+      "#8fd6b4",
+      "#e8cf8a",
+      "#a99bd6",
+      "#e89bd0",
+      "#86d4dc",
+      "#c9c5d8",
+      "#6b6789",
+      "#f0939f",
+      "#a8e2c6",
+      "#f0dba3",
+      "#bdb2e2",
+      "#f0b4dc",
+      "#a3e0e6",
+      "#e6e3ef"
+    ]
+  },
+  "gtk": {
+    "accent": "#848bbd",
+    "accentBg": "#5d6088",
+    "accentFg": "#e6e3ef",
+    "window": "#221d33",
+    "fg": "#d9d6e6",
+    "view": "#1e1a2e",
+    "headerbar": "#28223c",
+    "card": "#2e2945"
+  },
+  "nvim": "catppuccin"
+}

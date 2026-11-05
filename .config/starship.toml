@@ -1,0 +1,69 @@
+# Prompt de bash. Colores ANSI, así sigue la paleta de kitty (themes/custom.conf):
+# blue = lavanda #a99bd6, purple = rosa suave #e89bd0, cyan = #86d4dc, bright-black = #6b6789
+
+"$schema" = 'https://starship.rs/config-schema.json'
+
+add_newline = true
+
+# Todo en una línea: carpeta, git, lenguaje y ❯
+format = """
+$username$hostname$directory$git_branch$git_state$git_status\
+$python$rust$nodejs$lua$cmd_duration$jobs$character"""
+
+[character]
+success_symbol = "[❯](blue)"
+error_symbol = "[❯](bold red)"
+vimcmd_symbol = "[❮](bold green)"
+
+[directory]
+style = "bold blue"
+truncation_length = 3
+truncate_to_repo = true
+read_only = " 󰌾"
+home_symbol = "~"
+
+[git_branch]
+symbol = " "
+style = "bright-black"
+format = "[$symbol$branch]($style) "
+
+[git_status]
+style = "red"
+format = "([$all_status$ahead_behind]($style) )"
+
+[cmd_duration]
+min_time = 2000
+style = "yellow"
+format = "[ $duration]($style) "
+
+[jobs]
+symbol = " "
+style = "cyan"
+
+[username]
+style_user = "cyan"
+format = "[$user]($style)@"
+
+[hostname]
+style = "cyan"
+format = "[$hostname]($style) "
+
+[python]
+symbol = " "
+style = "cyan"
+format = "[$symbol$pyenv_prefix($version )(\\($virtualenv\\) )]($style)"
+
+[rust]
+symbol = " "
+style = "red"
+format = "[$symbol($version )]($style)"
+
+[nodejs]
+symbol = " "
+style = "green"
+format = "[$symbol($version )]($style)"
+
+[lua]
+symbol = " "
+style = "blue"
+format = "[$symbol($version )]($style)"

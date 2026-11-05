@@ -1,0 +1,217 @@
+#!/usr/bin/env python3
+# Cambia el tema de colores de todo el escritorio.
+#
+#   theme-set              lista los temas (* = el actual)
+#   theme-set <tema>       aplica un tema (el nombre de su carpeta)
+#   theme-set --reapply    vuelve a generar el tema actual (tras editar su theme.json)
+#
+# Cada tema es una carpeta en ~/.config/themes con un theme.json. Este script
+# lee ese archivo, escribe los colores de cada programa y les avisa:
+#
+#   Quickshell   lo lee directamente de themes/current/theme.json   (al momento)
+#   Hyprland     hypr/config/theme.lua                               (al momento)
+#   hyprlock     hypr/hyprlock-colors.conf                           (próximo bloqueo)
+#   kitty        kitty/themes/current.conf                           (al momento)
+#   btop         btop/themes/current.theme                           (al abrirlo)
+#   fzf          themes/current-env.sh, cargado desde ~/.bashrc      (terminales nuevas)
+#   GTK          gtk-3.0/gtk.css y gtk-4.0/gtk.css                   (al abrir la app)
+#   Neovim       lee "nvim" de theme.json en plugins/colorscheme.lua (al abrirlo)
+#
+# Los archivos generados empiezan con "Generado por theme-set": no los edites,
+# cambia el theme.json del tema y ejecuta `theme-set --reapply`.
+
+import json
+import os
+import subprocess
+import sys
+
+HOME = os.path.expanduser("~")
+CONF = f"{HOME}/.config"
+THEMES = f"{CONF}/themes"
+CURRENT = f"{THEMES}/current"
+HEADER = "Generado por theme-set a partir de themes/{}/theme.json: no editar"
+
+
+def themes():
+    return sorted(d for d in os.listdir(THEMES)
+                  if os.path.isfile(f"{THEMES}/{d}/theme.json") and d != "current")
+
+
+def current():
+    try:
+        return os.path.basename(os.readlink(CURRENT))
+    except OSError:
+        return None
+
+
+def write(path, text):
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        f.write(text)
+
+
+def rgb(hexcolor):
+    h = hexcolor.lstrip("#")
+    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
+
+
+def hypr(hexcolor):
+    # "#rrggbb" o "#rrggbbaa" → "rgba(rrggbbaa)"
+    h = hexcolor.lstrip("#")
+    return f"rgba({h if len(h) == 8 else h + 'ff'})"
+
+
+# ── Un generador por programa ────────────────────────────────
+
+def gen_hyprland(name, t):
+    ui, hy = t["ui"], t["hypr"]
+    write(f"{CONF}/hypr/config/theme.lua", f"""-- {HEADER.format(name)}
+-- Lo usan decorations.lua y misc.lua
+
+THEME_BORDER   = {{ {", ".join(f'"{hypr(c)}"' for c in hy["border"])} }}
+THEME_INACTIVE = "{hypr(hy["inactive"])}"
+THEME_GROUP    = "{hypr(hy["group"])}"
+THEME_ACCENT   = "{hypr(ui["accent"])}"
+THEME_BG       = "{hypr(ui["bg"])}"
+""")
+
+
+def gen_hyprlock(name, t):
+    ui, term = t["ui"], t["term"]
+    r, g, b = rgb(term["background"])
+    c = lambda k: "rgb({}, {}, {})".format(*rgb(ui[k]))
+    write(f"{CONF}/hypr/hyprlock-colors.conf", f"""# {HEADER.format(name)}
+$bg      = rgba({r}, {g}, {b}, 0.75)
+$fg      = {c("fg")}
+$muted   = {c("muted")}
+$accent  = {c("accent")}
+$accent2 = {c("accent2")}
+$yellow  = {c("yellow")}
+$red     = {c("red")}
+""")
+
+
+def gen_kitty(name, t):
+    term, ui = t["term"], t["ui"]
+    cols = "\n".join(f"color{i:<2} {c}" for i, c in enumerate(term["colors"]))
+    bg = term["background"]
+    write(f"{CONF}/kitty/themes/current.conf", f"""# {HEADER.format(name)}
+{cols}
+
+background            {bg}
+foreground            {term["foreground"]}
+cursor                {term["cursor"]}
+cursor_text_color     {bg}
+cursor_trail_color    {term["cursor"]}
+selection_background  {term["selection_background"]}
+selection_foreground  {term["selection_foreground"]}
+url_color             {term["colors"][6]}
+
+active_border_color   {ui["accent"]}
+inactive_border_color {term["colors"][8]}
+active_tab_foreground   {bg}
+active_tab_background   {ui["accent"]}
+inactive_tab_foreground {term["colors"][8]}
+inactive_tab_background {bg}
+""")
+
+
+def gen_btop(name, t):
+    term, ui = t["term"], t["ui"]
+    c = term["colors"]
+    box = term["selection_background"]
+    keys = {
+        "main_bg": term["background"], "main_fg": term["foreground"],
+        "title": c[4], "hi_fg": ui["accent"],
+        "selected_bg": c[0], "selected_fg": c[15],
+        "inactive_fg": c[8], "graph_text": c[8], "meter_bg": c[0],
+        "proc_misc": ui["accent"],
+        "cpu_box": box, "mem_box": box, "net_box": box, "proc_box": box,
+        "div_line": c[0],
+        "temp_start": c[6], "temp_mid": c[3], "temp_end": c[1],
+        "cpu_start": ui["muted"], "cpu_mid": ui["accent"], "cpu_end": c[4],
+        "free_start": box, "free_mid": ui["muted"], "free_end": ui["accent"],
+        "cached_start": box, "cached_mid": c[6], "cached_end": c[14],
+        "available_start": box, "available_mid": ui["muted"], "available_end": ui["accent"],
+        "used_start": c[4], "used_mid": c[5], "used_end": c[1],
+        "download_start": box, "download_mid": ui["muted"], "download_end": ui["accent"],
+        "upload_start": box, "upload_mid": c[6], "upload_end": c[14],
+        "process_start": ui["accent"], "process_mid": c[4], "process_end": c[5],
+    }
+    body = "\n".join(f'theme[{k}]="{v}"' for k, v in keys.items())
+    write(f"{CONF}/btop/themes/current.theme", f"# {HEADER.format(name)}\n{body}\n")
+
+
+def gen_fzf(name, t):
+    term, ui = t["term"], t["ui"]
+    c = term["colors"]
+    opts = (f"--color=bg:-1,bg+:{c[0]},fg:{term['foreground']},fg+:{c[15]},"
+            f"hl:{ui['accent']},hl+:{c[4]},info:{c[8]},prompt:{ui['accent']},"
+            f"pointer:{ui['accent']},marker:{c[5]},spinner:{ui['accent']},"
+            f"header:{c[8]},border:{term['selection_background']},gutter:-1 "
+            f"--pointer=▌ --marker=•")
+    write(f"{THEMES}/current-env.sh", f"# {HEADER.format(name)}\nexport FZF_DEFAULT_OPTS=\"{opts}\"\n")
+
+
+def gen_gtk(name, t):
+    g = t["gtk"]
+    pairs = [
+        ("accent", g["accent"]), ("accent-bg", g["accentBg"]), ("accent-fg", g["accentFg"]),
+        ("window-bg", g["window"]), ("window-fg", g["fg"]),
+        ("view-bg", g["view"]), ("view-fg", g["fg"]),
+        ("headerbar-bg", g["headerbar"]), ("headerbar-fg", g["fg"]),
+        ("sidebar-bg", g["view"]), ("sidebar-fg", g["fg"]),
+        ("card-bg", g["card"]),
+        ("popover-bg", g["headerbar"]), ("popover-fg", g["fg"]),
+        ("dialog-bg", g["headerbar"]), ("dialog-fg", g["fg"]),
+    ]
+    old = "\n".join(f"@define-color {k.replace('-', '_')}_color {v};" for k, v in pairs)
+    new = "\n".join(f"    --{k}-color: {v};" for k, v in pairs)
+    head = f"/* {HEADER.format(name)} */\n"
+    write(f"{CONF}/gtk-3.0/gtk.css", head + old + "\n")
+    write(f"{CONF}/gtk-4.0/gtk.css", head + ":root {\n" + new + "\n}\n\n"
+          "/* Lo mismo con nombres antiguos, para libadwaita < 1.6 */\n" + old + "\n")
+
+
+GENERATORS = [gen_hyprland, gen_hyprlock, gen_kitty, gen_btop, gen_fzf, gen_gtk]
+
+
+# ── Avisar a los programas que ya están abiertos ─────────────
+
+def reload_all():
+    quiet = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    subprocess.run(["qs", "ipc", "call", "theme", "reload"], **quiet)
+    subprocess.run(["hyprctl", "reload"], **quiet)
+    subprocess.run(["pkill", "-USR1", "-x", "kitty"], **quiet)  # kitty relee su config
+
+
+def apply(name):
+    with open(f"{THEMES}/{name}/theme.json") as f:
+        t = json.load(f)
+    tmp = CURRENT + ".tmp"
+    if os.path.lexists(tmp):
+        os.remove(tmp)
+    os.symlink(name, tmp)
+    os.replace(tmp, CURRENT)
+    for gen in GENERATORS:
+        gen(name, t)
+    reload_all()
+    subprocess.run(["notify-send", "-a", "Tema", "Tema de colores", t.get("name", name)],
+                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def main():
+    args = sys.argv[1:]
+    if not args:
+        cur = current()
+        for d in themes():
+            print(("* " if d == cur else "  ") + d)
+        return
+    name = current() if args[0] == "--reapply" else args[0]
+    if name not in themes():
+        sys.exit(f"No existe el tema «{name}». Temas: {', '.join(themes())}")
+    apply(name)
+
+
+if __name__ == "__main__":
+    main()

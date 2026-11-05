@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# dmenu hecho con Quickshell: lee opciones por stdin y escribe la elegida por
+# stdout (sale con 1 si cancelas). Lo usan networkmanager_dmenu y bzmenu.
+#
+#   printf 'uno\ndos\n' | dmenu-qs -p "Elige"
+#   dmenu-qs -P -p "Contraseña" < /dev/null      (oculta lo que escribes)
+#
+# networkmanager_dmenu solo pasa el prompt y la opción de contraseña a los
+# lanzadores que conoce, así que se le llama a través del enlace "wmenu" de
+# esta carpeta, que acepta las mismas opciones (-p, -P).
+
+prompt=""
+password=false
+while [ $# -gt 0 ]; do
+    case "$1" in
+        -p | --prompt) prompt="$2"; shift ;;
+        -P | --password) password=true ;;
+    esac
+    shift
+done
+
+dir=$(mktemp -d "${XDG_RUNTIME_DIR:-/tmp}/qs-dmenu.XXXXXX") || exit 1
+trap 'rm -rf "$dir"' EXIT
+
+cat > "$dir/items"
+mkfifo "$dir/out"
+
+qs ipc call launcher dmenu "$dir" "$prompt" "$password" >/dev/null || exit 1
+
+result=$(cat "$dir/out")
+[ -n "$result" ] || exit 1
+printf '%s\n' "$result"

@@ -1,0 +1,68 @@
+{
+  "name": "Catppuccin Mocha",
+  "ui": {
+    "bg": "#11111b",
+    "surface": "#1e1e2e",
+    "fg": "#cdd6f4",
+    "muted": "#6c7086",
+    "accent": "#b4befe",
+    "accent2": "#89dceb",
+    "accentDim": "#7f849c",
+    "ok": "#a6e3a1",
+    "red": "#f38ba8",
+    "yellow": "#f9e2af",
+    "pink": "#f5c2e7",
+    "cyan": "#89dceb",
+    "peach": "#fab387",
+    "butter": "#f9e2af",
+    "mint": "#94e2d5",
+    "border": "#b4befe",
+    "launcherBg": "#181825",
+    "launcherSel": "#313244"
+  },
+  "hypr": {
+    "border": [
+      "#b4befe",
+      "#cba6f7",
+      "#89dceb"
+    ],
+    "inactive": "#45475a88",
+    "group": "#89dceb"
+  },
+  "term": {
+    "background": "#1e1e2e",
+    "foreground": "#cdd6f4",
+    "cursor": "#f5e0dc",
+    "selection_background": "#45475a",
+    "selection_foreground": "#cdd6f4",
+    "colors": [
+      "#45475a",
+      "#f38ba8",
+      "#a6e3a1",
+      "#f9e2af",
+      "#89b4fa",
+      "#f5c2e7",
+      "#94e2d5",
+      "#bac2de",
+      "#585b70",
+      "#f38ba8",
+      "#a6e3a1",
+      "#f9e2af",
+      "#89b4fa",
+      "#f5c2e7",
+      "#94e2d5",
+      "#a6adc8"
+    ]
+  },
+  "gtk": {
+    "accent": "#b4befe",
+    "accentBg": "#585b70",
+    "accentFg": "#cdd6f4",
+    "window": "#1e1e2e",
+    "fg": "#cdd6f4",
+    "view": "#181825",
+    "headerbar": "#181825",
+    "card": "#313244"
+  },
+  "nvim": "catppuccin"
+}

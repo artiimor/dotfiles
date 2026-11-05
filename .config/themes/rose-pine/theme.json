@@ -1,0 +1,68 @@
+{
+  "name": "Rosé Pine",
+  "ui": {
+    "bg": "#191724",
+    "surface": "#1f1d2e",
+    "fg": "#e0def4",
+    "muted": "#6e6a86",
+    "accent": "#c4a7e7",
+    "accent2": "#9ccfd8",
+    "accentDim": "#524f67",
+    "ok": "#9ccfd8",
+    "red": "#eb6f92",
+    "yellow": "#f6c177",
+    "pink": "#ebbcba",
+    "cyan": "#9ccfd8",
+    "peach": "#ea9a97",
+    "butter": "#f6c177",
+    "mint": "#9ccfd8",
+    "border": "#c4a7e7",
+    "launcherBg": "#1f1d2e",
+    "launcherSel": "#26233a"
+  },
+  "hypr": {
+    "border": [
+      "#c4a7e7",
+      "#ebbcba",
+      "#9ccfd8"
+    ],
+    "inactive": "#524f6788",
+    "group": "#9ccfd8"
+  },
+  "term": {
+    "background": "#191724",
+    "foreground": "#e0def4",
+    "cursor": "#524f67",
+    "selection_background": "#403d52",
+    "selection_foreground": "#e0def4",
+    "colors": [
+      "#26233a",
+      "#eb6f92",
+      "#31748f",
+      "#f6c177",
+      "#9ccfd8",
+      "#c4a7e7",
+      "#ebbcba",
+      "#e0def4",
+      "#6e6a86",
+      "#eb6f92",
+      "#31748f",
+      "#f6c177",
+      "#9ccfd8",
+      "#c4a7e7",
+      "#ebbcba",
+      "#e0def4"
+    ]
+  },
+  "gtk": {
+    "accent": "#c4a7e7",
+    "accentBg": "#524f67",
+    "accentFg": "#e0def4",
+    "window": "#191724",
+    "fg": "#e0def4",
+    "view": "#1f1d2e",
+    "headerbar": "#1f1d2e",
+    "card": "#26233a"
+  },
+  "nvim": "rose-pine"
+}

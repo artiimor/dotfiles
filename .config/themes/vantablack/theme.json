@@ -1,0 +1,48 @@
+{
+  "name": "Vantablack",
+  "ui": {
+    "bg": "#000000",
+    "surface": "#0d0d0d",
+    "fg": "#e6e6e6",
+    "muted": "#5c5c5c",
+    "accent": "#d0d0d0",
+    "accent2": "#a0a0a0",
+    "accentDim": "#3a3a3a",
+    "ok": "#b5b5b5",
+    "red": "#c46a6a",
+    "yellow": "#c9b27c",
+    "pink": "#bdbdbd",
+    "cyan": "#9e9e9e",
+    "peach": "#8a8a8a",
+    "butter": "#cfcfcf",
+    "mint": "#a8a8a8",
+    "border": "#ffffff",
+    "launcherBg": "#0a0a0a",
+    "launcherSel": "#1c1c1c"
+  },
+  "hypr": {
+    "border": ["#e6e6e6", "#6e6e6e", "#e6e6e6"],
+    "inactive": "#26262688",
+    "group": "#a0a0a0"
+  },
+  "term": {
+    "background": "#000000",
+    "foreground": "#d4d4d4",
+    "cursor": "#e6e6e6",
+    "selection_background": "#262626",
+    "selection_foreground": "#f0f0f0",
+    "colors": ["#121212", "#b86b6b", "#8c9c8c", "#b8a77e", "#8a96a8", "#a48ca8", "#8aa3a3", "#bdbdbd",
+               "#4a4a4a", "#cc8080", "#a3b3a3", "#ccbc94", "#a0abbd", "#b9a3bd", "#a0b8b8", "#f0f0f0"]
+  },
+  "gtk": {
+    "accent": "#d0d0d0",
+    "accentBg": "#3a3a3a",
+    "accentFg": "#f0f0f0",
+    "window": "#000000",
+    "fg": "#e0e0e0",
+    "view": "#050505",
+    "headerbar": "#0a0a0a",
+    "card": "#141414"
+  },
+  "nvim": "catppuccin"
+}

@@ -1,0 +1,37 @@
+/* Generado por theme-set a partir de themes/tokyo-night/theme.json: no editar */
+:root {
+    --accent-color: #7aa2f7;
+    --accent-bg-color: #3d59a1;
+    --accent-fg-color: #c0caf5;
+    --window-bg-color: #1a1b26;
+    --window-fg-color: #c0caf5;
+    --view-bg-color: #16161e;
+    --view-fg-color: #c0caf5;
+    --headerbar-bg-color: #16161e;
+    --headerbar-fg-color: #c0caf5;
+    --sidebar-bg-color: #16161e;
+    --sidebar-fg-color: #c0caf5;
+    --card-bg-color: #292e42;
+    --popover-bg-color: #16161e;
+    --popover-fg-color: #c0caf5;
+    --dialog-bg-color: #16161e;
+    --dialog-fg-color: #c0caf5;
+}
+
+/* Lo mismo con nombres antiguos, para libadwaita < 1.6 */
+@define-color accent_color #7aa2f7;
+@define-color accent_bg_color #3d59a1;
+@define-color accent_fg_color #c0caf5;
+@define-color window_bg_color #1a1b26;
+@define-color window_fg_color #c0caf5;
+@define-color view_bg_color #16161e;
+@define-color view_fg_color #c0caf5;
+@define-color headerbar_bg_color #16161e;
+@define-color headerbar_fg_color #c0caf5;
+@define-color sidebar_bg_color #16161e;
+@define-color sidebar_fg_color #c0caf5;
+@define-color card_bg_color #292e42;
+@define-color popover_bg_color #16161e;
+@define-color popover_fg_color #c0caf5;
+@define-color dialog_bg_color #16161e;
+@define-color dialog_fg_color #c0caf5;
