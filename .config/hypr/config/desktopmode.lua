@@ -87,9 +87,11 @@ hl.bind("SUPER + ALT + D", function()
 	end
 	desktop[ws.name] = not desktop[ws.name] or nil
 	save()
-	for _, w in ipairs(hl.get_workspace_windows(ws)) do
+	local windows = hl.get_workspace_windows(ws)
+	for _, w in ipairs(windows) do
 		if desktop[ws.name] then
-			makeFloat(w, false)
+			-- Si estaba sola ocupaba toda la pantalla: se pone al tamaño de las nuevas
+			makeFloat(w, #windows == 1)
 		else
 			makeTiled(w)
 		end
@@ -97,3 +99,41 @@ hl.bind("SUPER + ALT + D", function()
 end)
 
 hl.bind("SUPER + M", hl.dsp.window.move({ workspace = "special:minimized", follow = false }))
+
+-- Barra de título (cerrar y maximizar) en las ventanas del modo escritorio.
+-- Es el plugin hyprbars de hyprwm/hyprland-plugins, compilado a mano: si tras
+-- actualizar Hyprland sale "version mismatch", recompílalo con el mismo tag:
+--   git clone https://github.com/hyprwm/hyprland-plugins && cd hyprland-plugins
+--   git checkout v<versión> && make -C hyprbars all
+--   cp hyprbars/hyprbars.so ~/.local/lib/hyprland/
+local HYPRBARS = os.getenv("HOME") .. "/.local/lib/hyprland/hyprbars.so"
+local MAXIMIZE = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })']]
+
+if io.open(HYPRBARS) then
+	hl.plugin.load(HYPRBARS)
+end
+
+if hl.plugin.hyprbars then
+	hl.config({
+		plugin = {
+			hyprbars = {
+				bar_height = 28,
+				bar_color = THEME_BG,
+				col = { text = "rgba(d9d6e6ff)" },
+				bar_text_font = "JetBrainsMono Nerd Font Propo",
+				bar_text_size = 11,
+				bar_text_align = "left",
+				bar_padding = 10,
+				bar_button_padding = 8,
+				bar_part_of_window = true,
+				bar_precedence_over_border = true,
+				on_double_click = MAXIMIZE,
+			},
+		},
+	})
+	-- Se añaden de derecha a izquierda: × queda en la esquina
+	hl.plugin.hyprbars.add_button({ bg_color = "rgba(e89bd0ff)", fg_color = THEME_BG, size = 12, icon = "×", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
+	hl.plugin.hyprbars.add_button({ bg_color = "rgba(86d4dcff)", fg_color = THEME_BG, size = 12, icon = "□", action = MAXIMIZE })
+	-- Solo las ventanas que ha hecho flotar el modo escritorio llevan barra
+	hl.window_rule({ match = { tag = "negative:desktop" }, ["hyprbars:no_bar"] = true })
+end
