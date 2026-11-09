@@ -98,7 +98,7 @@ Singleton {
 
         if (m === "apps") {
             const e = item.data;
-            const cmd = e.runInTerminal ? ["kitty", "-e", ...e.command] : e.command;
+            const cmd = e.runInTerminal ? ["ghostty", "-e", ...e.command] : e.command;
             Quickshell.execDetached(["uwsm", "app", "--", ...cmd]);
         } else if (m === "power") {
             const cmds = {

@@ -44,7 +44,7 @@ PanelWindow {
             anchors.verticalCenter: parent.verticalCenter
             spacing: Theme.gap
 
-            Workspaces {}
+            Workspaces { screen: bar.modelData }
             Media {}
         }
 

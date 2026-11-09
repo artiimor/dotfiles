@@ -171,6 +171,17 @@ hl.bind(mainMod .. " + CONTROL + mouse_down", hl.dsp.focus({ workspace = "m+1" }
 -- Cambiar de monitor (los números ya son workspaces del monitor actual)
 hl.bind(mainMod .. " + Tab", hl.dsp.focus({ monitor = "+1" }))
 
+-- Mover la ventana activa al workspace activo del otro monitor
+-- shortcut: con 3+ monitores elige el primero no enfocado; usar un selector relativo si hace falta
+hl.bind(mainMod .. " + SHIFT + Tab", function()
+	for _, m in ipairs(hl.get_monitors()) do
+		if not m.focused and m.active_workspace then
+			hl.dispatch(hl.dsp.window.move({ workspace = m.active_workspace.id }))
+			return
+		end
+	end
+end)
+
 -- Special workspace (scratchpad)
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special" }))
 hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special())

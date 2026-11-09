@@ -1,4 +1,5 @@
-// Workspaces de Hyprland (de todas las pantallas). Clic para ir, rueda para
+// Workspaces de Hyprland de ESTA pantalla, numerados 1..10 (en Hyprland son
+// id = monitor*10 + n, ver wsFor en binds.lua). Clic para ir, rueda para
 // pasar al siguiente/anterior. Los de modo escritorio llevan el número en un
 // recuadro, como una ventanita.
 import QtQuick
@@ -13,6 +14,9 @@ Island {
     padding: 4
     spacing: 2
 
+    required property ShellScreen screen
+    readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
+
     function focus(target) {
         // La config de Hyprland es Lua, así que dispatch usa sintaxis hl.dsp
         Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.focus({ workspace = "${target}" })`]);
@@ -20,15 +24,16 @@ Island {
 
     Repeater {
         // Los workspaces especiales (scratchpad) tienen id negativo: fuera
-        model: Hyprland.workspaces.values.filter(w => w.id > 0)
+        model: Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor?.name === root.screen.name)
 
         Item {
             id: ws
             required property HyprlandWorkspace modelData
-            readonly property bool active: modelData.id === Hyprland.focusedWorkspace?.id
+            readonly property int num: (modelData.id - 1) % 10 + 1
+            readonly property bool active: modelData.id === root.monitor?.activeWorkspace?.id
             readonly property bool hovered: mouse.containsMouse
             readonly property bool desktop: DesktopMode.workspaces.includes(modelData.name)
-            readonly property color tint: Theme.wsColors[(modelData.id - 1) % Theme.wsColors.length]
+            readonly property color tint: Theme.wsColors[(num - 1) % Theme.wsColors.length]
 
             anchors.verticalCenter: parent.verticalCenter
             implicitHeight: Theme.barHeight - 8
@@ -62,7 +67,7 @@ Island {
             Text {
                 id: label
                 anchors.centerIn: parent
-                text: ws.modelData.id
+                text: ws.num
                 color: ws.modelData.urgent ? Theme.red : ws.active || ws.hovered ? ws.tint : Qt.alpha(ws.tint, 0.45)
                 font.family: Theme.font
                 font.pixelSize: Theme.fontSize
@@ -83,6 +88,6 @@ Island {
     WheelHandler {
         parent: root
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-        onWheel: e => root.focus(e.angleDelta.y > 0 ? "e+1" : "e-1")
+        onWheel: e => root.focus(e.angleDelta.y > 0 ? "m+1" : "m-1")
     }
 }
