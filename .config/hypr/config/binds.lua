@@ -8,6 +8,13 @@ local function digitCode(d)
 	return "code:" .. (d == 0 and 19 or (9 + d))
 end
 
+-- Workspaces independientes por monitor: monitor id 0 -> 1..10, id 1 -> 11..20, ...
+-- shortcut: usa el id de Hyprland, que puede cambiar al (des)conectar pantallas; pasar a nombres de salida si molesta
+local function wsFor(i)
+	local m = hl.get_active_monitor()
+	return (m and m.id or 0) * 10 + i
+end
+
 ---------------------------
 ---- WINDOW MANAGEMENT ----
 ---------------------------
@@ -37,13 +44,17 @@ hl.bind(mainMod .. " + SHIFT + H", hl.dsp.window.move({ direction = "l" }))
 hl.bind(mainMod .. " + SHIFT + J", hl.dsp.window.move({ direction = "d" }))
 for i = 1, NUM_WPM do
 	local key = i % 10
-	hl.bind(mainMod .. " + SHIFT + " .. digitCode(key), hl.dsp.window.move({ workspace = i }))
+	hl.bind(mainMod .. " + SHIFT + " .. digitCode(key), function()
+		hl.dispatch(hl.dsp.window.move({ workspace = wsFor(i) }))
+	end)
 end
 for i = 1, NUM_WPM do
 	local key = i % 10
 	hl.bind(
 		mainMod .. " + SHIFT + ALT + " .. digitCode(key),
-		hl.dsp.window.move({ workspace = "m~" .. i, follow = false })
+		function()
+			hl.dispatch(hl.dsp.window.move({ workspace = wsFor(i), follow = false }))
+		end
 	)
 end
 
@@ -143,15 +154,12 @@ hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("loginctl lock-session"))
 ---- WORKSPACES & MONITORS ----
 -------------------------------
 
--- Focus on monitors
-hl.bind(mainMod .. " + " .. digitCode(1), hl.dsp.focus({ monitor = MONITOR1 }))
-hl.bind(mainMod .. " + " .. digitCode(2), hl.dsp.focus({ monitor = MONITOR2 }))
-hl.bind(mainMod .. " + " .. digitCode(3), hl.dsp.focus({ monitor = MONITOR3 }))
-
 -- Focus on workspace number
 for i = 1, NUM_WPM do
 	local key = i % 10
-	hl.bind(mainMod .. " + " .. digitCode(key), hl.dsp.focus({ workspace = i }))
+	hl.bind(mainMod .. " + " .. digitCode(key), function()
+		hl.dispatch(hl.dsp.focus({ workspace = wsFor(i) }))
+	end)
 end
 
 -- Scroll through existing workspaces & monitors
@@ -159,6 +167,9 @@ hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "m-1" }))
 hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "m+1" }))
 hl.bind(mainMod .. " + CONTROL + mouse_up", hl.dsp.focus({ workspace = "m-1" }))
 hl.bind(mainMod .. " + CONTROL + mouse_down", hl.dsp.focus({ workspace = "m+1" }))
+
+-- Cambiar de monitor (los números ya son workspaces del monitor actual)
+hl.bind(mainMod .. " + Tab", hl.dsp.focus({ monitor = "+1" }))
 
 -- Special workspace (scratchpad)
 hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special" }))
