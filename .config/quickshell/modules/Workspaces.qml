@@ -29,7 +29,8 @@ Island {
         Item {
             id: ws
             required property HyprlandWorkspace modelData
-            readonly property int num: (modelData.id - 1) % 10 + 1
+            // En el portátil, los 11..20 (huérfanos del monitor externo) muestran su número real
+            readonly property int num: root.screen.name.startsWith("eDP") ? modelData.id : (modelData.id - 1) % 10 + 1
             readonly property bool active: modelData.id === root.monitor?.activeWorkspace?.id
             readonly property bool hovered: mouse.containsMouse
             readonly property bool desktop: DesktopMode.workspaces.includes(modelData.name)

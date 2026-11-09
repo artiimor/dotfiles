@@ -162,6 +162,17 @@ for i = 1, NUM_WPM do
 	end)
 end
 
+-- Workspaces 11..20 (los del monitor externo, p.ej. huérfanos al desconectarlo): solo si existen y tienen ventanas
+for i = 1, NUM_WPM do
+	local key = i % 10
+	hl.bind(mainMod .. " + ALT + " .. digitCode(key), function()
+		local ws = hl.get_workspace(10 + i)
+		if ws and ws.windows > 0 then
+			hl.dispatch(hl.dsp.focus({ workspace = 10 + i }))
+		end
+	end)
+end
+
 -- Scroll through existing workspaces & monitors
 hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "m-1" }))
 hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "m+1" }))
