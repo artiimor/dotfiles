@@ -19,7 +19,7 @@ ASPECT = 2.1                   # alto/ancho de una celda de kitty
 #                     si no, lavanda clara (para dibujos casi monocromos)
 PEPES = {
     "mago": dict(
-        src=BG / "pepe-mago.png", crop=(30, 190, 640, 760), cols=56,
+        src=BG / "pepe-mago.png", crop=(30, 190, 486, 760), cols=45,
         ink=45, tone=(60, 230), fill=" ++###@", gamma=0.9, stroke="tinted",
         key=(45, 51, 63)),
 }
