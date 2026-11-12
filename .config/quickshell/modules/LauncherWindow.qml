@@ -233,11 +233,11 @@ PanelWindow {
 
                         // Descripción corta a la derecha (p. ej. "Navegador web")
                         Text {
-                            visible: !!row.modelData.sub && Launcher.mode === "apps"
-                            Layout.maximumWidth: 180
+                            visible: !!row.modelData.sub && (Launcher.mode === "apps" || Launcher.mode === "keys")
+                            Layout.maximumWidth: Launcher.mode === "keys" ? 240 : 180
                             elide: Text.ElideRight
                             text: row.modelData.sub ?? ""
-                            color: Theme.muted
+                            color: Launcher.mode === "keys" ? Theme.accent : Theme.muted
                             font.family: Theme.font
                             font.pixelSize: 12
                         }

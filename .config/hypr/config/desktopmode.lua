@@ -96,9 +96,9 @@ hl.bind("SUPER + ALT + D", function()
 			makeTiled(w)
 		end
 	end
-end)
+end, { description = "Modo escritorio" })
 
-hl.bind("SUPER + M", hl.dsp.window.move({ workspace = "special:minimized", follow = false }))
+hl.bind("SUPER + M", hl.dsp.window.move({ workspace = "special:minimized", follow = false }), { description = "Minimizar" })
 
 -- Barra de título (cerrar y maximizar) en las ventanas del modo escritorio.
 -- Es el plugin hyprbars de hyprwm/hyprland-plugins, compilado a mano: si tras

@@ -8,6 +8,7 @@
 //   emoji       selector de emojis                (Super+.)
 //   profiles    perfil de energía                 (clic en el icono de la barra)
 //   themes      tema de colores                   (Super+Ctrl+T)
+//   keys        chuleta de atajos de Hyprland     (Super+?)
 //   dmenu       menú genérico para scripts: lo usa scripts/dmenu-qs
 //               (wifi con networkmanager_dmenu, bluetooth con bzmenu)
 pragma Singleton
@@ -27,8 +28,8 @@ Singleton {
     property var items: []         // [{ text, icon, glyph, sub, data }]
 
     // Tamaño y sitio de la ventana según el modo (como estaba en wofi)
-    readonly property int width: ({ apps: 360, clipboard: 640, emoji: 420, power: 220, themes: 260 })[mode] ?? 320
-    readonly property bool centered: ["apps", "clipboard", "emoji", "power", "themes"].includes(mode)
+    readonly property int width: ({ apps: 360, clipboard: 640, emoji: 420, power: 220, themes: 260, keys: 520 })[mode] ?? 320
+    readonly property bool centered: ["apps", "clipboard", "emoji", "power", "themes", "keys"].includes(mode)
 
     // Abre un modo, o lo cierra si ya estaba abierto (como `pkill wofi || wofi`)
     function toggle(m) {
@@ -74,6 +75,10 @@ Singleton {
             prompt = "Tema";
             items = [];
             themeList.running = true;
+        } else if (m === "keys") {
+            prompt = "Atajos";
+            items = [];
+            binds.running = true;
         }
         open = true;
     }
@@ -95,6 +100,7 @@ Singleton {
         if (!item)
             return;
         open = false;
+        // keys: solo es para mirar, elegir una fila cierra la chuleta
 
         if (m === "apps") {
             const e = item.data;
@@ -170,6 +176,37 @@ Singleton {
         }
     }
 
+    // ── Chuleta de atajos ─────────────────────────────────
+    // Sale de `hyprctl binds`: solo los atajos con { description = "..." } en
+    // hypr/config/*.lua, así que está siempre al día con la config.
+    Process {
+        id: binds
+        command: ["hyprctl", "binds", "-j"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const mods = [[64, "Super"], [4, "Ctrl"], [8, "Alt"], [1, "Shift"]];
+                const keyName = k => {
+                    if (k === "code:10")
+                        return "1-0"; // los bucles de workspaces solo describen el 1
+                    const m = k.match(/^code:(\d+)$/);
+                    if (m && +m[1] >= 11 && +m[1] <= 19)
+                        return String((+m[1] - 9) % 10);
+                    return ({ "mouse:272": "Clic izq.", "mouse:273": "Clic dcho.", mouse_up: "Rueda", mouse_down: "Rueda",
+                              Return: "Enter", Escape: "Esc", period: ".", slash: "?", Minus: "-", Plus: "+" })[k]
+                        ?? (k.length === 1 ? k.toUpperCase() : k);
+                };
+                let list = [];
+                try {
+                    list = JSON.parse(text);
+                } catch (e) {}
+                root.items = list.filter(b => b.has_description).map(b => {
+                    const combo = mods.filter(([bit]) => b.modmask & bit).map(([, n]) => n).concat(keyName(b.key)).join(" + ");
+                    return { text: b.description, sub: combo, keywords: combo };
+                });
+            }
+        }
+    }
+
     // ── Temas de color ────────────────────────────────────
     // Cada carpeta de ~/.config/themes con un theme.json es un tema; al elegir
     // uno se ejecuta theme-set, que recolorea todo (ver ese script)
@@ -240,6 +277,7 @@ for t in sorted(os.listdir(d)):
         function emoji(): void { root.toggle("emoji"); }
         function profiles(): void { root.toggle("profiles"); }
         function themes(): void { root.toggle("themes"); }
+        function keys(): void { root.toggle("keys"); }
         function close(): void { root.close(); }
         function dmenu(dir: string, prompt: string, password: bool): void { root.showDmenu(dir, prompt, password); }
     }
