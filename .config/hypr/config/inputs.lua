@@ -14,13 +14,8 @@ hl.config({
     -- },
 })
 
--- Swap left Alt <-> left Super solo en el teclado del ThinkPad (no en el HHKB)
-hl.device({
-    name       = "at-translated-set-2-keyboard",
-    kb_layout  = "us",
-    kb_variant = "altgr-intl",
-    kb_options = "altwin:swap_lalt_lwin,caps:none",
-})
+-- Swap Alt/Super del ThinkPad: lo hace keyd (/etc/keyd/thinkpad.conf), no xkb
+-- (con keymap por dispositivo Hyprland no aplicaba el modificador Super)
 
 hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })
 hl.gesture({ fingers = 3, direction = "down",       action = "close" })
