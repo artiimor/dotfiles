@@ -30,17 +30,14 @@ end
 -- por eso se divide por la escala)
 local OPEN_SIZE = 0.65
 
--- Dos etiquetas:
---   "desktop" marca las ventanas que hemos hecho flotar nosotros, para no devolver
---             al tiling las que flotan por una window rule (Dolphin, calculadora...)
---   "bar"     todas las flotantes del modo escritorio: barra de título y snap
+-- La etiqueta "desktop" marca las ventanas que hemos hecho flotar nosotros, para
+-- no devolver al tiling las que flotan por una window rule (Dolphin, calculadora...)
 local function hasTag(w, tag)
 	local tags = type(w.tags) == "table" and table.concat(w.tags, " ") or (w.tags or "")
 	return (" " .. tags .. " "):find(" " .. tag .. " ", 1, true) ~= nil
 end
 
 local function makeFloat(w, center)
-	hl.dispatch(hl.dsp.window.tag({ tag = "+bar", window = w }))
 	if w.floating then
 		return
 	end
@@ -60,20 +57,11 @@ local function makeFloat(w, center)
 end
 
 local function makeTiled(w)
-	hl.dispatch(hl.dsp.window.tag({ tag = "-bar", window = w }))
 	if not hasTag(w, "desktop") then
 		return
 	end
 	hl.dispatch(hl.dsp.window.tag({ tag = "-desktop", window = w }))
 	hl.dispatch(hl.dsp.window.float({ action = "disable", window = w }))
-end
-
--- Al recargar la config las etiquetas se mantienen, pero por si acaso (o si vienen
--- de antes de existir "bar") se repasan las ventanas de los workspaces en modo escritorio
-for _, w in ipairs(hl.get_windows()) do
-	if w.floating and w.workspace and desktop[w.workspace.name] then
-		hl.dispatch(hl.dsp.window.tag({ tag = "+bar", window = w }))
-	end
 end
 
 hl.on("window.open", function(w)
@@ -131,7 +119,7 @@ local function snapTarget()
 	if not (w and w.floating and w.workspace and desktop[w.workspace.name]) then
 		return nil
 	end
-	return hasTag(w, "bar") and w or nil
+	return w
 end
 
 hl.bind("mouse:272", function()
@@ -265,6 +253,6 @@ if hl.plugin.hyprbars then
 	hl.plugin.hyprbars.add_button({ bg_color = "rgba(ff5f57ff)", fg_color = "rgba(4d0000cc)", size = 12, icon = "×", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
 	hl.plugin.hyprbars.add_button({ bg_color = "rgba(febc2eff)", fg_color = "rgba(5a3e00cc)", size = 12, icon = "–", action = [[hyprctl dispatch 'hl.dsp.window.move({ workspace = "special:minimized", follow = false })']] })
 	hl.plugin.hyprbars.add_button({ bg_color = "rgba(28c840ff)", fg_color = "rgba(004d00cc)", size = 12, icon = "+", action = MAXIMIZE })
-	-- Solo las ventanas flotantes de los workspaces en modo escritorio llevan barra
-	hl.window_rule({ match = { tag = "negative:bar" }, ["hyprbars:no_bar"] = true })
+	-- Barra en todas las ventanas flotantes, estén o no en modo escritorio
+	hl.window_rule({ match = { float = false }, ["hyprbars:no_bar"] = true })
 end
