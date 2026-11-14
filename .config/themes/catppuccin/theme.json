@@ -22,9 +22,7 @@
   },
   "hypr": {
     "border": [
-      "#b4befe",
-      "#cba6f7",
-      "#89dceb"
+      "#b4befe"
     ],
     "inactive": "#45475a88",
     "group": "#89dceb"

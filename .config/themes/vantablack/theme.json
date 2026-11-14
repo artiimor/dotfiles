@@ -21,7 +21,9 @@
     "launcherSel": "#1c1c1c"
   },
   "hypr": {
-    "border": ["#e6e6e6", "#6e6e6e", "#e6e6e6"],
+    "border": [
+      "#e6e6e6"
+    ],
     "inactive": "#26262688",
     "group": "#a0a0a0"
   },
@@ -31,8 +33,24 @@
     "cursor": "#e6e6e6",
     "selection_background": "#262626",
     "selection_foreground": "#f0f0f0",
-    "colors": ["#121212", "#b86b6b", "#8c9c8c", "#b8a77e", "#8a96a8", "#a48ca8", "#8aa3a3", "#bdbdbd",
-               "#4a4a4a", "#cc8080", "#a3b3a3", "#ccbc94", "#a0abbd", "#b9a3bd", "#a0b8b8", "#f0f0f0"]
+    "colors": [
+      "#121212",
+      "#b86b6b",
+      "#8c9c8c",
+      "#b8a77e",
+      "#8a96a8",
+      "#a48ca8",
+      "#8aa3a3",
+      "#bdbdbd",
+      "#4a4a4a",
+      "#cc8080",
+      "#a3b3a3",
+      "#ccbc94",
+      "#a0abbd",
+      "#b9a3bd",
+      "#a0b8b8",
+      "#f0f0f0"
+    ]
   },
   "gtk": {
     "accent": "#d0d0d0",
@@ -44,5 +62,5 @@
     "headerbar": "#0a0a0a",
     "card": "#141414"
   },
-  "nvim": "catppuccin"
+  "nvim": "vantablack"
 }

@@ -22,9 +22,7 @@
   },
   "hypr": {
     "border": [
-      "#848bbd",
-      "#e89bd0",
-      "#86d4dc"
+      "#848bbd"
     ],
     "inactive": "#b893ce88",
     "group": "#36f9f6"
@@ -64,5 +62,5 @@
     "headerbar": "#28223c",
     "card": "#2e2945"
   },
-  "nvim": "catppuccin"
+  "nvim": "miami"
 }

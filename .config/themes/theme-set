@@ -12,15 +12,23 @@
 #   Hyprland     hypr/config/theme.lua                               (al momento)
 #   hyprlock     hypr/hyprlock-colors.conf                           (próximo bloqueo)
 #   kitty        kitty/themes/current.conf                           (al momento)
+#   Ghostty      ghostty/themes/current (config: theme = current)    (al momento)
 #   btop         btop/themes/current.theme                           (al abrirlo)
 #   fzf          themes/current-env.sh, cargado desde ~/.bashrc      (terminales nuevas)
 #   GTK          gtk-3.0/gtk.css y gtk-4.0/gtk.css                   (al abrir la app)
-#   Neovim       lee "nvim" de theme.json en plugins/colorscheme.lua (al abrirlo)
+#   Qt / KDE     qt6ct/colors/current.conf, esquema KDE "Theme" y   (al abrir la app)
+#                sus colores en kdeglobals (Dolphin)
+#   fastfetch    fastfetch/themed/pepe-*.txt: Pepes teñidos con el     (terminales nuevas)
+#                acento (los originales los genera fastfetch/pepe.py)
+#   Neovim       lee "nvim" de theme.json en plugins/colorscheme.lua (al abrirlo;
+#                los ya abiertos lo reciben por su socket)
 #
 # Los archivos generados empiezan con "Generado por theme-set": no los edites,
 # cambia el theme.json del tema y ejecuta `theme-set --reapply`.
 
+import glob
 import json
+import re
 import os
 import subprocess
 import sys
@@ -173,7 +181,96 @@ def gen_gtk(name, t):
           "/* Lo mismo con nombres antiguos, para libadwaita < 1.6 */\n" + old + "\n")
 
 
-GENERATORS = [gen_hyprland, gen_hyprlock, gen_kitty, gen_btop, gen_fzf, gen_gtk]
+def gen_ghostty(name, t):
+    term = t["term"]
+    pal = "\n".join(f"palette = {i}={c}" for i, c in enumerate(term["colors"]))
+    write(f"{CONF}/ghostty/themes/current", f"""# {HEADER.format(name)}
+{pal}
+background = {term["background"]}
+foreground = {term["foreground"]}
+cursor-color = {term["cursor"]}
+cursor-text = {term["background"]}
+selection-background = {term["selection_background"]}
+selection-foreground = {term["selection_foreground"]}
+""")
+
+
+def gen_qt(name, t):
+    g, ui, c = t["gtk"], t["ui"], t["term"]["colors"]
+    fg, dim = g["fg"], c[8]
+
+    # qt6ct: los 22 roles de QPalette en su orden
+    def roles(text):
+        return ", ".join([text, g["card"], c[15], c[7], ui["bg"], c[8], text, c[15], text,
+                          g["window"], g["headerbar"], "#000000", g["accentBg"], g["accentFg"],
+                          c[6], ui["accent"], g["card"], g["window"], g["headerbar"], fg, dim,
+                          ui["accent"]])
+    write(f"{CONF}/qt6ct/colors/current.conf",
+          f"; {HEADER.format(name)}\n[ColorScheme]\nactive_colors={roles(fg)}\n"
+          f"disabled_colors={roles(dim)}\ninactive_colors={roles(fg)}\n")
+
+    # Esquema KDE (lo usan Dolphin y demás apps KF6)
+    def kde(*hexes):
+        return ",".join(str(int(x.lstrip("#")[i:i + 2], 16)) for x in hexes for i in (0, 2, 4))
+    fgs = (f"DecorationFocus={kde(ui['accent'])}\nDecorationHover={kde(ui['accent'])}\n"
+           f"ForegroundActive={kde(ui['accent'])}\nForegroundInactive={kde(dim)}\n"
+           f"ForegroundLink={kde(c[6])}\nForegroundNegative={kde(c[1])}\n"
+           f"ForegroundNeutral={kde(c[3])}\nForegroundPositive={kde(c[2])}\n"
+           f"ForegroundVisited={kde(ui['accent'])}\n")
+    def group(header, bg, alt, text=fg):
+        return (f"[{header}]\nBackgroundAlternate={kde(alt)}\nBackgroundNormal={kde(bg)}\n"
+                f"{fgs}ForegroundNormal={kde(text)}\n\n")
+    colors = (
+        group("Colors:Button", g["card"], g["headerbar"])
+        + group("Colors:Complementary", g["window"], g["card"])
+        + group("Colors:Header", g["headerbar"], g["window"])
+        + group("Colors:Header][Inactive", g["window"], g["headerbar"])
+        + group("Colors:Selection", g["accentBg"], g["accentBg"], g["accentFg"])
+        + group("Colors:Tooltip", g["headerbar"], g["window"])
+        + group("Colors:View", g["window"], g["card"])
+        + group("Colors:Window", g["headerbar"], g["card"])
+        + f"[WM]\nactiveBackground={kde(g['headerbar'])}\nactiveBlend={kde(ui['accent'])}\n"
+          f"activeForeground={kde(fg)}\ninactiveBackground={kde(g['window'])}\n"
+          f"inactiveBlend={kde(dim)}\ninactiveForeground={kde(dim)}\n"
+    )
+    write(f"{HOME}/.local/share/color-schemes/Theme.colors",
+          f"# {HEADER.format(name)}\n[General]\nColorScheme=Theme\nName=Tema actual\n\n{colors}")
+
+    # kdeglobals: se conservan las demás secciones y se cambian solo las de color
+    path = f"{CONF}/kdeglobals"
+    keep, skip = [], False
+    for line in (open(path).read().splitlines() if os.path.exists(path) else []):
+        if line.startswith("["):
+            skip = line.startswith(("[Colors:", "[ColorEffects:", "[WM]"))
+        if not skip:
+            keep.append(line)
+    write(path, "\n".join(keep).rstrip() + "\n\n" + colors)
+
+
+def gen_fastfetch(name, t):
+    # Mezcla cada color del Pepe con el acento a su misma luminosidad. Cuanto menos
+    # saturado es el acento, más se tiñe (con el gris de vantablack queda casi en grises).
+    acc = rgb(t["ui"]["accent"])
+    lum = lambda c: 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
+    sat = (max(acc) - min(acc)) / max(max(acc), 1)
+    k = 0.4 + 0.4 * (1 - sat)
+    la = max(lum(acc), 1)
+
+    def tint(m):
+        c = [int(x) for x in m.group(2).split(";")]
+        l = lum(c)
+        out = [round(min(255, (1 - k) * x + k * a * l / la)) for x, a in zip(c, acc)]
+        return f"{m.group(1)};2;{out[0]};{out[1]};{out[2]}m"
+
+    src = f"{CONF}/fastfetch"
+    for f in sorted(os.listdir(src)):
+        if f.startswith("pepe-") and f.endswith(".txt"):
+            text = open(f"{src}/{f}").read()
+            write(f"{src}/themed/{f}", re.sub(r"\x1b\[(38|48);2;(\d+;\d+;\d+)m",
+                                             lambda m: "\x1b[" + tint(m), text))
+
+
+GENERATORS = [gen_hyprland, gen_hyprlock, gen_kitty, gen_ghostty, gen_btop, gen_fzf, gen_gtk, gen_qt, gen_fastfetch]
 
 
 # ── Avisar a los programas que ya están abiertos ─────────────
@@ -183,6 +280,18 @@ def reload_all():
     subprocess.run(["qs", "ipc", "call", "theme", "reload"], **quiet)
     subprocess.run(["hyprctl", "reload"], **quiet)
     subprocess.run(["pkill", "-USR1", "-x", "kitty"], **quiet)  # kitty relee su config
+    subprocess.run(["pkill", "-USR2", "-x", "ghostty"], **quiet)  # ghostty también (SIGUSR2)
+
+
+def reload_nvim(t):
+    # Cada Neovim abierto escucha en $XDG_RUNTIME_DIR/nvim.<pid>.0
+    cs = t.get("nvim", "catppuccin")
+    for sock in glob.glob(f"{os.environ.get('XDG_RUNTIME_DIR', '/tmp')}/nvim.*.0"):
+        try:
+            subprocess.run(["nvim", "--server", sock, "--remote-expr", f"execute('colorscheme {cs}')"],
+                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2)
+        except subprocess.TimeoutExpired:
+            pass  # socket muerto de un nvim que se cerró mal
 
 
 def apply(name):
@@ -196,6 +305,7 @@ def apply(name):
     for gen in GENERATORS:
         gen(name, t)
     reload_all()
+    reload_nvim(t)
     subprocess.run(["notify-send", "-a", "Tema", "Tema de colores", t.get("name", name)],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
