@@ -1,4 +1,4 @@
-# Prompt de bash. Colores ANSI, así sigue la paleta de kitty (themes/custom.conf):
+# Prompt de bash. Colores ANSI, así sigue la paleta del tema activo (themes/):
 # blue = lavanda #a99bd6, purple = rosa suave #e89bd0, cyan = #86d4dc, bright-black = #6b6789
 
 "$schema" = 'https://starship.rs/config-schema.json'
