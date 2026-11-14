@@ -18,7 +18,7 @@ hl.config({
         background_color = THEME_BG,
         middle_click_paste = false,
         enable_swallow = true,
-        swallow_regex = "(kitty|ghostty|[Kk]onsole|Alacritty|gnome-terminal|xfce[0-9]?-terminal)",
+        swallow_regex = "(kitty|ghostty|com\\.mitchellh\\.ghostty|[Kk]onsole|Alacritty|gnome-terminal|xfce[0-9]?-terminal)",
         vrr = 3,
         -- Si la pantalla de bloqueo (Quickshell) se cierra estando bloqueado,
         -- permite volver a lanzarla en vez de quedarte en la pantalla roja
