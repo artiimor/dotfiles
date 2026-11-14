@@ -1,0 +1,63 @@
+diff --git a/hyprbars/barDeco.cpp b/hyprbars/barDeco.cpp
+index e57f77b..5faffe6 100644
+--- a/hyprbars/barDeco.cpp
++++ b/hyprbars/barDeco.cpp
+@@ -276,6 +276,11 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
+             (void)Config::Actions::floatWindow(Config::Actions::eTogglableAction::TOGGLE_ACTION_DISABLE);
+ 
+         LOG(Log::DEBUG, "[hyprbars] Dragging ended on {:x}", (uintptr_t)m_pWindow.lock().get());
++
++        // patch local: avisa al config (snap tipo macOS en desktopmode.lua)
++        const auto ON_DRAG_END = g_pGlobalState->config.onDragEnd->value();
++        if (!ON_DRAG_END.empty())
++            Config::Supplementary::executor()->spawn(ON_DRAG_END);
+     }
+ 
+     m_bDragPending = false;
+@@ -284,6 +289,11 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
+ }
+ 
+ void CHyprBar::handleMovement() {
++    // patch local: Lua síncrono antes de coger la ventana (restaurar tamaño tras un snap)
++    const auto ON_DRAG_START = g_pGlobalState->config.onDragStartEval->value();
++    if (!ON_DRAG_START.empty())
++        HyprlandAPI::invokeHyprctlCommand("eval", ON_DRAG_START);
++
+     g_layoutManager->beginDragTarget(m_pWindow.lock()->layoutTarget(), MBIND_MOVE);
+     m_bDraggingThis = true;
+     LOG(Log::DEBUG, "[hyprbars] Dragging initiated on {:x}", (uintptr_t)m_pWindow.lock().get());
+diff --git a/hyprbars/globals.hpp b/hyprbars/globals.hpp
+index 2911644..0a09a3b 100644
+--- a/hyprbars/globals.hpp
++++ b/hyprbars/globals.hpp
+@@ -40,7 +40,7 @@ struct SGlobalState {
+         SP<Config::Values::CIntValue>        barPadding;
+         SP<Config::Values::CIntValue>        barButtonPadding;
+         SP<Config::Values::CBoolValue>       barBlur, barTitleEnabled, barPartOfWindow, barPrecedenceOverBorder, enabled, iconOnHover, buttonsOnHover;
+-        SP<Config::Values::CStringValue>     barTextFont, barTextAlign, barButtonsAlignment, onDoubleClick;
++        SP<Config::Values::CStringValue>     barTextFont, barTextAlign, barButtonsAlignment, onDoubleClick, onDragEnd, onDragStartEval;
+     } config;
+ };
+ 
+diff --git a/hyprbars/main.cpp b/hyprbars/main.cpp
+index 3d88b57..d47ea42 100644
+--- a/hyprbars/main.cpp
++++ b/hyprbars/main.cpp
+@@ -196,6 +196,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
+     g_pGlobalState->config.buttonsOnHover      = makeShared<Config::Values::CBoolValue>(
+         "plugin:hyprbars:buttons_on_hover", "Whether the buttons are only drawn while the cursor is over the bar", false);
+     g_pGlobalState->config.onDoubleClick       = makeShared<Config::Values::CStringValue>("plugin:hyprbars:on_double_click", "Action to execute on double click of the bar", "");
++    g_pGlobalState->config.onDragEnd           = makeShared<Config::Values::CStringValue>("plugin:hyprbars:on_drag_end", "Action to execute after dragging a window by the bar", "");
++    g_pGlobalState->config.onDragStartEval     = makeShared<Config::Values::CStringValue>("plugin:hyprbars:on_drag_start_eval", "Lua run synchronously before a bar drag begins", "");
+ 
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barColor);
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.textColor);
+@@ -216,6 +218,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.iconOnHover);
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.buttonsOnHover);
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.onDoubleClick);
++    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.onDragEnd);
++    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.onDragStartEval);
+ 
+     HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "add_button", ::newLuaButton);
+     HyprlandAPI::addLuaFunction(PHANDLE, "hyprbars", "set_title", ::setLuaTitle);
