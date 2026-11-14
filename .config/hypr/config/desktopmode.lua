@@ -145,13 +145,16 @@ function DesktopSnap()
 		local x = c.x <= m.x + EDGE and mx or mx + mw - half
 		hl.dispatch(hl.dsp.window.resize({ x = half, y = mh, window = w }))
 		hl.dispatch(hl.dsp.window.move({ x = x, y = my, window = w }))
-	elseif c.y <= m.y + EDGE then
+	elseif c.y <= m.y + r.top + EDGE then -- soltar sobre la barra de arriba cuenta como borde
 		for _, other in ipairs(hl.get_workspace_windows(w.workspace)) do
 			if other.address ~= w.address then
 				hl.dispatch(hl.dsp.window.move({ workspace = "special:minimized", follow = false, window = other }))
 			end
 		end
 		hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "set", window = w }))
+	elseif w.at.y < my then
+		-- Como el menú de macOS: la barra de título nunca se queda debajo de la barra de arriba
+		hl.dispatch(hl.dsp.window.move({ x = w.at.x, y = my, window = w }))
 	end
 end
 
