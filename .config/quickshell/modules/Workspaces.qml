@@ -34,7 +34,7 @@ Island {
             readonly property bool active: modelData.id === root.monitor?.activeWorkspace?.id
             readonly property bool hovered: mouse.containsMouse
             readonly property bool desktop: DesktopMode.workspaces.includes(modelData.name)
-            readonly property color tint: Theme.wsColors[(num - 1) % Theme.wsColors.length]
+            readonly property color tint: Theme.accent
 
             anchors.verticalCenter: parent.verticalCenter
             implicitHeight: Theme.barHeight - 8
@@ -69,7 +69,7 @@ Island {
                 id: label
                 anchors.centerIn: parent
                 text: ws.num
-                color: ws.modelData.urgent ? Theme.red : ws.active || ws.hovered ? ws.tint : Qt.alpha(ws.tint, 0.45)
+                color: ws.modelData.urgent ? Theme.red : ws.active ? ws.tint : ws.hovered ? Theme.fg : Theme.muted
                 font.family: Theme.font
                 font.pixelSize: Theme.fontSize
                 font.bold: true

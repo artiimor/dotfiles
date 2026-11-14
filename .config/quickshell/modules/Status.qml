@@ -127,7 +127,7 @@ Item {
 
             icon: muted ? "󰝟" : (bluetooth ? "󰂯 " : "") + ["󰕿", "󰖀", "󰕾"][Math.min(2, Math.floor(volume * 3))]
             padding: 10
-            color: muted ? Theme.muted : Theme.pink
+            color: muted ? Theme.muted : Theme.fg
             tooltip: root.sink ? `${root.sink.description}\nVolumen ${Math.round(volume * 100)}%` : "Sin salida de audio"
 
             onClicked: m => {
@@ -147,7 +147,7 @@ Item {
                 : Net.wifi ? ["󰤟", "󰤢", "󰤥", "󰤨"][Math.min(3, Math.floor(Net.signal / 25))]
                 : "󰤭"
             padding: 10
-            color: Net.wired || Net.wifi ? Theme.cyan : Theme.muted
+            color: Net.wired || Net.wifi ? Theme.fg : Theme.muted
             tooltip: {
                 if (!Net.wired && !Net.wifi)
                     return "Desconectado";
@@ -187,10 +187,10 @@ Item {
                 : root.plugged ? "󰚥"
                 : ["󰂎", "󰁺", "󰁼", "󰁾", "󰂀", "󰂂", "󰁹"][Math.min(6, Math.floor(root.percent / 100 * 7))]
             padding: 10
-            color: root.charging ? Theme.mint
+            color: root.charging ? Theme.fg
                 : critical ? (blink ? Theme.fg : Theme.red)
                 : warning ? Theme.yellow
-                : Theme.peach
+                : Theme.fg
             tooltip: {
                 const time = root.formatTime(root.charging ? root.battery?.timeToFull : root.battery?.timeToEmpty);
                 return `${root.percent}%${time ? " · " + time : ""}\n${Math.abs(root.battery?.changeRate ?? 0).toFixed(1)} W`;
