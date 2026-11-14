@@ -90,6 +90,48 @@ ha, hyp = hyp[..., 3:] / 255, hyp[..., :3]
 ha *= np.clip((HH - 1 - np.arange(HH)) / 25, 0, 1)[:, None, None]  # la camiseta se hunde en la hierba
 hx, hy = HX - hw // 2, HY - HH
 
+# Pepe astronauta (pepe-astronauta.png, fondo de galaxia): traje gris + verde + contorno, crecido
+# desde el pecho para dejar fuera estrellas y planetas; el casco es un disco de cristal translúcido.
+src = load(DIR / "pepe-astronauta.png", 860, 860)
+sat, lum = np.ptp(src, axis=2), src @ [0.299, 0.587, 0.114]
+r, g, b = src[..., 0], src[..., 1], src[..., 2]
+green = (g > r + 20) & (g > b + 20)
+suit = (sat < 45) & (lum > 110)
+cand = (green | suit | (grow(green | suit, 3) & (lum < 90))) & ~((b > g + 30) & (r > g + 30))  # sin morado de galaxia
+body = np.zeros_like(cand)
+body[520, 450] = True               # semilla en el pecho
+while True:
+    n = grow(body) & cand
+    if (n == body).all():
+        break
+    body = n
+body = ~grow(~grow(body, 4), 4)     # cierre
+out = np.zeros_like(body)
+out[0, :] = out[-1, :] = out[:, 0] = out[:, -1] = True
+out &= ~body
+while True:                         # rellena huecos (parches, ojos)
+    n = grow(out) & ~body
+    if (n == out).all():
+        break
+    out = n
+yy0, xx0 = np.mgrid[0:860, 0:860]
+helmet = np.hypot(xx0 - 450, yy0 - 318) < 136
+amask = np.maximum(~grow(out) * 1.0, helmet * 0.3)   # cristal del casco al 30 %
+cx0, cy0, cx1, cy1 = 240, 180, 620, 790              # recorte alrededor del astronauta
+src, amask = src[cy0:cy1, cx0:cx1], amask[cy0:cy1, cx0:cx1]
+AH, AX, AY = 300, 1650, 40          # alto, centro x y borde superior (cielo arriba a la derecha)
+aw = round(src.shape[1] * AH / src.shape[0])
+rgba = np.dstack([src, amask * 255.0]).astype(np.uint8)
+raw = subprocess.run(["magick", "-size", f"{src.shape[1]}x{src.shape[0]}", "-depth", "8", "rgba:-",
+                      "-background", "none", "-rotate", "-12", "-filter", "Lanczos",
+                      "-resize", f"x{AH}", "rgba:-"],
+                     input=rgba.tobytes(), capture_output=True, check=True).stdout
+aw = len(raw) // (4 * AH)           # el giro cambia el ancho
+ast = np.frombuffer(raw, np.uint8).reshape(AH, aw, 4).astype(float)
+aa, ast = ast[..., 3:] / 255, ast[..., :3]
+ax, ay = AX - aw // 2, AY
+assert 0 <= ax and ax + aw <= W
+
 def blend(scene, fig, alpha, x, y):
     h, w = alpha.shape[:2]
     scene[y:y + h, x:x + w] = scene[y:y + h, x:x + w] * (1 - alpha) + fig * alpha
@@ -99,8 +141,9 @@ fx = px + 0.30 * cw                # centro de los pies (bajo la túnica, no el 
 # Sombra en la hierba bajo los pies
 shadow = np.clip(1 - np.sqrt(((xx - fx) / 190) ** 2 + ((yy - FY + 8) / 26) ** 2), 0, 1)[..., None]
 
-def paste(scene, fig, far, hype):
+def paste(scene, fig, far, hype, astro):
     out = scene * (1 - 0.45 * shadow)
+    blend(out, astro, aa, ax, ay)
     blend(out, far, la, lx, ly)
     blend(out, hype, ha, hx, hy)
     blend(out, fig, a, px, py)
@@ -113,7 +156,8 @@ g = (np.clip(1 - d, 0, 1) ** 2)[..., None]
 desk = desk * (1 + 1.6 * g * SUN / 255) + SUN * 0.25 * g
 # el lejano en color pero algo velado por la distancia
 save(paste(desk, mago * 0.95 + SUN * 0.04, lej * 0.8 + 0.2 * desk[ly:ly + LH, lx:lx + lw],
-           hyp * 0.85 + 0.15 * desk[hy:hy + HH, hx:hx + hw]), DIR / "wallpaper-desktop.jpg")
+           hyp * 0.85 + 0.15 * desk[hy:hy + HH, hx:hx + hw],
+           ast * 0.85 + 0.15 * desk[ay:ay + AH, ax:ax + aw]), DIR / "wallpaper-desktop.jpg")
 
 # Bloqueo: apagado, luminancia llevada a los tonos gris lavanda del Pepe nocturno
 night = load(DIR / "wallpaper-pepe.png", W, H)
@@ -121,5 +165,6 @@ def apagar(fig, light):
     dark = np.array([34, 32, 50])
     return dark + (light - dark) * (fig @ [0.299, 0.587, 0.114])[..., None] / 255
 save(paste(night, apagar(mago, np.array([150, 150, 180])), apagar(lej, np.array([115, 115, 145])),
-           apagar(hyp, np.array([128, 128, 158]))), DIR / "wallpaper.jpg")
+           apagar(hyp, np.array([128, 128, 158])), apagar(ast, np.array([140, 140, 170]))),
+     DIR / "wallpaper.jpg")
 print("ok")
