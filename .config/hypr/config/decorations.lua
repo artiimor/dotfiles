@@ -4,7 +4,7 @@ hl.config({
     general = {
         gaps_in = 3,
         gaps_out = 8,
-        border_size = 2,
+        border_size = 1,
         extend_border_grab_area = 10,
         resize_on_border = true,
         col = {
@@ -33,13 +33,16 @@ hl.config({
     },
     decoration = {
         dim_special = 0.3,
-        rounding = 0,
-        active_opacity = 0.95,
-        inactive_opacity = 0.85,
+        rounding = 10,
+        active_opacity = 1,
+        inactive_opacity = 1,
+        -- La inactiva se distingue oscureciéndola un poco, sin transparencia
+        dim_inactive = true,
+        dim_strength = 0.1,
         fullscreen_opacity = 1,
         blur = {
             size = 5,
-            passes = 4,
+            passes = 2,
             special = true,
         },
     },
