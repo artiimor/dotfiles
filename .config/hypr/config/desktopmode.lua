@@ -105,7 +105,7 @@ end, { description = "Modo escritorio" })
 hl.bind("SUPER + M", hl.dsp.window.move({ workspace = "special:minimized", follow = false }), { description = "Minimizar" })
 
 -- Snap como macOS: al soltar una ventana arrastrada con el cursor pegado al borde
---   izquierda/derecha → media pantalla   arriba → maximizar y minimizar el resto
+--   izquierda/derecha → media pantalla   arriba → maximizar (igual que el botón □)
 -- No hay evento de "fin de arrastre": con Super se escucha el clic izquierdo
 -- (sin consumirlo) y se compara la posición al pulsar y al soltar; con la barra
 -- de título avisa hyprbars (opción on_drag_end, parche local del plugin).
@@ -161,11 +161,6 @@ function DesktopSnap()
 		hl.dispatch(hl.dsp.window.resize({ x = half, y = mh, window = w }))
 		hl.dispatch(hl.dsp.window.move({ x = x, y = my, window = w }))
 	elseif c.y <= m.y + r.top + EDGE then -- soltar sobre la barra de arriba cuenta como borde
-		for _, other in ipairs(hl.get_workspace_windows(w.workspace)) do
-			if other.address ~= w.address then
-				hl.dispatch(hl.dsp.window.move({ workspace = "special:minimized", follow = false, window = other }))
-			end
-		end
 		hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "set", window = w }))
 	elseif w.at.y < my then
 		-- Como el menú de macOS: la barra de título nunca se queda debajo de la barra de arriba
