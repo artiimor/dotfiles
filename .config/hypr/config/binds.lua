@@ -95,7 +95,7 @@ end, { repeating = true })
 
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(launchPrefix .. TERMINAL), { description = "Terminal" })
 hl.bind(mainMod .. " + F", hl.dsp.exec_cmd(launchPrefix .. FILE_MANAGER), { description = "Archivos" })
-hl.bind(mainMod .. " + T", hl.dsp.exec_cmd(launchPrefix .. EDITOR), { description = "Editor" })
+hl.bind(mainMod .. " + CTRL + T", hl.dsp.exec_cmd(launchPrefix .. EDITOR), { description = "Editor" })
 hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd(launchPrefix .. CALCULATOR), { description = "Calculadora" })
 hl.bind("XF86Calculator", hl.dsp.exec_cmd(launchPrefix .. CALCULATOR))
 hl.bind("CONTROL + SHIFT + Escape", hl.dsp.exec_cmd(launchPrefix .. TERMINAL .. " -e btop"), { description = "Monitor del sistema (btop)" })
@@ -110,8 +110,9 @@ hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("qs ipc call launcher apps"), { d
 hl.bind(mainMod .. " + CTRL + V", hl.dsp.exec_cmd("qs ipc call launcher clipboard"), { description = "Portapapeles" })
 hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("qs ipc call launcher power"), { description = "Menú de energía" })
 hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("qs ipc call launcher emoji"), { description = "Emojis" })
-hl.bind(mainMod .. " + CTRL + T", hl.dsp.exec_cmd("qs ipc call launcher themes"), { description = "Tema de colores" })
+hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("qs ipc call launcher themes"), { description = "Tema de colores" })
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("qs ipc call launcher keys"), { description = "Chuleta de atajos" })
+hl.bind(mainMod .. " + ALT + K", hl.dsp.exec_cmd("qs ipc call launcher keys"))
 
 ---------------------------
 ---- HARDWARE CONTROLS ----
