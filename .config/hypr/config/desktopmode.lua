@@ -211,9 +211,14 @@ if hl.plugin.hyprbars then
 				col = { text = "rgba(d9d6e6ff)" },
 				bar_text_font = "JetBrainsMono Nerd Font Propo",
 				bar_text_size = 11,
-				bar_text_align = "left",
+				bar_text_align = "center",
 				bar_padding = 10,
 				bar_button_padding = 8,
+				-- Estilo macOS: botones a la izquierda, símbolo solo al pasar el ratón,
+				-- y grises en las ventanas sin foco
+				bar_buttons_alignment = "left",
+				icon_on_hover = true,
+				inactive_button_color = "rgba(80808099)",
 				bar_part_of_window = true,
 				bar_precedence_over_border = true,
 				on_double_click = MAXIMIZE,
@@ -222,10 +227,10 @@ if hl.plugin.hyprbars then
 			},
 		},
 	})
-	-- Se añaden de derecha a izquierda: × queda en la esquina
-	hl.plugin.hyprbars.add_button({ bg_color = "rgba(e89bd0ff)", fg_color = THEME_BG, size = 12, icon = "×", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
-	hl.plugin.hyprbars.add_button({ bg_color = "rgba(86d4dcff)", fg_color = THEME_BG, size = 12, icon = "□", action = MAXIMIZE })
-	hl.plugin.hyprbars.add_button({ bg_color = "rgba(a99bd6ff)", fg_color = THEME_BG, size = 12, icon = "–", action = [[hyprctl dispatch 'hl.dsp.window.move({ workspace = "special:minimized", follow = false })']] })
+	-- Alineados a la izquierda se añaden de izquierda a derecha: cerrar, minimizar, maximizar
+	hl.plugin.hyprbars.add_button({ bg_color = "rgba(ff5f57ff)", fg_color = "rgba(4d0000cc)", size = 12, icon = "×", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
+	hl.plugin.hyprbars.add_button({ bg_color = "rgba(febc2eff)", fg_color = "rgba(5a3e00cc)", size = 12, icon = "–", action = [[hyprctl dispatch 'hl.dsp.window.move({ workspace = "special:minimized", follow = false })']] })
+	hl.plugin.hyprbars.add_button({ bg_color = "rgba(28c840ff)", fg_color = "rgba(004d00cc)", size = 12, icon = "+", action = MAXIMIZE })
 	-- Solo las ventanas que ha hecho flotar el modo escritorio llevan barra
 	hl.window_rule({ match = { tag = "negative:desktop" }, ["hyprbars:no_bar"] = true })
 end
