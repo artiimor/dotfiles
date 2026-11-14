@@ -18,9 +18,21 @@ export BAT_THEME="ansi"
 command -v starship >/dev/null && eval "$(starship init bash)"
 
 # Info del sistema al abrir la terminal (config en ~/.config/fastfetch/config.jsonc)
-# con un Pepe al azar de ~/.config/fastfetch/pepe-*.txt (los genera pepe.py)
+# con un Pepe ASCII al azar (pepe-*.txt, los genera pepe.py; theme-set los tiñe en themed/)
 if command -v fastfetch >/dev/null; then
     pepes=(~/.config/fastfetch/pepe-*.txt)
-    fastfetch --logo "${pepes[RANDOM % ${#pepes[@]}]}" --logo-type file-raw
+    pepe=$(basename "${pepes[RANDOM % ${#pepes[@]}]}" .txt)
     unset pepes
+    logo=~/.config/fastfetch/themed/$pepe.txt
+    [ -f "$logo" ] || logo=~/.config/fastfetch/$pepe.txt
+    if [ "$pepe" = pepe-mago ]; then
+        # el mago es alto: los "break" de la config bajan la info a la altura de la túnica
+        fastfetch --logo "$logo" --logo-type file-raw
+    else
+        cfg="${XDG_RUNTIME_DIR:-/tmp}/fastfetch-pepe.jsonc"
+        sed '/"break", "break"/d' ~/.config/fastfetch/config.jsonc > "$cfg"
+        fastfetch -c "$cfg" --logo "$logo" --logo-type file-raw
+        unset cfg
+    fi
+    unset pepe logo
 fi
