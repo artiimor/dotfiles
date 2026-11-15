@@ -1,0 +1,112 @@
+/* Colores Miami night (los mismos que Quickshell, hyprlock y kitty) */
+@define-color bg        rgba(26, 16, 51, 0.80);
+@define-color surface   #262335;
+@define-color fg        #f0eff1;
+@define-color muted     #5d6088;
+@define-color accent    #848bbd;
+@define-color accentHi  #a3a9d6;
+@define-color accentDim #5f6394;
+@define-color red       #fe4450;
+
+* {
+    color: @fg;
+}
+
+window {
+    background: #1a1033;
+}
+
+/* Las "islas": tarjeta de login y barra de arriba */
+frame {
+    background: @bg;
+    border: 1px solid alpha(@accent, 0.35);
+    border-radius: 14px;
+    padding: 18px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+}
+
+label {
+    color: @fg;
+}
+
+entry,
+dropdown > button,
+combobox > box > button {
+    background: @surface;
+    color: @fg;
+    border: 1px solid alpha(@muted, 0.3);
+    border-radius: 8px;
+    min-height: 38px;
+    padding: 0 12px;
+    box-shadow: none;
+    outline: none;
+}
+entry:focus-within {
+    border-color: @accent;
+}
+
+button {
+    background: @surface;
+    color: @fg;
+    border: none;
+    border-radius: 8px;
+    padding: 6px 14px;
+    box-shadow: none;
+    transition: all 0.2s ease;
+}
+button:hover {
+    background: alpha(@accent, 0.15);
+    color: @accent;
+}
+
+/* Botón de entrar: el degradado de los workspaces */
+button.suggested-action {
+    background: linear-gradient(45deg, @accent, @accentDim);
+    color: #1a1033;
+    font-weight: bold;
+}
+button.suggested-action:hover {
+    background: linear-gradient(45deg, @accentHi, @accent);
+}
+
+/* Reiniciar / apagar */
+button.destructive-action {
+    background: transparent;
+    color: @red;
+}
+button.destructive-action:hover {
+    background: @red;
+    color: #1a1033;
+}
+
+/* Errores (contraseña mala) */
+infobar, .error {
+    color: @red;
+}
+
+button.suggested-action label {
+    color: #1a1033;
+}
+
+/* Reiniciar / apagar: botones fantasma abajo */
+box.horizontal > button:not(.suggested-action) {
+    background: transparent;
+    color: @muted;
+    border: 1px solid alpha(@muted, 0.3);
+}
+box.horizontal > button:not(.suggested-action):hover {
+    background: alpha(@red, 0.2);
+    border-color: @red;
+    color: @red;
+}
+
+/* ...pero los desplegables de usuario y sesión vuelven a su estilo */
+combobox box.horizontal > button:not(.suggested-action) {
+    background: @surface;
+    color: @fg;
+    border: 1px solid alpha(@muted, 0.3);
+}
+combobox box.horizontal > button:not(.suggested-action):hover {
+    border-color: @accent;
+    color: @fg;
+}

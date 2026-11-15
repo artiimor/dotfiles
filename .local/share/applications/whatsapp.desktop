@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=WhatsApp
+Comment=WhatsApp
+Exec=brave --new-window --ozone-platform=wayland --app="https://web.whatsapp.com"
+Icon=/home/morci/.local/share/applications/icons/whatsapp.png
+Terminal=false
+Type=Application
+StartupNotify=true

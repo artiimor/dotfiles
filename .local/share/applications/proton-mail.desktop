@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Proton Mail
+Comment=Proton Mail
+Exec=brave --new-window --ozone-platform=wayland --app="https://mail.proton.me"
+Icon=/home/morci/.local/share/applications/icons/proton-mail.png
+Terminal=false
+Type=Application
+StartupNotify=true

@@ -1,0 +1,23 @@
+[background]
+path = "/usr/share/backgrounds/greeter.jpg"
+fit = "Cover"
+
+[GTK]
+application_prefer_dark_theme = true
+cursor_theme_name = "Adwaita"
+font_name = "JetBrainsMono Nerd Font Propo 14"
+icon_theme_name = "breeze-dark"
+theme_name = "Adwaita"
+
+[commands]
+reboot = [ "systemctl", "reboot" ]
+poweroff = [ "systemctl", "poweroff" ]
+
+[appearance]
+greeting_msg = "cachyos-x8664"
+
+[widget.clock]
+format = "%A, %B %d  ·  %H:%M"
+resolution = "500ms"
+label_width = 320
+locale = "en_US"

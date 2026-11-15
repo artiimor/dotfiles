@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=Proton Calendar
+Comment=Proton Calendar
+Exec=brave --new-window --ozone-platform=wayland --app="https://calendar.proton.me"
+Icon=/home/morci/.local/share/applications/icons/proton-calendar.png
+Terminal=false
+Type=Application
+StartupNotify=true
