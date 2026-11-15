@@ -1,23 +1,23 @@
-# Generado por theme-set a partir de themes/kanagawa-dragon/theme.json: no editar
-palette = 0=#0d0c0c
+# Generado por theme-set a partir de themes/grafito/theme.json: no editar
+palette = 0=#17191b
 palette = 1=#c4746e
 palette = 2=#8a9a7b
 palette = 3=#c4b28a
 palette = 4=#8ba4b0
 palette = 5=#a292a3
 palette = 6=#8ea4a2
-palette = 7=#c8c093
-palette = 8=#a6a69c
+palette = 7=#d4d6d9
+palette = 8=#8e9298
 palette = 9=#e46876
 palette = 10=#87a987
 palette = 11=#e6c384
 palette = 12=#7fb4ca
 palette = 13=#938aa9
 palette = 14=#7aa89f
-palette = 15=#c5c9c5
-background = #181616
-foreground = #c5c9c5
+palette = 15=#f4f5f6
+background = #232528
+foreground = #e8eaed
 cursor-color = #c8c093
-cursor-text = #181616
+cursor-text = #232528
 selection-background = #2d4f67
 selection-foreground = #c8c093

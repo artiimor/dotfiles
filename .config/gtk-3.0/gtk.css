@@ -1,17 +1,17 @@
-/* Generado por theme-set a partir de themes/kanagawa-dragon/theme.json: no editar */
+/* Generado por theme-set a partir de themes/grafito/theme.json: no editar */
 @define-color accent_color #c8c093;
-@define-color accent_bg_color #625e5a;
-@define-color accent_fg_color #0d0c0c;
-@define-color window_bg_color #181616;
-@define-color window_fg_color #c5c9c5;
-@define-color view_bg_color #12120f;
-@define-color view_fg_color #c5c9c5;
-@define-color headerbar_bg_color #12120f;
-@define-color headerbar_fg_color #c5c9c5;
-@define-color sidebar_bg_color #12120f;
-@define-color sidebar_fg_color #c5c9c5;
-@define-color card_bg_color #282727;
-@define-color popover_bg_color #12120f;
-@define-color popover_fg_color #c5c9c5;
-@define-color dialog_bg_color #12120f;
-@define-color dialog_fg_color #c5c9c5;
+@define-color accent_bg_color #8e9298;
+@define-color accent_fg_color #17191b;
+@define-color window_bg_color #232528;
+@define-color window_fg_color #e8eaed;
+@define-color view_bg_color #1c1e21;
+@define-color view_fg_color #e8eaed;
+@define-color headerbar_bg_color #1c1e21;
+@define-color headerbar_fg_color #e8eaed;
+@define-color sidebar_bg_color #1c1e21;
+@define-color sidebar_fg_color #e8eaed;
+@define-color card_bg_color #34373b;
+@define-color popover_bg_color #1c1e21;
+@define-color popover_fg_color #e8eaed;
+@define-color dialog_bg_color #1c1e21;
+@define-color dialog_fg_color #e8eaed;

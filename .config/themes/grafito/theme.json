@@ -1,0 +1,92 @@
+{
+  "name": "Grafito",
+  "ui": {
+    "bg": "#1c1e21",
+    "surface": "#232528",
+    "fg": "#e8eaed",
+    "muted": "#8e9298",
+    "accent": "#c8c093",
+    "accent2": "#8ea4a2",
+    "accentDim": "#404349",
+    "ok": "#87a987",
+    "red": "#c4746e",
+    "yellow": "#c4b28a",
+    "pink": "#a292a3",
+    "cyan": "#8ea4a2",
+    "peach": "#b6927b",
+    "butter": "#c4b28a",
+    "mint": "#8a9a7b",
+    "border": "#c4c6c9",
+    "launcherBg": "#202225",
+    "launcherSel": "#34373b"
+  },
+  "hypr": {
+    "border": [
+      "#c4c6c9"
+    ],
+    "inactive": "#34373b88",
+    "group": "#c8c093"
+  },
+  "term": {
+    "background": "#232528",
+    "foreground": "#e8eaed",
+    "cursor": "#c8c093",
+    "selection_background": "#2d4f67",
+    "selection_foreground": "#c8c093",
+    "colors": [
+      "#17191b",
+      "#c4746e",
+      "#8a9a7b",
+      "#c4b28a",
+      "#8ba4b0",
+      "#a292a3",
+      "#8ea4a2",
+      "#d4d6d9",
+      "#8e9298",
+      "#e46876",
+      "#87a987",
+      "#e6c384",
+      "#7fb4ca",
+      "#938aa9",
+      "#7aa89f",
+      "#f4f5f6"
+    ]
+  },
+  "gtk": {
+    "accent": "#c8c093",
+    "accentBg": "#8e9298",
+    "accentFg": "#17191b",
+    "window": "#232528",
+    "fg": "#e8eaed",
+    "view": "#1c1e21",
+    "headerbar": "#1c1e21",
+    "card": "#34373b"
+  },
+  "nvim": "kanagawa-dragon",
+  "nvimColors": {
+    "ui": {
+      "nontext": "#7a7e84",
+      "whitespace": "#404349",
+      "special": "#b8bcc2"
+    },
+    "syn": {
+      "string": "#b5d68a",
+      "number": "#f08fb0",
+      "constant": "#ffb37a",
+      "identifier": "#f5d58f",
+      "parameter": "#d0ccec",
+      "fun": "#8fd0f0",
+      "statement": "#c4a8f0",
+      "keyword": "#c4a8f0",
+      "operator": "#ff7a85",
+      "preproc": "#ff7a85",
+      "type": "#8fd4c4",
+      "regex": "#ff7a85",
+      "punct": "#cfd1d4",
+      "comment": "#9da1a7",
+      "special1": "#b4c4e8",
+      "special2": "#ff7a85",
+      "special3": "#ff7a85"
+    }
+  }
+}
