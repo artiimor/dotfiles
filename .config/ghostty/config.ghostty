@@ -57,8 +57,8 @@ keybind = shift+insert=paste_from_clipboard
 # Cerrar sin preguntar aunque haya algo corriendo
 confirm-close-surface = false
 
-# Transparencia del fondo solo (el texto queda opaco), igual que kitty; Hyprland pone el blur
-background-opacity = 0.93
+# Fondo opaco (antes 0.93 con blur de Hyprland), igual que kitty
+background-opacity = 1
 
 # Colores generados por ~/.config/themes/theme-set
 theme = current
