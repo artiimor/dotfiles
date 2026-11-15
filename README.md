@@ -82,10 +82,21 @@ Workspace numbers are bound by keycode, so they also work on AZERTY keyboards.
 
 ## Installation
 
-There's no script: copy whatever you want into your `~`.
+On a fresh CachyOS install:
 
 ```sh
-git clone https://github.com/artiimor/dotfiles.git
+git clone https://github.com/artiimor/dotfiles.git ~/dotfiles
+~/dotfiles/install.sh        # asks before each step; --yes does everything
+```
+
+It installs the packages (plus `bzmenu` from the AUR), copies the dotfiles and web apps into `~`
+(anything it overwrites goes to `~/.dotfiles-old/<date>`), applies a theme, builds the patched `hyprbars`
+and, optionally, sets up the system parts in `system/`: greetd + ReGreet login, the Plymouth boot theme
+and the keyd Alt/Super swap for the ThinkPad keyboard.
+
+Or copy just what you want by hand:
+
+```sh
 cp -r dotfiles/.config/* ~/.config/
 cp dotfiles/.bashrc dotfiles/.bash_profile ~/
 ```
@@ -101,5 +112,5 @@ After copying, run `~/.config/themes/theme-set miami` (or any other theme) to ge
 Things you'll probably want to change:
 
 - `.config/hypr/config/variables.lua`: default apps and monitor names.
-- `.config/hypr/config/inputs.lua`: keyboard layout (`us` altgr-intl). On my ThinkPad, Alt and Super are swapped with keyd, outside this repo.
+- `.config/hypr/config/inputs.lua`: keyboard layout (`us` altgr-intl). On my ThinkPad, Alt and Super are swapped with keyd (`system/etc/keyd`).
 - `.config/quickshell/Theme.qml`: the wallpaper paths.
