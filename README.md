@@ -19,7 +19,7 @@ Designed by me and implemented with help from [Claude Code](https://claude.com/c
 - **macOS-style titlebars** on every floating window (close, minimize, maximize), using a patched `hyprbars` plugin.
 - **Color theme switcher** (`.config/themes`): one `theme.json` per theme that colors Hyprland, Quickshell,
   hyprlock, ghostty, kitty, btop, GTK, Qt/KDE, fzf, fastfetch and running Neovims at once.
-  Ships with miami, catppuccin, tokyo-night, rose-pine, gruvbox and vantablack. See `.config/themes/README.md`.
+  Ships with kanagawa-dragon, everforest, miami, catppuccin, tokyo-night, rose-pine, gruvbox and vantablack. See `.config/themes/README.md`.
 - **ghostty** as the terminal, bash + starship prompt, Neovim with LazyVim (own miami and vantablack colorschemes),
   btop, and fastfetch with a random ASCII Pepe tinted with the theme accent.
 

@@ -24,7 +24,7 @@ Cada carpeta con un `theme.json` es un tema. `current` es un enlace al tema acti
 | `hypr.group` | Borde de grupos de ventanas | Hyprland |
 | `term` | Fondo, texto, cursor, selección y los 16 colores ANSI (`colors[0..15]`) | kitty, btop, fzf, starship |
 | `gtk` | Ventanas, cabeceras, tarjetas y acento | apps GTK3/GTK4 |
-| `nvim` | Nombre del colorscheme: `catppuccin`, `tokyonight`, `rose-pine`, `gruvbox` | Neovim |
+| `nvim` | Nombre del colorscheme: `catppuccin`, `tokyonight`, `rose-pine`, `gruvbox`, `kanagawa-dragon`, `everforest` | Neovim |
 
 Cuándo se ve el cambio: Quickshell, Hyprland y kitty al momento; btop, Neovim
 y las apps GTK al volver a abrirlas; fzf en terminales nuevas; hyprlock en el

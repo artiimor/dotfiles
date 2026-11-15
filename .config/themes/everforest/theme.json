@@ -1,0 +1,66 @@
+{
+  "name": "Everforest",
+  "ui": {
+    "bg": "#232a2e",
+    "surface": "#2d353b",
+    "fg": "#d3c6aa",
+    "muted": "#7a8478",
+    "accent": "#a7c080",
+    "accent2": "#83c092",
+    "accentDim": "#425047",
+    "ok": "#a7c080",
+    "red": "#e67e80",
+    "yellow": "#dbbc7f",
+    "pink": "#d699b6",
+    "cyan": "#83c092",
+    "peach": "#e69875",
+    "butter": "#dbbc7f",
+    "mint": "#83c092",
+    "border": "#a7c080",
+    "launcherBg": "#232a2e",
+    "launcherSel": "#3d484d"
+  },
+  "hypr": {
+    "border": [
+      "#a7c080"
+    ],
+    "inactive": "#47525888",
+    "group": "#83c092"
+  },
+  "term": {
+    "background": "#2d353b",
+    "foreground": "#d3c6aa",
+    "cursor": "#d3c6aa",
+    "selection_background": "#543a48",
+    "selection_foreground": "#d3c6aa",
+    "colors": [
+      "#343f44",
+      "#e67e80",
+      "#a7c080",
+      "#dbbc7f",
+      "#7fbbb3",
+      "#d699b6",
+      "#83c092",
+      "#859289",
+      "#868d80",
+      "#e67e80",
+      "#a7c080",
+      "#dbbc7f",
+      "#7fbbb3",
+      "#d699b6",
+      "#83c092",
+      "#9da9a0"
+    ]
+  },
+  "gtk": {
+    "accent": "#a7c080",
+    "accentBg": "#425047",
+    "accentFg": "#d3c6aa",
+    "window": "#2d353b",
+    "fg": "#d3c6aa",
+    "view": "#232a2e",
+    "headerbar": "#232a2e",
+    "card": "#343f44"
+  },
+  "nvim": "everforest"
+}

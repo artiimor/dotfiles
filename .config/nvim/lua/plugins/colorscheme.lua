@@ -46,6 +46,25 @@ return {
   },
 
   {
+    "rebelot/kanagawa.nvim",
+    lazy = true,
+    opts = {
+      transparent = true,
+      background = { dark = "dragon" },
+    },
+  },
+
+  {
+    "neanias/everforest-nvim",
+    main = "everforest",
+    lazy = true,
+    opts = {
+      background = "medium",
+      transparent_background_level = 1,
+    },
+  },
+
+  {
     "LazyVim/LazyVim",
     opts = {
       colorscheme = theme_colorscheme(),
