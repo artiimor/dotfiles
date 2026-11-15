@@ -2,7 +2,7 @@
 
 require("config.animations")
 require("config.autostart")
-require("config.colors")
+require("config.theme") -- colores del tema activo (los genera ~/.config/themes/theme-set)
 require("config.decorations")
 require("config.variables")
 require("config.environment")

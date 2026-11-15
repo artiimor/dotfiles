@@ -242,7 +242,7 @@ hl.bind("mouse:272", function()
 	end
 end, { release = true, non_consuming = true, transparent = true, ignore_mods = true })
 
--- Barra de título (cerrar y maximizar) en las ventanas del modo escritorio.
+-- Barra de título (cerrar, minimizar y maximizar) en las ventanas flotantes.
 -- Es el plugin hyprbars de hyprwm/hyprland-plugins, compilado a mano: si tras
 -- actualizar Hyprland sale "version mismatch", recompílalo con el mismo tag:
 --   git clone https://github.com/hyprwm/hyprland-plugins && cd hyprland-plugins
