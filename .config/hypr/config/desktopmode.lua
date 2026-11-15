@@ -40,29 +40,33 @@ end
 -- Alto de la barra de hyprbars: se dibuja encima de w.at
 local TITLEBAR = 28
 
--- Al pasar de tiling a flotante la ventana conserva su sitio, pero la barra de
--- título (que va por encima de w.at) queda debajo de la barra de arriba: se baja
--- y se acorta lo mismo para que no se salga por abajo.
--- Va en window.update_state (abajo) para cubrir cualquier camino: atajo, gesto,
--- mover la ventana a un workspace en modo escritorio...
-local function keepBelowBar(w)
+-- Zona útil de un monitor para una ventana flotante (x, y, ancho, alto): sin las
+-- barras reservadas y dejando sitio a la barra de título
+local function usableArea(m)
+	local r = m.reserved
+	return m.x + r.left,
+		m.y + r.top + TITLEBAR,
+		math.floor(m.width / m.scale) - r.left - r.right,
+		math.floor(m.height / m.scale) - r.top - r.bottom - TITLEBAR
+end
+
+-- Al pasar de tiling a flotante la ventana conserva su sitio (y la barra de título
+-- quedaría bajo la barra de arriba) o recupera un tamaño flotante guardado que
+-- puede no caber: se encaja en la zona útil. Va en window.update_state (abajo)
+-- para cubrir cualquier camino: atajo, gesto, mover a un workspace en modo escritorio...
+local function fitOnScreen(w)
 	local m = w and w.floating and w.monitor
 	if not m then
 		return
 	end
-	-- Zona útil: sin barras reservadas y dejando sitio a la barra de título.
-	-- El tamaño flotante guardado puede ser mayor que la pantalla, así que se recorta.
-	local r = m.reserved
-	local left, top = m.x + r.left, m.y + r.top + TITLEBAR
-	local right = m.x + math.floor(m.width / m.scale) - r.right
-	local bottom = m.y + math.floor(m.height / m.scale) - r.bottom
+	local left, top, areaW, areaH = usableArea(m)
 	local x, y, width, height = w.at.x, w.at.y, w.size.x, w.size.y
-	if y >= top and y + height <= bottom and x >= left and x + width <= right then
+	if x >= left and y >= top and x + width <= left + areaW and y + height <= top + areaH then
 		return
 	end
-	width, height = math.min(width, right - left), math.min(height, bottom - top)
-	x = math.max(left, math.min(x, right - width))
-	y = math.max(top, math.min(y, bottom - height))
+	width, height = math.min(width, areaW), math.min(height, areaH)
+	x = math.max(left, math.min(x, left + areaW - width))
+	y = math.max(top, math.min(y, top + areaH - height))
 	-- primero el resize: Hyprland redimensiona manteniendo el centro y w.at cambia
 	hl.dispatch(hl.dsp.window.resize({ x = width, y = height, window = w }))
 	hl.dispatch(hl.dsp.window.move({ x = x, y = y, window = w }))
@@ -97,7 +101,7 @@ end
 
 hl.on("window.update_state", function(w, changes)
 	if changes and changes.float ~= nil then
-		keepBelowBar(w)
+		fitOnScreen(w)
 	end
 end)
 
@@ -185,10 +189,7 @@ function DesktopSnap()
 	if not (c and m) then
 		return
 	end
-	local r = m.reserved
-	local mx, my = m.x + r.left, m.y + r.top + TITLEBAR
-	local mw = math.floor(m.width / m.scale) - r.left - r.right
-	local mh = math.floor(m.height / m.scale) - r.top - r.bottom - TITLEBAR
+	local mx, my, mw, mh = usableArea(m)
 
 	if c.x <= m.x + EDGE or c.x >= m.x + m.width / m.scale - EDGE then
 		snapped[w.address] = snapped[w.address] or { x = w.size.x, y = w.size.y }
@@ -196,7 +197,7 @@ function DesktopSnap()
 		local x = c.x <= m.x + EDGE and mx or mx + mw - half
 		hl.dispatch(hl.dsp.window.resize({ x = half, y = mh, window = w }))
 		hl.dispatch(hl.dsp.window.move({ x = x, y = my, window = w }))
-	elseif c.y <= m.y + r.top + EDGE then -- soltar sobre la barra de arriba cuenta como borde
+	elseif c.y <= m.y + m.reserved.top + EDGE then -- soltar sobre la barra de arriba cuenta como borde
 		hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "set", window = w }))
 	elseif w.at.y < my then
 		-- Como el menú de macOS: la barra de título nunca se queda debajo de la barra de arriba
