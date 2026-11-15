@@ -37,6 +37,37 @@ local function hasTag(w, tag)
 	return (" " .. tags .. " "):find(" " .. tag .. " ", 1, true) ~= nil
 end
 
+-- Alto de la barra de hyprbars: se dibuja encima de w.at
+local TITLEBAR = 28
+
+-- Al pasar de tiling a flotante la ventana conserva su sitio, pero la barra de
+-- título (que va por encima de w.at) queda debajo de la barra de arriba: se baja
+-- y se acorta lo mismo para que no se salga por abajo.
+-- Va en window.update_state (abajo) para cubrir cualquier camino: atajo, gesto,
+-- mover la ventana a un workspace en modo escritorio...
+local function keepBelowBar(w)
+	local m = w and w.floating and w.monitor
+	if not m then
+		return
+	end
+	-- Zona útil: sin barras reservadas y dejando sitio a la barra de título.
+	-- El tamaño flotante guardado puede ser mayor que la pantalla, así que se recorta.
+	local r = m.reserved
+	local left, top = m.x + r.left, m.y + r.top + TITLEBAR
+	local right = m.x + math.floor(m.width / m.scale) - r.right
+	local bottom = m.y + math.floor(m.height / m.scale) - r.bottom
+	local x, y, width, height = w.at.x, w.at.y, w.size.x, w.size.y
+	if y >= top and y + height <= bottom and x >= left and x + width <= right then
+		return
+	end
+	width, height = math.min(width, right - left), math.min(height, bottom - top)
+	x = math.max(left, math.min(x, right - width))
+	y = math.max(top, math.min(y, bottom - height))
+	-- primero el resize: Hyprland redimensiona manteniendo el centro y w.at cambia
+	hl.dispatch(hl.dsp.window.resize({ x = width, y = height, window = w }))
+	hl.dispatch(hl.dsp.window.move({ x = x, y = y, window = w }))
+end
+
 local function makeFloat(w, center)
 	if w.floating then
 		return
@@ -63,6 +94,12 @@ local function makeTiled(w)
 	hl.dispatch(hl.dsp.window.tag({ tag = "-desktop", window = w }))
 	hl.dispatch(hl.dsp.window.float({ action = "disable", window = w }))
 end
+
+hl.on("window.update_state", function(w, changes)
+	if changes and changes.float ~= nil then
+		keepBelowBar(w)
+	end
+end)
 
 hl.on("window.open", function(w)
 	if w.workspace and desktop[w.workspace.name] then
@@ -110,7 +147,6 @@ hl.bind("SUPER + M", hl.dsp.window.move({ workspace = "special:minimized", follo
 -- (sin consumirlo) y se compara la posición al pulsar y al soltar; con la barra
 -- de título avisa hyprbars (opción on_drag_end, parche local del plugin).
 local EDGE = 4 -- píxeles de margen para considerar "pegado al borde"
-local TITLEBAR = 28 -- alto de la barra de hyprbars: se dibuja encima de w.at
 local pressedAt
 local snapped = {} -- tamaño previo de las ventanas en media pantalla, por dirección
 
