@@ -63,7 +63,7 @@ Singleton {
     readonly property color borderBase: ui.border ?? "#b893ce"
     readonly property color border: Qt.rgba(borderBase.r, borderBase.g, borderBase.b, 0.25)
 
-    readonly property string font: "JetBrainsMono Nerd Font Propo"
+    readonly property string font: "Inter"
     readonly property int fontSize: 13
     readonly property int iconSize: 12
 
