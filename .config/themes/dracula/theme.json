@@ -1,0 +1,66 @@
+{
+  "name": "Dracula",
+  "ui": {
+    "bg": "#21222c",
+    "surface": "#282a36",
+    "fg": "#f8f8f2",
+    "muted": "#6272a4",
+    "accent": "#bd93f9",
+    "accent2": "#ff79c6",
+    "accentDim": "#44475a",
+    "ok": "#50fa7b",
+    "red": "#ff5555",
+    "yellow": "#f1fa8c",
+    "pink": "#ff79c6",
+    "cyan": "#8be9fd",
+    "peach": "#ffb86c",
+    "butter": "#f1fa8c",
+    "mint": "#50fa7b",
+    "border": "#bd93f9",
+    "launcherBg": "#21222c",
+    "launcherSel": "#44475a"
+  },
+  "hypr": {
+    "border": [
+      "#bd93f9"
+    ],
+    "inactive": "#44475a88",
+    "group": "#ff79c6"
+  },
+  "term": {
+    "background": "#282a36",
+    "foreground": "#f8f8f2",
+    "cursor": "#f8f8f2",
+    "selection_background": "#44475a",
+    "selection_foreground": "#f8f8f2",
+    "colors": [
+      "#21222c",
+      "#ff5555",
+      "#50fa7b",
+      "#f1fa8c",
+      "#bd93f9",
+      "#ff79c6",
+      "#8be9fd",
+      "#f8f8f2",
+      "#6272a4",
+      "#ff6e6e",
+      "#69ff94",
+      "#ffffa5",
+      "#d6acff",
+      "#ff92df",
+      "#a4ffff",
+      "#ffffff"
+    ]
+  },
+  "gtk": {
+    "accent": "#bd93f9",
+    "accentBg": "#44475a",
+    "accentFg": "#f8f8f2",
+    "window": "#282a36",
+    "fg": "#f8f8f2",
+    "view": "#21222c",
+    "headerbar": "#21222c",
+    "card": "#343746"
+  },
+  "nvim": "dracula"
+}
