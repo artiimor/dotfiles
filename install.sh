@@ -139,8 +139,6 @@ if ask "¿Copiarlos?"; then
 		fi
 		cp "$REPO/$f" "$HOME/$f"
 	done
-	# .bash_profile carga ~/.cargo/env (rustup): que no falle si no existe
-	sed -i 's|^\. "\$HOME/\.cargo/env"|[[ -f "$HOME/.cargo/env" ]] \&\& . "$HOME/.cargo/env"|' "$HOME/.bash_profile"
 	fix_home "$HOME/.config/quickshell" "$HOME/.config/networkmanager-dmenu" \
 		"$HOME/.config/ghostty" "$HOME/.local/share/applications"
 	chmod +x "$HOME/.config/themes/theme-set" "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
