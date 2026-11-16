@@ -67,7 +67,7 @@ Singleton {
     readonly property int fontSize: 13
     readonly property int iconSize: 12
 
-    readonly property int barHeight: 34
+    readonly property int barHeight: 26
     readonly property int gap: 8      // separación entre islas y margen de la barra
     readonly property int radius: 10
 

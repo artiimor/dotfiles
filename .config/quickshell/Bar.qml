@@ -26,7 +26,8 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0; color: Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.75) }
+            GradientStop { position: 0; color: Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.9) }
+            GradientStop { position: 0.6; color: Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.6) }
             GradientStop { position: 1; color: "transparent" }
         }
     }
