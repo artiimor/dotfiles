@@ -14,7 +14,7 @@ hl.config({
     -- },
 })
 
--- Swap Alt/Super del ThinkPad: lo hace keyd (/etc/keyd/thinkpad.conf), no xkb
+-- Swap Alt/Super y CapsLock->Control del ThinkPad: lo hace keyd (/etc/keyd/thinkpad.conf), no xkb
 -- (con keymap por dispositivo Hyprland no aplicaba el modificador Super)
 
 hl.gesture({ fingers = 4, direction = "horizontal", action = "workspace" })
