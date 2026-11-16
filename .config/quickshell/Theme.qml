@@ -73,8 +73,8 @@ Singleton {
 
     // Fondo de pantalla (también se usa, desenfocado, en la pantalla de bloqueo)
     readonly property string wallpaper: "file:///home/morci/.config/backgrounds/wallpaper.jpg"
-    // Solo el escritorio: Pepe mago (wallhaven l3j97l)
-    readonly property string desktopWallpaper: "file:///home/morci/.config/backgrounds/pepe-mago.png"
+    // Solo el escritorio: el prado con todos los pepes en color
+    readonly property string desktopWallpaper: "file:///home/morci/.config/backgrounds/wallpaper-desktop.jpg"
 
     readonly property int anim: 250   // duración de las animaciones (ms)
     readonly property int drawerAnim: 400
