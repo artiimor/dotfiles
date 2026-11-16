@@ -1,37 +1,37 @@
 /* Generado por theme-set a partir de themes/grafito/theme.json: no editar */
 :root {
-    --accent-color: #c8c093;
-    --accent-bg-color: #8e9298;
-    --accent-fg-color: #17191b;
-    --window-bg-color: #232528;
-    --window-fg-color: #e8eaed;
-    --view-bg-color: #1c1e21;
-    --view-fg-color: #e8eaed;
-    --headerbar-bg-color: #1c1e21;
-    --headerbar-fg-color: #e8eaed;
-    --sidebar-bg-color: #1c1e21;
-    --sidebar-fg-color: #e8eaed;
+    --accent-color: #e2d29a;
+    --accent-bg-color: #a3a7ad;
+    --accent-fg-color: #0f1012;
+    --window-bg-color: #1a1c1f;
+    --window-fg-color: #f2f3f5;
+    --view-bg-color: #141518;
+    --view-fg-color: #f2f3f5;
+    --headerbar-bg-color: #141518;
+    --headerbar-fg-color: #f2f3f5;
+    --sidebar-bg-color: #141518;
+    --sidebar-fg-color: #f2f3f5;
     --card-bg-color: #34373b;
-    --popover-bg-color: #1c1e21;
-    --popover-fg-color: #e8eaed;
-    --dialog-bg-color: #1c1e21;
-    --dialog-fg-color: #e8eaed;
+    --popover-bg-color: #141518;
+    --popover-fg-color: #f2f3f5;
+    --dialog-bg-color: #141518;
+    --dialog-fg-color: #f2f3f5;
 }
 
 /* Lo mismo con nombres antiguos, para libadwaita < 1.6 */
-@define-color accent_color #c8c093;
-@define-color accent_bg_color #8e9298;
-@define-color accent_fg_color #17191b;
-@define-color window_bg_color #232528;
-@define-color window_fg_color #e8eaed;
-@define-color view_bg_color #1c1e21;
-@define-color view_fg_color #e8eaed;
-@define-color headerbar_bg_color #1c1e21;
-@define-color headerbar_fg_color #e8eaed;
-@define-color sidebar_bg_color #1c1e21;
-@define-color sidebar_fg_color #e8eaed;
+@define-color accent_color #e2d29a;
+@define-color accent_bg_color #a3a7ad;
+@define-color accent_fg_color #0f1012;
+@define-color window_bg_color #1a1c1f;
+@define-color window_fg_color #f2f3f5;
+@define-color view_bg_color #141518;
+@define-color view_fg_color #f2f3f5;
+@define-color headerbar_bg_color #141518;
+@define-color headerbar_fg_color #f2f3f5;
+@define-color sidebar_bg_color #141518;
+@define-color sidebar_fg_color #f2f3f5;
 @define-color card_bg_color #34373b;
-@define-color popover_bg_color #1c1e21;
-@define-color popover_fg_color #e8eaed;
-@define-color dialog_bg_color #1c1e21;
-@define-color dialog_fg_color #e8eaed;
+@define-color popover_bg_color #141518;
+@define-color popover_fg_color #f2f3f5;
+@define-color dialog_bg_color #141518;
+@define-color dialog_fg_color #f2f3f5;

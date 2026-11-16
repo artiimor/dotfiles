@@ -3,6 +3,6 @@
 
 THEME_BORDER   = { "rgba(c4c6c9ff)" }
 THEME_INACTIVE = "rgba(34373b88)"
-THEME_GROUP    = "rgba(c8c093ff)"
-THEME_ACCENT   = "rgba(c8c093ff)"
-THEME_BG       = "rgba(1c1e21ff)"
+THEME_GROUP    = "rgba(e2d29aff)"
+THEME_ACCENT   = "rgba(e2d29aff)"
+THEME_BG       = "rgba(141518ff)"
