@@ -130,11 +130,12 @@ hl.bind("SUPER + ALT + D", function()
 	if not ws then
 		return
 	end
-	desktop[ws.name] = not desktop[ws.name] or nil
+	local on = not desktop[ws.name]
+	desktop[ws.name] = on or nil
 	save()
 	local windows = hl.get_workspace_windows(ws)
 	for _, w in ipairs(windows) do
-		if desktop[ws.name] then
+		if on then
 			-- Si estaba sola ocupaba toda la pantalla: se pone al tamaño de las nuevas
 			makeFloat(w, #windows == 1)
 		else
@@ -152,18 +153,50 @@ hl.bind("SUPER + M", hl.dsp.window.move({ workspace = "special:minimized", follo
 -- de título avisa hyprbars (opción on_drag_end, parche local del plugin).
 local EDGE = 4 -- píxeles de margen para considerar "pegado al borde"
 local pressedAt
-local snapped = {} -- tamaño previo de las ventanas en media pantalla, por dirección
+local snapped = {} -- tamaño previo de las ventanas en media pantalla, por address
 
-local function snapTarget()
-	local w = hl.get_active_window()
-	if not (w and w.floating and w.workspace and desktop[w.workspace.name]) then
-		return nil
+-- Ventana activa si es flotante y está en un workspace en modo escritorio
+local function snapTarget(w)
+	w = w or hl.get_active_window()
+	if w and w.floating and w.workspace and desktop[w.workspace.name] then
+		return w
 	end
-	return w
+end
+
+-- Clic en una ventana flotante o maximizada (de cualquier workspace) = sale delante.
+-- Con follow_mouse = 1 el hover ya le da el foco pero no la sube, y el clic sobre
+-- una ventana que ya tiene el foco tampoco: por eso se sube a mano.
+local function raise(w)
+	if w.fullscreen == 0 then
+		if w.floating then
+			hl.dispatch(hl.dsp.window.bring_to_top()) -- w es la activa
+		end
+		return
+	end
+	-- Una maximizada/pantalla completa va en su propia capa: bring_to_top no la pone
+	-- sobre las flotantes que se abrieron encima (allowed_over_fullscreen). Volver a
+	-- maximizarla les quita ese permiso y quedan detrás.
+	if not w.workspace then
+		return
+	end
+	for _, o in ipairs(hl.get_workspace_windows(w.workspace)) do
+		if o.allowed_over_fullscreen and o.visible and not o.pinned and o.address ~= w.address then
+			-- El modo se guarda antes: w está vivo y tras el unset w.fullscreen vale 0,
+			-- que como modo significa pantalla completa total
+			local mode = w.fullscreen == 1 and "maximized" or "fullscreen"
+			hl.dispatch(hl.dsp.window.fullscreen({ mode = mode, action = "unset", window = w }))
+			hl.dispatch(hl.dsp.window.fullscreen({ mode = mode, action = "set", window = w }))
+			return
+		end
+	end
 end
 
 hl.bind("mouse:272", function()
-	local w = snapTarget()
+	local active = hl.get_active_window()
+	if active then
+		raise(active)
+	end
+	local w = snapTarget(active)
 	pressedAt = w and { x = w.at.x, y = w.at.y } or nil
 end, { non_consuming = true, transparent = true, ignore_mods = true })
 
@@ -191,10 +224,11 @@ function DesktopSnap()
 	end
 	local mx, my, mw, mh = usableArea(m)
 
-	if c.x <= m.x + EDGE or c.x >= m.x + m.width / m.scale - EDGE then
+	local atLeft = c.x <= m.x + EDGE
+	if atLeft or c.x >= m.x + m.width / m.scale - EDGE then
 		snapped[w.address] = snapped[w.address] or { x = w.size.x, y = w.size.y }
 		local half = math.floor(mw / 2)
-		local x = c.x <= m.x + EDGE and mx or mx + mw - half
+		local x = atLeft and mx or mx + mw - half
 		hl.dispatch(hl.dsp.window.resize({ x = half, y = mh, window = w }))
 		hl.dispatch(hl.dsp.window.move({ x = x, y = my, window = w }))
 	elseif c.y <= m.y + m.reserved.top + EDGE then -- soltar sobre la barra de arriba cuenta como borde
@@ -252,7 +286,9 @@ end, { release = true, non_consuming = true, transparent = true, ignore_mods = t
 local HYPRBARS = os.getenv("HOME") .. "/.local/lib/hyprland/hyprbars.so"
 local MAXIMIZE = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })']]
 
-if io.open(HYPRBARS) then
+local so = io.open(HYPRBARS)
+if so then
+	so:close() -- solo se abría para ver si existe
 	hl.plugin.load(HYPRBARS)
 end
 
