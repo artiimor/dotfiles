@@ -21,15 +21,15 @@ command -v starship >/dev/null && eval "$(starship init bash)"
 HISTSIZE=10000
 HISTFILESIZE=20000
 HISTCONTROL=ignoreboth:erasedups
-shopt -s histappend autocd cdspell
+shopt -s histappend cdspell
 PROMPT_COMMAND="history -a${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
 
-# ls con iconos y git (eza) y cat con colores (bat)
+# ls con git (eza) y cat con colores (bat)
 if command -v eza >/dev/null; then
-    alias ls='eza --icons=auto --group-directories-first'
-    alias ll='eza -l --icons=auto --group-directories-first --git --no-user --time-style=relative'
+    alias ls='eza --group-directories-first'
+    alias ll='eza -l --group-directories-first --git --no-user --time-style=relative'
     alias la='ll -a'
-    alias tree='eza --tree --icons=auto --level=2'
+    alias tree='eza --tree --level=2'
 fi
 command -v bat >/dev/null && alias cat='bat --paging=never --style=plain'
 
