@@ -62,7 +62,7 @@
     "headerbar": "#1c1e21",
     "card": "#34373b"
   },
-  "nvim": "kanagawa-dragon",
+  "nvim": "dracula",
   "nvimColors": {
     "ui": {
       "nontext": "#7a7e84",
