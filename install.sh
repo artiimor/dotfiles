@@ -10,7 +10,7 @@
 #   2. Apps extra (Firefox, Brave, Spotify, Discord, Proton...)
 #   3. Dotfiles: .config, .bashrc, webapps -> ~ (lo que pisa va a ~/.dotfiles-old/<fecha>)
 #   4. Tema de colores (theme-set)
-#   5. Plugin hyprbars con el parche del modo escritorio
+#   5. Plugin hyprbars con el parche del modo escritorio (y quita los botones propios de GTK/Brave)
 #   6. Sistema (sudo): greetd + ReGreet, Plymouth "canalla", keyd (ThinkPad), servicios
 #
 # Ejecútalo como tu usuario, no como root: pide sudo cuando lo necesita.
@@ -176,6 +176,30 @@ if command -v Hyprland >/dev/null && ask "¿Compilar hyprbars?"; then
 		warn "no se pudo compilar (¿no hay tag v$ver en hyprland-plugins?). Sin él todo funciona, solo que sin barras de título."
 	fi
 	rm -rf "$dir"
+fi
+
+# Los botones de cerrar/minimizar/maximizar los pone hyprbars (estilo macOS):
+# se quitan los que dibujan las propias apps para que no salgan dos veces
+if ask "¿Quitar los botones de ventana propios de GTK y Brave (se quedan solo los de hyprbars)?"; then
+	# GTK 4 / libadwaita lo lee de aquí; GTK 3 de gtk-3.0/settings.ini (paso 3)
+	gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:' 2>/dev/null || true
+	# Brave: "Usar la barra de título y los bordes del sistema" (brave://settings/appearance).
+	# Con Brave abierto el cambio se pierde al cerrarlo, así que solo se toca si está cerrado
+	prefs="$HOME/.config/BraveSoftware/Brave-Browser/Default/Preferences"
+	if pgrep -x brave >/dev/null; then
+		warn "Brave está abierto: ciérralo y repite este paso, o actívalo en brave://settings/appearance"
+	elif [[ -f "$prefs" ]]; then
+		python3 - "$prefs" <<-'EOF'
+			import json, sys
+			p = sys.argv[1]
+			d = json.load(open(p))
+			d.setdefault("browser", {})["custom_chrome_frame"] = False
+			json.dump(d, open(p, "w"), separators=(",", ":"))
+		EOF
+		info "Brave usará la barra del sistema"
+	else
+		info "Brave aún no tiene perfil: ábrelo una vez y repite este paso"
+	fi
 fi
 
 # ---------------------------------------------------------------- 6. sistema
