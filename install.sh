@@ -8,7 +8,7 @@
 # Pasos (cada uno se puede saltar):
 #   1. Paquetes del escritorio (pacman) y los de AUR (bzmenu) con makepkg
 #   2. Apps extra (Firefox, Brave, Spotify, Discord, Proton...)
-#   3. Dotfiles: .config, .bashrc, webapps -> ~ (lo que pisa va a ~/.dotfiles-old/<fecha>)
+#   3. Dotfiles: .config, .bashrc, webapps -> ~ (lo que pisa va a ~/.dotfiles-old/<fecha>) y bash como shell
 #   4. Tema de colores (theme-set)
 #   5. Plugin hyprbars con el parche del modo escritorio (y quita los botones propios de GTK/Brave)
 #   6. Sistema (sudo): greetd + ReGreet, Plymouth "canalla", keyd (ThinkPad), servicios
@@ -149,6 +149,12 @@ if ask "¿Copiarlos?"; then
 	[[ -d "$BACKUP" ]] && info "copias de lo anterior en $BACKUP"
 fi
 
+# CachyOS pone fish de shell por defecto; la config de este repo es la de bash (.bashrc)
+if [[ "$(getent passwd "$USER" | cut -d: -f7)" != */bash ]] && ask "¿Usar bash como shell (en vez de fish)?"; then
+	sudo chsh -s /bin/bash "$USER"
+	info "shell cambiado a bash: se nota al volver a iniciar sesión"
+fi
+
 # ---------------------------------------------------------------- 4. tema
 
 step "4. Tema de colores"
@@ -167,7 +173,8 @@ if command -v Hyprland >/dev/null && ask "¿Compilar hyprbars?"; then
 	if git clone https://github.com/hyprwm/hyprland-plugins "$dir/hp" &&
 		{ git -C "$dir/hp" checkout -q "v$ver" 2>/dev/null ||
 			git -C "$dir/hp" checkout -q "v${ver%.*}.0"; } &&
-		git -C "$dir/hp" apply "$REPO/.config/hypr/hyprbars-on-drag-end.patch" &&
+		git -C "$dir/hp" apply "$REPO/.config/hypr/hyprbars-on-drag-end.patch" \
+			"$REPO/.config/hypr/hyprbars-hover-icon.patch" &&
 		make -C "$dir/hp/hyprbars" all; then
 		mkdir -p "$HOME/.local/lib/hyprland"
 		cp "$dir/hp/hyprbars/hyprbars.so" "$HOME/.local/lib/hyprland/"
