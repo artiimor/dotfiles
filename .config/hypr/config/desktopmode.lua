@@ -280,8 +280,9 @@ end, { release = true, non_consuming = true, transparent = true, ignore_mods = t
 -- Es el plugin hyprbars de hyprwm/hyprland-plugins, compilado a mano: si tras
 -- actualizar Hyprland sale "version mismatch", recompílalo con el mismo tag:
 --   git clone https://github.com/hyprwm/hyprland-plugins && cd hyprland-plugins
---   git checkout v<versión> && git apply ~/.config/hypr/hyprbars-on-drag-end.patch
---   make -C hyprbars all   (el parche añade on_drag_end y on_drag_start_eval, que usa el snap)
+--   git checkout v<versión> && git apply ~/.config/hypr/hyprbars-on-drag-end.patch ~/.config/hypr/hyprbars-hover-icon.patch
+--   make -C hyprbars all   (los parches añaden on_drag_end y on_drag_start_eval, que usa el snap,
+--                           y hover_icon en add_button: el símbolo cambia al pasar el ratón)
 --   cp hyprbars/hyprbars.so ~/.local/lib/hyprland/
 local HYPRBARS = os.getenv("HOME") .. "/.local/lib/hyprland/hyprbars.so"
 local MAXIMIZE = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })']]
@@ -304,11 +305,11 @@ if hl.plugin.hyprbars then
 				bar_text_align = "center",
 				bar_padding = 10,
 				bar_button_padding = 8,
-				-- Estilo macOS: botones a la izquierda, símbolo solo al pasar el ratón,
-				-- y grises en las ventanas sin foco
+				-- Estilo macOS: botones a la izquierda, un punto que cambia a su símbolo al pasar el ratón (hover_icon),
+				-- todos grises (más apagados en las ventanas sin foco)
 				bar_buttons_alignment = "left",
 				icon_on_hover = true,
-				inactive_button_color = "rgba(80808099)",
+				inactive_button_color = "rgba(8e8e9355)",
 				bar_part_of_window = true,
 				bar_precedence_over_border = true,
 				on_double_click = MAXIMIZE,
@@ -318,9 +319,9 @@ if hl.plugin.hyprbars then
 		},
 	})
 	-- Alineados a la izquierda se añaden de izquierda a derecha: cerrar, minimizar, maximizar
-	hl.plugin.hyprbars.add_button({ bg_color = "rgba(ff5f57ff)", fg_color = "rgba(4d0000cc)", size = 12, icon = "×", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
-	hl.plugin.hyprbars.add_button({ bg_color = "rgba(febc2eff)", fg_color = "rgba(5a3e00cc)", size = 12, icon = "–", action = [[hyprctl dispatch 'hl.dsp.window.move({ workspace = "special:minimized", follow = false })']] })
-	hl.plugin.hyprbars.add_button({ bg_color = "rgba(28c840ff)", fg_color = "rgba(004d00cc)", size = 12, icon = "+", action = MAXIMIZE })
+	hl.plugin.hyprbars.add_button({ bg_color = "rgba(8e8e93ff)", fg_color = "rgba(2c2c2ecc)", size = 12, icon = "·", hover_icon = "×", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
+	hl.plugin.hyprbars.add_button({ bg_color = "rgba(8e8e93ff)", fg_color = "rgba(2c2c2ecc)", size = 12, icon = "·", hover_icon = "–", action = [[hyprctl dispatch 'hl.dsp.window.move({ workspace = "special:minimized", follow = false })']] })
+	hl.plugin.hyprbars.add_button({ bg_color = "rgba(8e8e93ff)", fg_color = "rgba(2c2c2ecc)", size = 12, icon = "·", hover_icon = "+", action = MAXIMIZE })
 	-- Barra en todas las ventanas flotantes, estén o no en modo escritorio
 	hl.window_rule({ match = { float = false }, ["hyprbars:no_bar"] = true })
 end

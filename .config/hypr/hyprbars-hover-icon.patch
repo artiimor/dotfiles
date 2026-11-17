@@ -1,0 +1,107 @@
+diff --git a/hyprbars/barDeco.cpp b/hyprbars/barDeco.cpp
+index 5faffe6..2ada119 100644
+--- a/hyprbars/barDeco.cpp
++++ b/hyprbars/barDeco.cpp
+@@ -389,6 +389,8 @@ void CHyprBar::renderBarButtons(Render::CRenderContext& ctx, CBox* barBox, const
+             color = m_bWindowHasFocus ? color : configColor(INACTIVECOLOR);
+             if (INVALIDATEICONS && button.userfg && button.iconTex)
+                 button.iconTex = nullptr;
++            if (INVALIDATEICONS && button.userfg && button.hoverIconTex)
++                button.hoverIconTex = nullptr;
+         }
+ 
+         color.a *= a;
+@@ -431,27 +433,37 @@ void CHyprBar::renderBarButtonsText(Render::CRenderContext& ctx, CBox* barBox, c
+         bool       hovering   = VECINRECT(COORDS, currentPos.x, currentPos.y, currentPos.x + button.size + BARBUTTONPADDING, currentPos.y + button.size);
+         noScaleOffset += BARBUTTONPADDING + button.size;
+ 
+-        const bool NEEDICON = !button.icon.empty() &&
+-            (!button.iconTex || button.iconTex->m_texID == 0 || !button.m_fIconScale.has_value() || std::abs(button.m_fIconScale.value_or(0.F) - scale) > 1e-6);
+-        if (NEEDICON) {
+-            // render icon
+-            auto fgcol = button.userfg ? button.fgcol : (button.bgcol.r + button.bgcol.g + button.bgcol.b < 1) ? CHyprColor(0xFFFFFFFF) : CHyprColor(0xFF000000);
+-
+-            button.iconTex =
+-                g_pHyprRenderer->renderText(button.icon, fgcol, std::round(button.size * 0.62 * scale), false, g_pGlobalState->config.barTextFont->value(), scaledButtonSize);
+-            button.m_fIconScale = scale;
+-        }
+-
+-        if (!button.iconTex || button.iconTex->m_texID == 0)
++        const auto fgcol = button.userfg ? button.fgcol : (button.bgcol.r + button.bgcol.g + button.bgcol.b < 1) ? CHyprColor(0xFFFFFFFF) : CHyprColor(0xFF000000);
++        const auto ensureTex = [&](const std::string& text, SP<Render::ITexture>& tex, std::optional<float>& texScale) {
++            const bool NEEDICON =
++                !text.empty() && (!tex || tex->m_texID == 0 || !texScale.has_value() || std::abs(texScale.value_or(0.F) - scale) > 1e-6);
++            if (!NEEDICON)
++                return;
++            tex      = g_pHyprRenderer->renderText(text, fgcol, std::round(button.size * 0.62 * scale), false, g_pGlobalState->config.barTextFont->value(), scaledButtonSize);
++            texScale = scale;
++        };
++
++        ensureTex(button.icon, button.iconTex, button.m_fIconScale);
++        ensureTex(button.hoverIcon, button.hoverIconTex, button.m_fHoverIconScale);
++
++        // with hover_icon: icon at rest, hover_icon while the cursor is over the buttons
++        const bool HASHOVERICON = !button.hoverIcon.empty();
++        const bool GROUPHOVERED = m_iButtonHoverState > 0;
++        const auto TEX          = HASHOVERICON && GROUPHOVERED ? button.hoverIconTex : button.iconTex;
++        const bool SHOWICON     = HASHOVERICON || !ICONONHOVER || GROUPHOVERED;
++
++        if (!TEX || TEX->m_texID == 0) {
++            offset += scaledButtonsPad + scaledButtonSize;
+             continue;
++        }
+ 
+-        const auto iconX = barBox->x + (BUTTONSRIGHT ? barBox->width - offset - scaledButtonSize / 2.0 : offset + scaledButtonSize / 2.0) - button.iconTex->m_size.x / 2.0;
+-        const auto iconY = barBox->y + barBox->height / 2.0 - button.iconTex->m_size.y / 2.0;
+-        CBox       pos   = {iconX, iconY, button.iconTex->m_size.x, button.iconTex->m_size.y};
++        const auto iconX = barBox->x + (BUTTONSRIGHT ? barBox->width - offset - scaledButtonSize / 2.0 : offset + scaledButtonSize / 2.0) - TEX->m_size.x / 2.0;
++        const auto iconY = barBox->y + barBox->height / 2.0 - TEX->m_size.y / 2.0;
++        CBox       pos   = {iconX, iconY, TEX->m_size.x, TEX->m_size.y};
+         pos.round(); // snap to whole pixels, otherwise the icon is sampled at a half-pixel offset and blurs
+ 
+-        if (!ICONONHOVER || (ICONONHOVER && m_iButtonHoverState > 0))
+-            g_pHyprOpenGL->renderTexture(ctx, button.iconTex, pos, {.a = a});
++        if (SHOWICON)
++            g_pHyprOpenGL->renderTexture(ctx, TEX, pos, {.a = a});
+         offset += scaledButtonsPad + scaledButtonSize;
+ 
+         bool currentBit = (m_iButtonHoverState & (1 << i)) != 0;
+diff --git a/hyprbars/globals.hpp b/hyprbars/globals.hpp
+index 0a09a3b..bf2d706 100644
+--- a/hyprbars/globals.hpp
++++ b/hyprbars/globals.hpp
+@@ -21,6 +21,10 @@ struct SHyprButton {
+     std::string          icon    = "";
+     SP<Render::ITexture> iconTex;
+     std::optional<float> m_fIconScale;
++    // optional: icon shown while the cursor is over the buttons (icon is shown otherwise)
++    std::string          hoverIcon = "";
++    SP<Render::ITexture> hoverIconTex;
++    std::optional<float> m_fHoverIconScale;
+ };
+ 
+ class CHyprBar;
+diff --git a/hyprbars/main.cpp b/hyprbars/main.cpp
+index d47ea42..bb7e827 100644
+--- a/hyprbars/main.cpp
++++ b/hyprbars/main.cpp
+@@ -120,6 +120,19 @@ int newLuaButton(lua_State* L) {
+         button.icon = lua_tostring(L, -1);
+     }
+ 
++    {
++        Hyprutils::Utils::CScopeGuard x([L] { lua_pop(L, 1); });
++
++        lua_getfield(L, 1, "hover_icon");
++
++        if (!lua_isnil(L, -1)) {
++            if (!lua_isstring(L, -1))
++                return Config::Lua::Bindings::Internal::configError(L, "add_button: hover_icon must be a string");
++
++            button.hoverIcon = lua_tostring(L, -1);
++        }
++    }
++
+     {
+         Hyprutils::Utils::CScopeGuard x([L] { lua_pop(L, 1); });
+ 
