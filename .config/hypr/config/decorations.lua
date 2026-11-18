@@ -33,7 +33,17 @@ hl.config({
     },
     decoration = {
         dim_special = 0.3,
-        rounding = 0,
+        -- Esquinas redondeadas y sombra como las ventanas de Plasma (Sur-Gris)
+        rounding = 10,
+        rounding_power = 2,
+        shadow = {
+            enabled = true,
+            range = 24,
+            render_power = 3,
+            offset = "0 6",
+            color = "rgba(00000077)",
+            color_inactive = "rgba(00000044)",
+        },
         active_opacity = 1,
         inactive_opacity = 1,
         -- La inactiva se distingue oscureciéndola un poco, sin transparencia

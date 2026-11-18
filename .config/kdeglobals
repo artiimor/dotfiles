@@ -4,7 +4,7 @@ Name=Miami Night
 TerminalApplication=kitty
 
 [Icons]
-Theme=Papirus-Dark
+Theme=Sur-Transparente
 
 [KDE]
 contrast=4
