@@ -86,6 +86,8 @@ for _, m in ipairs(floatApps) do hl.window_rule({ match = m, float = true }) end
 -- the "waybar-popup" class name is kept because Quickshell launches btop with it
 hl.window_rule({ match = { class = "^(waybar-popup)$" }, float = true, size = { 940, 640 }, move = { "monitor_w - 950", 50 } })
 hl.window_rule({ match = { class = "^(org.pulseaudio.pavucontrol)$" }, float = true, size = { 640, 420 }, move = { "monitor_w - 650", 50 } })
+-- "Network Settings…" from the macshell wifi panel (macOS-style window)
+hl.window_rule({ match = { class = "^(org\\.quickshell)$", title = "^(Network)$" }, float = true, size = { 560, 660 }, center = true })
 
 -- Float Common Modals
 local modalMatches = {
