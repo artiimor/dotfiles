@@ -38,7 +38,7 @@ local function hasTag(w, tag)
 end
 
 -- Alto de la barra de hyprbars: se dibuja encima de w.at
-local TITLEBAR = 32 -- como la barra Sur-Gris de Plasma
+local TITLEBAR = PROFILE_MAC and 32 or 28 -- mac: como la barra Sur-Gris de Plasma
 
 -- Zona útil de un monitor para una ventana flotante (x, y, ancho, alto): sin las
 -- barras reservadas y dejando sitio a la barra de título
@@ -298,14 +298,15 @@ if hl.plugin.hyprbars then
 		plugin = {
 			hyprbars = {
 				bar_height = TITLEBAR,
-				-- Colores, fuente y medidas de la decoración Sur-Gris de Plasma
-				bar_color = "rgba(2d2d2dff)",
-				col = { text = "rgba(e1e1e1ff)" },
-				bar_text_font = "Noto Sans",
-				bar_text_size = 10,
+				-- mac: colores, fuente y medidas de la decoración Sur-Gris de Plasma;
+				-- default: el fondo del tema de colores y JetBrains Mono
+				bar_color = PROFILE_MAC and "rgba(2d2d2dff)" or THEME_BG,
+				col = { text = PROFILE_MAC and "rgba(e1e1e1ff)" or "rgba(d9d6e6ff)" },
+				bar_text_font = PROFILE_MAC and "Noto Sans" or "JetBrainsMono Nerd Font Propo",
+				bar_text_size = PROFILE_MAC and 10 or 11,
 				bar_text_align = "center",
-				bar_padding = 16,
-				bar_button_padding = 10,
+				bar_padding = PROFILE_MAC and 16 or 10,
+				bar_button_padding = PROFILE_MAC and 10 or 8,
 				-- Estilo macOS: botones a la izquierda, un punto que cambia a su símbolo al pasar el ratón (hover_icon),
 				-- todos grises (más apagados en las ventanas sin foco)
 				bar_buttons_alignment = "left",

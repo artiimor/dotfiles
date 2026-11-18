@@ -91,8 +91,8 @@ PanelWindow {
     // Colores propios del launcher (vienen del tema: launcherBg / launcherSel)
     readonly property color bgColor: Theme.launcherBg
     readonly property color selColor: Theme.launcherSel
-    // Menús cortos (apagar, temas): sin buscador
-    readonly property bool noSearch: ["power", "themes"].includes(Launcher.mode)
+    // Menús cortos (apagar, temas, configs): sin buscador
+    readonly property bool noSearch: ["power", "themes", "configs"].includes(Launcher.mode)
 
     Rectangle {
         id: box

@@ -17,9 +17,20 @@ import qs.modules
 ShellRoot {
     id: root
 
-    // Si está instalada la barra estilo macOS (macshell, repo plasma-mac), ella
-    // pone la barra superior, las notificaciones y el Spotlight (la arranca
-    // autostart.lua). Para volver a la barra de aquí, borra/renombra esa carpeta.
+    // Perfil del escritorio (~/.local/state/desktop-profile, lo escribe
+    // ~/.config/themes/config-set; se elige con Super+Shift+T):
+    //   "mac"      la barra superior, las notificaciones y el Spotlight los pone
+    //              macshell (repo plasma-mac, lo arranca autostart.lua / config-set)
+    //   "default"  la barra y las notificaciones de aquí
+    // Sin archivo: "mac" si está macshell. "mac" sin macshell = "default".
+    // config-set reinicia qs al cambiar de perfil, así que basta leerlo al arrancar.
+    FileView {
+        id: profileFile
+        printErrors: false
+        path: Quickshell.env("HOME") + "/.local/state/desktop-profile"
+        onLoaded: root.profileChecked = true
+        onLoadFailed: root.profileChecked = true
+    }
     FileView {
         id: macshell
         printErrors: false
@@ -27,11 +38,13 @@ ShellRoot {
         onLoaded: root.macChecked = true
         onLoadFailed: root.macChecked = true
     }
-    // La comprobación es asíncrona: hasta que acabe no se crea la barra ni las
+    // Las comprobaciones son asíncronas: hasta que acaben no se crea la barra ni las
     // notificaciones de aquí (si no, se quedarían con el servidor de notificaciones)
+    property bool profileChecked: false
     property bool macChecked: false
-    readonly property bool macBar: macshell.loaded
-    readonly property bool ownBar: macChecked && !macBar
+    readonly property string profile: profileFile.loaded ? profileFile.text().trim() : ""
+    readonly property bool macBar: macshell.loaded && root.profile !== "default"
+    readonly property bool ownBar: profileChecked && macChecked && !macBar
 
     // Una barra por cada pantalla conectada
     Variants {

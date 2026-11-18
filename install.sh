@@ -9,7 +9,7 @@
 #   1. Paquetes del escritorio (pacman) y los de AUR (bzmenu) con makepkg
 #   2. Apps extra (Firefox, Brave, Spotify, Discord, Proton...)
 #   3. Dotfiles: .config, .bashrc, webapps -> ~ (lo que pisa va a ~/.dotfiles-old/<fecha>) y bash como shell
-#   4. Tema de colores (theme-set)
+#   4. Tema de colores (theme-set) y perfil Mac/Default (config-set)
 #   5. Plugin hyprbars con el parche del modo escritorio (y quita los botones propios de GTK/Brave)
 #   6. Sistema (sudo): greetd + ReGreet, Plymouth "canalla", keyd (ThinkPad), servicios
 #
@@ -141,7 +141,7 @@ if ask "¿Copiarlos?"; then
 	done
 	fix_home "$HOME/.config/quickshell" "$HOME/.config/networkmanager-dmenu" \
 		"$HOME/.config/ghostty" "$HOME/.local/share/applications"
-	chmod +x "$HOME/.config/themes/theme-set" "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
+	chmod +x "$HOME/.config/themes/theme-set" "$HOME/.config/themes/config-set" "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
 	# Cursor por defecto (Adwaita) también para apps X11
 	mkdir -p "$HOME/.icons/default"
 	printf '[Icon Theme]\nName=Default\nInherits=Adwaita\n' >"$HOME/.icons/default/index.theme"
@@ -160,6 +160,11 @@ fi
 step "4. Tema de colores"
 if [[ -x "$HOME/.config/themes/theme-set" ]] && ask "¿Aplicar el tema $THEME?"; then
 	"$HOME/.config/themes/theme-set" "$THEME" || warn "theme-set falló; repítelo dentro de Hyprland"
+fi
+# Perfil del escritorio (Super+Shift+T): "mac" si está macshell (repo plasma-mac), si no "default".
+# Ajusta iconos GTK/Qt y qt6ct a ese perfil (el repo los trae como en "mac")
+if [[ -x "$HOME/.config/themes/config-set" ]]; then
+	"$HOME/.config/themes/config-set" --reapply || warn "config-set falló; repítelo dentro de Hyprland"
 fi
 
 # ---------------------------------------------------------------- 5. hyprbars

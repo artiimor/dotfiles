@@ -7,7 +7,8 @@
 //   clipboard   historial de cliphist             (Super+Ctrl+V)
 //   emoji       selector de emojis                (Super+.)
 //   profiles    perfil de energía                 (clic en el icono de la barra)
-//   themes      tema de colores                   (Super+Ctrl+T)
+//   themes      tema de colores                   (Super+T)
+//   configs     perfil del escritorio: Config Mac / Config Default  (Super+Shift+T)
 //   keys        chuleta de atajos de Hyprland     (Super+?)
 //   dmenu       menú genérico para scripts: lo usa scripts/dmenu-qs
 //               (wifi con networkmanager_dmenu, bluetooth con bzmenu)
@@ -28,8 +29,8 @@ Singleton {
     property var items: []         // [{ text, icon, glyph, sub, data }]
 
     // Tamaño y sitio de la ventana según el modo (como estaba en wofi)
-    readonly property int width: ({ apps: 360, clipboard: 640, emoji: 420, power: 220, themes: 260, keys: 520 })[mode] ?? 320
-    readonly property bool centered: ["apps", "clipboard", "emoji", "power", "themes", "keys"].includes(mode)
+    readonly property int width: ({ apps: 360, clipboard: 640, emoji: 420, power: 220, themes: 260, configs: 260, keys: 520 })[mode] ?? 320
+    readonly property bool centered: ["apps", "clipboard", "emoji", "power", "themes", "configs", "keys"].includes(mode)
 
     // Abre un modo, o lo cierra si ya estaba abierto (como `pkill wofi || wofi`)
     function toggle(m) {
@@ -75,6 +76,10 @@ Singleton {
             prompt = "Tema";
             items = [];
             themeList.running = true;
+        } else if (m === "configs") {
+            prompt = "Config";
+            items = [];
+            configList.running = true;
         } else if (m === "keys") {
             prompt = "Atajos";
             items = [];
@@ -123,6 +128,9 @@ Singleton {
             copyAndPaste(`printf '%s' "$1" | wl-copy`, item.glyph);
         } else if (m === "themes") {
             Quickshell.execDetached([root.themesDir + "/theme-set", item.data]);
+        } else if (m === "configs") {
+            // config-set reinicia Quickshell (este proceso incluido): setsid para que no muera con él
+            Quickshell.execDetached(["setsid", "-f", root.themesDir + "/config-set", item.data]);
         }
     }
 
@@ -239,6 +247,26 @@ for t in sorted(os.listdir(d)):
         }
     }
 
+    // ── Configs (perfiles del escritorio) ─────────────────
+    // `config-set --list` da "<perfil>\t<nombre>\t<1 si es el actual>"; al elegir
+    // uno, config-set cambia Hyprland, la barra, iconos y Qt (ver ese script)
+    Process {
+        id: configList
+        command: [root.themesDir + "/config-set", "--list"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.items = text.split("\n").filter(l => l).map(l => {
+                    const [id, name, cur] = l.split("\t");
+                    return {
+                        text: name + (cur === "1" ? "  " + String.fromCodePoint(0xF012C) : ""),
+                        glyph: id === "mac" ? String.fromCodePoint(0xF0035) : String.fromCodePoint(0xF0379),
+                        data: id
+                    };
+                });
+            }
+        }
+    }
+
     // ── dmenu (para scripts) ──────────────────────────────
     // scripts/dmenu-qs deja las opciones en <dir>/items y espera la respuesta
     // en el fifo <dir>/out. Cadena vacía = cancelado.
@@ -277,6 +305,7 @@ for t in sorted(os.listdir(d)):
         function emoji(): void { root.toggle("emoji"); }
         function profiles(): void { root.toggle("profiles"); }
         function themes(): void { root.toggle("themes"); }
+        function configs(): void { root.toggle("configs"); }
         function keys(): void { root.toggle("keys"); }
         function close(): void { root.close(); }
         function dmenu(dir: string, prompt: string, password: bool): void { root.showDmenu(dir, prompt, password); }

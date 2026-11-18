@@ -33,17 +33,8 @@ hl.config({
     },
     decoration = {
         dim_special = 0.3,
-        -- Esquinas redondeadas y sombra como las ventanas de Plasma (Sur-Gris)
-        rounding = 10,
-        rounding_power = 2,
-        shadow = {
-            enabled = true,
-            range = 24,
-            render_power = 3,
-            offset = "0 6",
-            color = "rgba(00000077)",
-            color_inactive = "rgba(00000044)",
-        },
+        -- Perfil "default": esquinas rectas y la sombra por defecto de Hyprland
+        rounding = 0,
         active_opacity = 1,
         inactive_opacity = 1,
         -- La inactiva se distingue oscureciéndola un poco, sin transparencia
@@ -57,3 +48,21 @@ hl.config({
         },
     },
 })
+
+-- Perfil "mac": esquinas redondeadas y sombra como las ventanas de Plasma (Sur-Gris)
+if PROFILE_MAC then
+    hl.config({
+        decoration = {
+            rounding = 10,
+            rounding_power = 2,
+            shadow = {
+                enabled = true,
+                range = 24,
+                render_power = 3,
+                offset = "0 6",
+                color = "rgba(00000077)",
+                color_inactive = "rgba(00000044)",
+            },
+        },
+    })
+end

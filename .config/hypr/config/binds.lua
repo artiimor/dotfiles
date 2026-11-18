@@ -106,14 +106,19 @@ hl.bind(mainMod .. " + V", hl.dsp.send_shortcut({ mods = "SHIFT", key = "Insert"
 hl.bind(mainMod .. " + X", hl.dsp.send_shortcut({ mods = "CTRL", key = "X" }), { description = "Cortar" })
 
 -- Lanzador y menús de Quickshell (pulsar otra vez cierra)
--- Buscador de macshell (barra estilo macOS); si no está, el lanzador de siempre
+-- Perfil "mac": Spotlight, energía y notificaciones de macshell (si fallan, los de siempre).
+-- Perfil "default": el lanzador, el menú de energía y las notificaciones de Quickshell
 local macshell = "qs -p ~/.config/quickshell/macshell ipc call "
-hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd(macshell .. "spotlight toggle || qs ipc call launcher apps"), { description = "Buscar" })
+local function shellCmd(mac, own)
+	return PROFILE_MAC and (macshell .. mac .. " || " .. own) or own
+end
+hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd(shellCmd("spotlight toggle", "qs ipc call launcher apps")), { description = PROFILE_MAC and "Buscar" or "Lanzador de apps" })
 hl.bind(mainMod .. " + SHIFT + Space", hl.dsp.exec_cmd("qs ipc call launcher apps"), { description = "Lanzador de apps" })
 hl.bind(mainMod .. " + CTRL + V", hl.dsp.exec_cmd("qs ipc call launcher clipboard"), { description = "Portapapeles" })
-hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd(macshell .. "power toggle || qs ipc call launcher power"), { description = "Menú de energía" })
+hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd(shellCmd("power toggle", "qs ipc call launcher power")), { description = "Menú de energía" })
 hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("qs ipc call launcher emoji"), { description = "Emojis" })
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("qs ipc call launcher themes"), { description = "Tema de colores" })
+hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("qs ipc call launcher configs"), { description = "Config (Mac / Default)" })
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("qs ipc call launcher keys"), { description = "Chuleta de atajos" })
 hl.bind(mainMod .. " + ALT + K", hl.dsp.exec_cmd("qs ipc call launcher keys"))
 
@@ -152,7 +157,7 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("qs ipc call brightness down"),
 -- Screen Capture
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprshot -m region"), { description = "Captura de una zona" })
 -- Notifications
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(macshell .. "center toggle || qs ipc call notifs toggle"), { description = "Notificaciones" })
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(shellCmd("center toggle", "qs ipc call notifs toggle")), { description = "Notificaciones" })
 
 -- Lock
 hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("loginctl lock-session"), { description = "Bloquear" })

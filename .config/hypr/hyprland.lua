@@ -1,5 +1,6 @@
 -- CachyOS Hyprland Configuration
 
+require("config.profile") -- perfil "mac" o "default" (ver profile.lua y themes/config-set)
 require("config.animations")
 require("config.autostart")
 require("config.keyd") -- keyd al esquema de Hyprland (ver keyd.lua)

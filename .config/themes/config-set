@@ -1,0 +1,219 @@
+#!/usr/bin/env python3
+# Cambia el perfil ("config") del escritorio en Hyprland: Mac o Default.
+#
+#   config-set              lista los perfiles (* = el actual)
+#   config-set <perfil>     aplica un perfil: mac | default
+#   config-set --reapply    vuelve a aplicar el actual (p.ej. tras install.sh)
+#   config-set --list       para el menú de Quickshell: "<perfil>\t<nombre>\t<1 si es el actual>"
+#
+# También desde el menú: Super+Shift+T (modo "configs" del launcher de Quickshell).
+#
+#   mac      barra macshell (repo plasma-mac) con Spotlight (Super+Espacio),
+#            PowerMenu (Super+Esc) y centro de notificaciones (Super+A); ventanas
+#            con esquinas redondeadas y sombra; hyprbars gris Sur-Gris; iconos
+#            Sur-Transparente; Qt con estilo Breeze, colores mac-dark y Noto Sans
+#   default  lo de antes del estilo Mac: barra, lanzador, menú de energía y
+#            notificaciones de Quickshell; esquinas rectas; hyprbars con el color
+#            del tema; iconos Papirus-Dark; Qt con Fusion y los colores del tema
+#
+# Lo común a los dos (cursor Adwaita, keyd, qt6ct como tema de plataforma Qt,
+# temas de color, etc.) no lo toca este script.
+#
+# El perfil se guarda en ~/.local/state/desktop-profile y lo leen:
+#
+#   Hyprland     hypr/config/profile.lua (decoración, hyprbars,     (hyprctl reload)
+#                atajos y autostart)
+#   Quickshell   shell.qml (su barra/notificaciones o las de macshell) (se reinicia qs)
+#
+# y este script escribe además (al abrir cada app):
+#
+#   GTK          gtk-3.0/settings.ini, gtk-4.0/settings.ini y gsettings: iconos
+#   Qt           qt6ct/qt6ct.conf: estilo, colores, iconos y fuentes
+#   KDE          kdeglobals [Icons] (Dolphin)
+#
+# Todo se aplica sin cerrar sesión. Las apps ya abiertas mantienen sus iconos y
+# estilo Qt hasta que se vuelven a abrir.
+
+import configparser
+import os
+import re
+import subprocess
+import sys
+import time
+
+HOME = os.path.expanduser("~")
+CONF = f"{HOME}/.config"
+STATE = f"{HOME}/.local/state/desktop-profile"
+MACSHELL = f"{CONF}/quickshell/macshell"
+
+PROFILES = {
+    "mac": {
+        "name": "Config Mac",
+        "icons": "Sur-Transparente",
+        "qt_style": "Breeze",
+        "qt_colors": "mac-dark.conf",  # no la toca theme-set
+        "qt_fonts": {
+            "fixed": '"Noto Sans Mono,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"',
+            "general": '"Noto Sans,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"',
+        },
+    },
+    "default": {
+        "name": "Config Default",
+        "icons": "Papirus-Dark",
+        "qt_style": "Fusion",
+        "qt_colors": "current.conf",  # la genera theme-set con el tema activo
+        "qt_fonts": None,
+    },
+}
+
+quiet = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+def has_macshell():
+    return os.path.isfile(f"{MACSHELL}/shell.qml")
+
+
+def current():
+    # Igual que profile.lua y shell.qml: sin archivo, "mac" si está macshell
+    try:
+        p = open(STATE).read().strip()
+    except OSError:
+        p = ""
+    if p not in PROFILES:
+        p = "mac" if has_macshell() else "default"
+    return p
+
+
+# ── Archivos de cada programa ────────────────────────────────
+
+def set_key(path, key, value):
+    # key=value en un .ini simple (settings.ini de GTK), sin tocar lo demás
+    if not os.path.exists(path):
+        return
+    text = open(path).read()
+    line = f"{key}={value}"
+    if re.search(rf"^{re.escape(key)}=", text, re.M):
+        text = re.sub(rf"^{re.escape(key)}=.*$", line, text, flags=re.M)
+    else:
+        text = text.rstrip("\n") + "\n" + line + "\n"
+    open(path, "w").write(text)
+
+
+def set_gtk(p):
+    for d in ("gtk-3.0", "gtk-4.0"):
+        set_key(f"{CONF}/{d}/settings.ini", "gtk-icon-theme-name", p["icons"])
+    subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "icon-theme", p["icons"]], **quiet)
+
+
+def set_qt(p):
+    path = f"{CONF}/qt6ct/qt6ct.conf"
+    cp = configparser.ConfigParser(interpolation=None)
+    cp.optionxform = str  # qt6ct distingue mayúsculas
+    cp.read(path)
+    if not cp.has_section("Appearance"):
+        cp.add_section("Appearance")
+    a = cp["Appearance"]
+    # $USER lo expande qt6ct (así venía en el repo)
+    a["color_scheme_path"] = f"/home/$USER/.config/qt6ct/colors/{p['qt_colors']}"
+    a["custom_palette"] = "true"
+    a["icon_theme"] = p["icons"]
+    a["style"] = p["qt_style"]
+    if p["qt_fonts"]:
+        if not cp.has_section("Fonts"):
+            cp.add_section("Fonts")
+        for k, v in p["qt_fonts"].items():
+            cp["Fonts"][k] = v
+    else:
+        cp.remove_section("Fonts")
+    os.makedirs(os.path.dirname(path), exist_ok=True)
+    with open(path, "w") as f:
+        cp.write(f, space_around_delimiters=False)
+
+
+def set_kde(p):
+    # kdeglobals [Icons] Theme= (theme-set conserva esa sección)
+    path = f"{CONF}/kdeglobals"
+    lines = open(path).read().splitlines() if os.path.exists(path) else []
+    out, sec, done = [], None, False
+    for line in lines:
+        if line.startswith("["):
+            if sec == "[Icons]" and not done:
+                out.append(f"Theme={p['icons']}")
+                done = True
+            sec = line.strip()
+        elif sec == "[Icons]" and line.startswith("Theme="):
+            line, done = f"Theme={p['icons']}", True
+        out.append(line)
+    if not done:
+        if sec != "[Icons]":
+            out += ["", "[Icons]"]
+        out.append(f"Theme={p['icons']}")
+    open(path, "w").write("\n".join(out).rstrip() + "\n")
+
+
+# ── Avisar a lo que ya está abierto ──────────────────────────
+
+def qs_running(path):
+    r = subprocess.run(["qs", "list", "-p", path], capture_output=True, text=True)
+    return "Process ID" in r.stdout
+
+
+def restart_shell(name):
+    if not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        return  # fuera de Hyprland (p.ej. install.sh): ya se verá al entrar
+    subprocess.run(["hyprctl", "reload"], **quiet)
+    # Quickshell: el de siempre (fondo, launcher, OSD, bloqueo... y en "default"
+    # la barra) y macshell. shell.qml solo mira el perfil al arrancar.
+    shells = [f"{CONF}/quickshell"]
+    if has_macshell():
+        shells.append(MACSHELL)
+    for s in shells:
+        subprocess.run(["qs", "kill", "-p", s], **quiet)
+    for _ in range(30):
+        if not any(qs_running(s) for s in shells):
+            break
+        time.sleep(0.1)
+    # Se arrancan desde Hyprland, igual que en autostart.lua (mismo entorno)
+    start = ["qs"]
+    if name == "mac" and has_macshell():
+        start.append(f"qs -p {MACSHELL}")
+    for cmd in start:
+        subprocess.run(["hyprctl", "dispatch", f"hl.dsp.exec_cmd('{cmd}')"], **quiet)
+    time.sleep(1.5)  # que haya servidor de notificaciones para el aviso
+    subprocess.run(["notify-send", "-a", "Config", "Config del escritorio", PROFILES[name]["name"]], **quiet)
+
+
+def apply(name):
+    if name == "mac" and not has_macshell():
+        print(f"Aviso: no está macshell ({MACSHELL}); \"mac\" se verá como \"default\" "
+              "en la barra (instálalo desde el repo plasma-mac)", file=sys.stderr)
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    tmp = STATE + ".tmp"
+    open(tmp, "w").write(name + "\n")
+    os.replace(tmp, STATE)
+    p = PROFILES[name]
+    set_gtk(p)
+    set_qt(p)
+    set_kde(p)
+    restart_shell(name)
+
+
+def main():
+    args = sys.argv[1:]
+    cur = current()
+    if not args:
+        for k in PROFILES:
+            print(("* " if k == cur else "  ") + k)
+        return
+    if args[0] == "--list":
+        for k, p in PROFILES.items():
+            print(k, p["name"], int(k == cur), sep="\t")
+        return
+    name = cur if args[0] == "--reapply" else args[0]
+    if name not in PROFILES:
+        sys.exit(f"No existe el perfil «{name}». Perfiles: {', '.join(PROFILES)}")
+    apply(name)
+
+
+if __name__ == "__main__":
+    main()
