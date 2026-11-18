@@ -1,8 +1,9 @@
 export BROWSER=firefox
 export TERM=xterm-kitty
 export QT_QPA_PLATFORM="wayland;xcb"
-# Qt lee ~/.config/kdeglobals como en Plasma (estilo Breeze, colores, iconos); antes qt6ct
-export QT_QPA_PLATFORMTHEME="kde"
+# Qt con qt6ct: estilo Breeze, iconos Sur-Transparente y colores mac-dark (qt6ct/colors/mac-dark.conf).
+# Las apps KDE (Dolphin) leen además ~/.config/kdeglobals. Plasma ya no está instalado.
+export QT_QPA_PLATFORMTHEME="qt6ct"
 export ELECTRON_OZONE_PLATFORM_HINT=auto
 export HYPRCURSOR_SIZE=24
 export XCURSOR_THEME="Adwaita"

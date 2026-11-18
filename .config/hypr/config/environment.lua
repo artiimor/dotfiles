@@ -9,6 +9,6 @@
 -- hl.env("LIBVA_DRIVER_NAME", "nvidia") -- Hardware acceleration on NVIDIA GPUs
 -- hl.env("__GL_GSYNC_ALLOWED", "1") -- Controls if G-Sync capable monitors should use Variable Refresh Rate (VRR)
 
--- Apps Qt como en Plasma: leen ~/.config/kdeglobals (estilo Breeze, colores, iconos Sur-Transparente).
+-- Apps Qt con qt6ct: estilo Breeze, iconos Sur-Transparente, colores mac-dark (sin Plasma).
 -- Con uwsm lo pone ~/.config/uwsm/env; esto cubre la sesión de Hyprland sin uwsm.
-hl.env("QT_QPA_PLATFORMTHEME", "kde")
+hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
