@@ -1,7 +1,9 @@
 {
   "extras": [
     "lazyvim.plugins.extras.ai.claudecode",
-    "lazyvim.plugins.extras.lang.ruby"
+    "lazyvim.plugins.extras.lang.ruby",
+    "lazyvim.plugins.extras.dap.core",
+    "lazyvim.plugins.extras.lang.clangd"
   ],
   "install_version": 8,
   "news": {
