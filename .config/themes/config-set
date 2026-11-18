@@ -35,6 +35,7 @@
 # estilo Qt hasta que se vuelven a abrir.
 
 import configparser
+import fcntl
 import os
 import re
 import subprocess
@@ -167,11 +168,14 @@ def restart_shell(name):
     shells = [f"{CONF}/quickshell"]
     if has_macshell():
         shells.append(MACSHELL)
-    for s in shells:
-        subprocess.run(["qs", "kill", "-p", s], **quiet)
+    # `qs kill` solo mata la instancia más antigua: se repite mientras quede alguna
+    # (si no, una duplicada seguiría con el perfil viejo, p.ej. la barra de macshell)
     for _ in range(30):
-        if not any(qs_running(s) for s in shells):
+        running = [s for s in shells if qs_running(s)]
+        if not running:
             break
+        for s in running:
+            subprocess.run(["qs", "kill", "-p", s], **quiet)
         time.sleep(0.1)
     # Se arrancan desde Hyprland, igual que en autostart.lua (mismo entorno)
     start = ["qs"]
@@ -212,6 +216,9 @@ def main():
     name = cur if args[0] == "--reapply" else args[0]
     if name not in PROFILES:
         sys.exit(f"No existe el perfil «{name}». Perfiles: {', '.join(PROFILES)}")
+    # Uno detrás de otro: dos a la vez (doble clic en el menú) arrancarían qs dos veces
+    lock = open(f"{os.environ.get('XDG_RUNTIME_DIR', '/tmp')}/config-set.lock", "w")
+    fcntl.flock(lock, fcntl.LOCK_EX)
     apply(name)
 
 
