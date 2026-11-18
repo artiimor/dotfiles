@@ -2,6 +2,7 @@
 
 require("config.animations")
 require("config.autostart")
+require("config.keyd") -- keyd al esquema de Hyprland (ver keyd.lua)
 require("config.theme") -- colores del tema activo (los genera ~/.config/themes/theme-set)
 require("config.decorations")
 require("config.variables")
