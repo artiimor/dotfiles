@@ -110,7 +110,7 @@ Singleton {
             const cmds = {
                 lock: "loginctl lock-session",
                 suspend: "loginctl lock-session && sleep 0.5 && systemctl suspend",
-                logout: "uwsm stop",
+                logout: "if uwsm check is-active; then uwsm stop; else loginctl terminate-session \"$XDG_SESSION_ID\"; fi",
                 reboot: "systemctl reboot",
                 poweroff: "systemctl poweroff"
             };

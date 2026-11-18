@@ -106,7 +106,10 @@ hl.bind(mainMod .. " + V", hl.dsp.send_shortcut({ mods = "SHIFT", key = "Insert"
 hl.bind(mainMod .. " + X", hl.dsp.send_shortcut({ mods = "CTRL", key = "X" }), { description = "Cortar" })
 
 -- Lanzador y menús de Quickshell (pulsar otra vez cierra)
-hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd("qs ipc call launcher apps"), { description = "Lanzador de apps" })
+-- Spotlight de macshell (barra estilo macOS); si no está, el lanzador de siempre
+local macshell = "qs -p ~/.config/quickshell/macshell ipc call "
+hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd(macshell .. "spotlight toggle || qs ipc call launcher apps"), { description = "Spotlight" })
+hl.bind(mainMod .. " + SHIFT + Space", hl.dsp.exec_cmd("qs ipc call launcher apps"), { description = "Lanzador de apps" })
 hl.bind(mainMod .. " + CTRL + V", hl.dsp.exec_cmd("qs ipc call launcher clipboard"), { description = "Portapapeles" })
 hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd("qs ipc call launcher power"), { description = "Menú de energía" })
 hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("qs ipc call launcher emoji"), { description = "Emojis" })
@@ -149,7 +152,7 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("qs ipc call brightness down"),
 -- Screen Capture
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprshot -m region"), { description = "Captura de una zona" })
 -- Notifications
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd("qs ipc call notifs toggle"), { description = "Notificaciones" })
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(macshell .. "center toggle || qs ipc call notifs toggle"), { description = "Notificaciones" })
 
 -- Lock
 hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("loginctl lock-session"), { description = "Bloquear" })

@@ -7,6 +7,8 @@ hl.on("hyprland.start", function()
 	-- lanzador, pantalla de bloqueo y polkit. Sustituye a waybar, hyprpaper,
 	-- swaync, swayosd-server, wofi, hyprlock y hyprpolkitagent
 	hl.exec_cmd("qs & hypridle")
+	-- Barra superior + Spotlight estilo macOS (la misma que en Plasma, repo plasma-mac)
+	hl.exec_cmd("[ -f ~/.config/quickshell/macshell/shell.qml ] && qs -p ~/.config/quickshell/macshell")
 	hl.exec_cmd("hyprsunset")
 	hl.exec_cmd("wl-paste --type text --watch cliphist store & wl-paste --type image --watch cliphist store")
 end)

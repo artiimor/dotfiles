@@ -11,12 +11,31 @@
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import qs.modules
 
 ShellRoot {
+    id: root
+
+    // Si está instalada la barra estilo macOS (macshell, repo plasma-mac), ella
+    // pone la barra superior, las notificaciones y el Spotlight (la arranca
+    // autostart.lua). Para volver a la barra de aquí, borra/renombra esa carpeta.
+    FileView {
+        id: macshell
+        printErrors: false
+        path: Quickshell.env("HOME") + "/.config/quickshell/macshell/shell.qml"
+        onLoaded: root.macChecked = true
+        onLoadFailed: root.macChecked = true
+    }
+    // La comprobación es asíncrona: hasta que acabe no se crea la barra ni las
+    // notificaciones de aquí (si no, se quedarían con el servidor de notificaciones)
+    property bool macChecked: false
+    readonly property bool macBar: macshell.loaded
+    readonly property bool ownBar: macChecked && !macBar
+
     // Una barra por cada pantalla conectada
     Variants {
-        model: Quickshell.screens
+        model: root.ownBar ? Quickshell.screens : []
 
         Bar {}
     }
@@ -28,8 +47,8 @@ ShellRoot {
     Wallpaper {}
 
     // Estos van solo en la pantalla con el foco
-    NotificationPopups {}
-    NotificationCenter {}
+    LazyLoader { active: root.ownBar; NotificationPopups {} }
+    LazyLoader { active: root.ownBar; NotificationCenter {} }
     Osd {}
     LauncherWindow {}
     PolkitDialog {}
