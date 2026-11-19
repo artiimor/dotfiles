@@ -2,7 +2,7 @@
 Name=Proton Drive
 Comment=Proton Drive
 Exec=brave --new-window --ozone-platform=wayland --app="https://drive.proton.me"
-Icon=/home/morci/.local/share/applications/icons/proton-drive.png
+Icon=@HOME@/.local/share/applications/icons/proton-drive.png
 Terminal=false
 Type=Application
 StartupNotify=true

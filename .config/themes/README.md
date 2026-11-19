@@ -66,7 +66,7 @@ perfiles). Se aplica al momento, sin cerrar sesión.
 
 | | Modo Mac | Modo normal (`default`) |
 |---|---|---|
-| Barra, notificaciones | macshell (repo plasma-mac) | la de Quickshell de aquí |
+| Barra, notificaciones | macshell (config aparte, no incluida) | la de Quickshell de aquí |
 | Super+Espacio / Super+Esc / Super+A | Spotlight / PowerMenu / centro de macshell | lanzador / menú de energía / notificaciones de aquí |
 | Ventanas | esquinas de 10 px y sombra | rectas, sombra por defecto |
 | hyprbars | gris Sur-Gris, Noto Sans, 32 px | color del tema, JetBrains Mono, 28 px |

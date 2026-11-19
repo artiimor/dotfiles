@@ -60,7 +60,7 @@ Singleton {
         }
     }
 
-    // mac / mac-light: los colores de macshell (Theme.qml del repo plasma-mac)
+    // mac / mac-light: los colores de macshell (su Theme.qml, config aparte)
     readonly property color bgSolid: macLight ? "#f5f5f7" : mac ? "#28282b" : ui.bg ?? "#0d0b12"
     readonly property color bg: Qt.rgba(bgSolid.r, bgSolid.g, bgSolid.b, mac ? 0.88 : 0.85) // translúcido
     readonly property color surface: macLight ? Qt.rgba(0, 0, 0, 0.07) : mac ? Qt.rgba(1, 1, 1, 0.10) : ui.surface ?? "#1c1826"
@@ -105,10 +105,10 @@ Singleton {
     readonly property int radius: mac ? 14 : 10
 
     // Fondo de pantalla (también se usa, desenfocado, en la pantalla de bloqueo)
-    readonly property string wallpaper: "file:///home/morci/.config/backgrounds/wallpaper.jpg"
+    readonly property string wallpaper: "file://" + Quickshell.env("HOME") + "/.config/backgrounds/wallpaper.jpg"
     // Solo el escritorio: el fondo del tema (Super+Ctrl+B, themes/background-set);
     // por defecto el prado con todos los pepes en color
-    property string desktopWallpaper: "file:///home/morci/.config/backgrounds/wallpaper-desktop.jpg"
+    property string desktopWallpaper: "file://" + Quickshell.env("HOME") + "/.config/backgrounds/wallpaper-desktop.jpg"
     Process {
         id: backgroundProc
         command: [Quickshell.env("HOME") + "/.config/themes/background-set", "--path"]

@@ -20,7 +20,7 @@ ShellRoot {
     // Perfil del escritorio (~/.local/state/desktop-profile, lo escribe
     // ~/.config/themes/config-set; se elige con Super+Shift+T):
     //   "mac"      la barra superior, las notificaciones y el Spotlight los pone
-    //              macshell (repo plasma-mac, lo arranca autostart.lua / config-set)
+    //              macshell (config aparte; lo arranca autostart.lua / config-set)
     //   "default"  la barra y las notificaciones de aquí
     // Sin archivo: "mac" si está macshell. "mac" sin macshell = "default".
     // config-set reinicia qs al cambiar de perfil, así que basta leerlo al arrancar.

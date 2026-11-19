@@ -24,7 +24,7 @@ Singleton {
     // Interfaz en uso (el cable manda si están los dos)
     readonly property string iface: wired?.name ?? wifi?.name ?? ""
 
-    property string ip: ""       // "192.168.1.64/24"
+    property string ip: ""       // "192.168.1.10/24"
     property real down: 0        // bytes/s
     property real up: 0
 
@@ -52,7 +52,7 @@ Singleton {
         id: ipProc
         command: ["ip", "-4", "-br", "addr", "show", "dev", root.iface]
         stdout: StdioCollector {
-            // "wlan0   UP   192.168.1.64/24"
+            // "wlan0   UP   192.168.1.10/24"
             onStreamFinished: root.ip = text.trim().split(/\s+/)[2] ?? ""
         }
     }

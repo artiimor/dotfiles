@@ -68,31 +68,33 @@ git clone https://github.com/artiimor/dotfiles.git ~/dotfiles
 ~/dotfiles/install.sh --yes    # does everything without asking (-y also works)
 ```
 
-The script is safe to re-run: `pacman` uses `--needed` and files are simply overwritten (with backups).
+The script is safe to re-run: `pacman` uses `--needed`, overwritten files are backed up, and your own
+`monitors.lua`, `variables.lua`, `inputs.lua` and chosen theme are kept if they already exist.
+It asks for `sudo` once at the start and keeps it alive. A failed package, AUR build or download is only a warning.
 Its prompts are in Spanish (`[S/n]`: `s`/`y` or Enter means yes).
 
 ### What `install.sh` does
 
 | Step | What happens |
 |---|---|
-| **1. Desktop packages** | `pacman -Syu --needed` of the desktop, terminal, font and login/boot package groups (see the list below), then `bzmenu` built from the AUR with `makepkg`. |
-| **2. Extra apps** (optional) | `firefox brave-bin spotify-launcher discord proton-pass proton-vpn-gtk-app claude-code github-cli`. Failures here are only a warning. |
+| **1. Desktop packages** | `pacman -Syu`, then installs the desktop, terminal, font and login/boot package groups (see the list below). Packages missing from your repos (e.g. CachyOS-only ones on plain Arch) are reported and tried from the AUR; if a batch conflicts, it retries one by one. `bzmenu` comes from the AUR via `paru`/`yay` if present, otherwise `makepkg`. |
+| **2. Extra apps** (optional) | `firefox brave-bin spotify-launcher discord proton-pass proton-vpn-gtk-app claude-code github-cli`, installed the same way as step 1. |
 | **3. Dotfiles** | Copies `.config/` → `~/.config/`, `.local/share/applications/` (web apps) → `~/.local/share/applications/`, and `.bashrc`, `.bash_profile`, `.profile` → `~`. Details below. |
 | **3b. Shell** | If your login shell isn't bash (CachyOS defaults to fish), offers `chsh -s /bin/bash`. |
 | **4. Theme and profile** | Runs `theme-set <theme>` (your current theme if you already had one, otherwise **grafito**) and `config-set --reapply` (Mac mode if macshell is installed, otherwise Normal mode). |
 | **5. hyprbars** | Clones `hyprwm/hyprland-plugins` at the tag matching your installed Hyprland (falls back to `vX.Y.0`), applies the two patches in `.config/hypr/`, builds it and copies `hyprbars.so` to `~/.local/lib/hyprland/`. Then offers to remove the apps' own window buttons (GTK `button-layout`, and Brave's "use system title bar", only if Brave is closed). |
-| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname, disables sddm/gdm/lightdm/ly and enables greetd); **Plymouth "canalla"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`, enables keyd and adds you to the `keyd` group); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). |
+| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname, disables whatever display manager is active and enables greetd); **Plymouth "canalla"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
 
 Details of step 3:
 
 - **Backups**: every file it would overwrite is first saved to `~/.dotfiles-old/<YYYYmmdd-HHMMSS>/`, keeping the same
   relative path (e.g. `~/.dotfiles-old/20261119-120000/.config/hypr/hyprland.lua`). Copying is done with
-  `rsync -a --backup`, so nothing in your `~/.config` is deleted, only overwritten.
-- **Path rewrite**: a few files contain the absolute home path of the machine they were written on
-  (`quickshell/Theme.qml`, `networkmanager-dmenu/config.ini`, `ghostty/config.ghostty` and the web app `.desktop` files).
-  The installer rewrites that path to your `$HOME`.
+  `rsync -a --backup`, so nothing in your `~/.config` is deleted, only overwritten. `hypr/config/monitors.lua`,
+  `variables.lua`, `inputs.lua` and `themes/current` are only copied if you don't have them yet.
+- **Home path**: the few files that need an absolute path (`networkmanager-dmenu/config.ini` and the web app
+  `.desktop` files) contain an `@HOME@` placeholder. The installer replaces it with your `$HOME` in those files only.
 - **Cursor**: downloads the black macOS cursor ([apple_cursor](https://github.com/ful1e5/apple_cursor) v2.0.1) into
-  `~/.local/share/icons/macOS`. If the download fails it switches GTK, `uwsm/env` and `hypr/config/environment.lua`
+  `~/.local/share/icons/macOS` and checks its SHA-256. If the download fails it switches GTK, `uwsm/env` and `hypr/config/environment.lua`
   to Adwaita instead. It also writes `~/.icons/default/index.theme` (for X11 apps) and sets the GNOME cursor setting.
 - Makes `theme-set`, `config-set`, `background-set` and the Quickshell scripts executable, and runs `xdg-user-dirs-update`.
 
@@ -102,7 +104,7 @@ When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 
 | Group | Packages |
 |---|---|
-| Desktop | `hyprland quickshell uwsm xdg-desktop-portal-hyprland hypridle hyprlock hyprsunset hyprshot hyprpicker grim slurp cliphist wl-clipboard brightnessctl playerctl ddcutil pipewire-pulse wireplumber pavucontrol power-profiles-daemon upower networkmanager networkmanager-dmenu bluez bluez-utils gnome-keyring seahorse libnotify xdg-user-dirs unicode-emoji dolphin kde-cli-tools ffmpegthumbnailer qview gnome-calculator gnome-text-editor swash qt6ct breeze nwg-look adw-gtk-theme papirus-icon-theme` |
+| Desktop | `hyprland quickshell uwsm xdg-desktop-portal-hyprland hypridle hyprlock hyprsunset hyprshot hyprpicker grim slurp cliphist wl-clipboard brightnessctl playerctl ddcutil pipewire-pulse wireplumber pavucontrol power-profiles-daemon upower networkmanager networkmanager-dmenu bluez bluez-utils gnome-keyring seahorse libnotify xdg-user-dirs unicode-emoji dolphin kde-cli-tools ffmpegthumbs ffmpegthumbnailer qview gnome-calculator gnome-text-editor swash qt6ct breeze nwg-look adw-gtk-theme papirus-icon-theme` |
 | Terminal | `ghostty kitty starship btop fastfetch bash-completion fzf eza bat neovim lazygit ripgrep tree-sitter-cli nodejs npm micro python python-defusedxml git base-devel rsync` |
 | Fonts | `ttf-jetbrains-mono-nerd otf-geist-mono-nerd inter-font cantarell-fonts noto-fonts noto-fonts-emoji noto-fonts-cjk` |
 | Login / boot | `greetd greetd-regreet cage plymouth keyd` |
@@ -119,8 +121,8 @@ cp ~/dotfiles/.bashrc ~/dotfiles/.bash_profile ~/dotfiles/.profile ~/
 ~/.config/themes/config-set default         # or "mac" if you have macshell
 ```
 
-You'll have to fix the hard-coded home path in the files listed above yourself
-(`grep -rn '/home/' ~/.config/quickshell ~/.config/ghostty ~/.config/networkmanager-dmenu`).
+Then replace the `@HOME@` placeholder yourself:
+`grep -rlI '@HOME@' ~/.config ~/.local/share/applications | xargs -r sed -i "s|@HOME@|$HOME|g"`.
 
 ## Desktop profiles: Mac mode / Normal mode
 
@@ -433,8 +435,9 @@ cd ~/dotfiles && git pull
 ```
 
 Re-running is safe: packages are skipped if installed, overwritten files go to a new `~/.dotfiles-old/<timestamp>/`,
-and step 4 re-applies **your current theme** and profile (not the default). Note that any local edits you made to files
-tracked by this repo will be replaced (they end up in the backup).
+and step 4 re-applies **your current theme** and profile (not the default). `monitors.lua`, `variables.lua` and
+`inputs.lua` are left alone if they exist; local edits to any other file tracked by this repo are replaced (they end
+up in the backup).
 
 To only regenerate things without copying anything:
 
@@ -478,7 +481,7 @@ There's no uninstall script. To go back:
 | Mac mode looks exactly like Normal mode | macshell isn't installed at `~/.config/quickshell/macshell/`. That's expected: it isn't part of this repo. |
 | Missing icons in Mac mode | The Sur / Sur-Transparente icon themes aren't installed by `install.sh`; install them or use Normal mode. |
 | Super shortcuts do nothing, or Alt and Super are swapped on a non-ThinkPad keyboard | `hypr/config/keyd.lua` rebinds keyd at startup. If you run keyd with your own configs, remove `require("config.keyd")` from `hyprland.lua` and run `keyd bind reset`. If you're not in the `keyd` group, log out and back in after the installer adds you. |
-| Bar, launcher or wallpaper missing | Start Quickshell by hand to see errors: `qs` (and `qs -p ~/.config/quickshell/macshell` in Mac mode). Check that the home path in `~/.config/quickshell/Theme.qml` is yours. |
+| Bar, launcher or wallpaper missing | Start Quickshell by hand to see errors: `qs` (and `qs -p ~/.config/quickshell/macshell` in Mac mode). |
 | Colors look wrong or half-applied | `~/.config/themes/theme-set --reapply`, then reopen GTK/Qt apps and btop. |
 | Qt apps ignore the theme | They need `QT_QPA_PLATFORMTHEME=qt6ct` (set in `uwsm/env` and `environment.lua`); log in through the uwsm session. |
 | Cursor is Adwaita instead of macOS | The download failed during install. Download [apple_cursor](https://github.com/ful1e5/apple_cursor/releases) into `~/.local/share/icons/macOS` and set `XCURSOR_THEME="macOS"` in `uwsm/env`, `environment.lua` and the GTK `settings.ini` files. |

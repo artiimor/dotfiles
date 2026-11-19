@@ -14,7 +14,8 @@
 #   6. Sistema (sudo): greetd + ReGreet, Plymouth "canalla", keyd (ThinkPad), servicios
 #
 # Ejecútalo como tu usuario, no como root: pide sudo cuando lo necesita.
-# Se puede repetir sin miedo: pacman usa --needed y los archivos se sobrescriben.
+# Se puede repetir sin miedo: pacman usa --needed, lo que se sobrescribe va a ~/.dotfiles-old
+# y monitors.lua, variables.lua, inputs.lua y el tema elegido se respetan si ya existen.
 
 set -euo pipefail
 
@@ -35,7 +36,7 @@ DESKTOP=(
 	pipewire-pulse wireplumber pavucontrol power-profiles-daemon upower
 	networkmanager networkmanager-dmenu bluez bluez-utils
 	gnome-keyring seahorse libnotify xdg-user-dirs unicode-emoji
-	dolphin kde-cli-tools ffmpegthumbnailer qview gnome-calculator gnome-text-editor swash
+	dolphin kde-cli-tools ffmpegthumbs ffmpegthumbnailer qview gnome-calculator gnome-text-editor swash
 	qt6ct breeze nwg-look adw-gtk-theme papirus-icon-theme
 )
 # Terminal, shell y Neovim
@@ -81,18 +82,61 @@ if ! command -v pacman >/dev/null; then
 fi
 
 BACKUP="$HOME/.dotfiles-old/$(date +%Y%m%d-%H%M%S)"
+ME="$(id -un)"
+
+# Pide sudo una vez y lo mantiene vivo (las compilaciones de AUR pueden tardar)
+sudo -v
+while sleep 60; do sudo -n true; done 2>/dev/null &
+SUDO_KEEPALIVE=$!
+trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null' EXIT
+
+# Archivos de config que se editan a mano: si ya existen no se pisan al repetir
+KEEP=(hypr/config/monitors.lua hypr/config/variables.lua hypr/config/inputs.lua themes/current)
+
+# Copia de un archivo de /etc (o similar) antes de sobrescribirlo
+backup_sys() {
+	local f
+	for f; do
+		[[ -e "$f" ]] && mkdir -p "$BACKUP/system${f%/*}" && sudo cat "$f" >"$BACKUP/system$f"
+	done
+	return 0
+}
+
+# Instala con pacman lo que esté en los repos; lo que no, avisa (p. ej. paquetes
+# solo de CachyOS en un Arch puro) y si hay un helper de AUR lo intenta por ahí
+pacman_install() {
+	local p ok=() missing=()
+	for p; do
+		if pacman -Si "$p" &>/dev/null || pacman -Qq "$p" &>/dev/null; then ok+=("$p"); else missing+=("$p"); fi
+	done
+	if ((${#ok[@]})) && ! sudo pacman -S --needed --noconfirm "${ok[@]}"; then
+		warn "pacman falló (¿un conflicto, p. ej. pulseaudio o tuned-ppd?). Pruebo uno a uno"
+		for p in "${ok[@]}"; do
+			sudo pacman -S --needed --noconfirm "$p" &>/dev/null || warn "no se pudo instalar $p"
+		done
+	fi
+	((${#missing[@]})) && { warn "no están en tus repos: ${missing[*]}"; aur_install "${missing[@]}"; }
+	return 0
+}
 
 # Copia src -> dst; lo que se sobrescriba se guarda en $BACKUP con la misma ruta
 copy_tree() {
-	local src="$1" dst="$2" rel="${2#"$HOME"/}"
+	local src="$1" dst="$2" rel="${2#"$HOME"/}" k excl=()
 	mkdir -p "$dst"
-	rsync -a --backup --backup-dir="$BACKUP/$rel" "$src/" "$dst/"
+	for k in "${KEEP[@]}"; do
+		[[ -e "$dst/$k" || -L "$dst/$k" ]] && excl+=(--exclude "/$k")
+	done
+	rsync -a --backup --backup-dir="$BACKUP/$rel" "${excl[@]}" "$src/" "$dst/"
 }
 
-# Las rutas absolutas de la config llevan /home/morci: se cambian por tu $HOME
+# Los pocos archivos que necesitan una ruta absoluta llevan @HOME@: se cambia por tu $HOME.
+# Solo se tocan los que trae el repo, nada más de ~/.config
 fix_home() {
-	[[ "$HOME" == "/home/morci" ]] && return 0
-	grep -rlZ '/home/morci' "$@" 2>/dev/null | xargs -0r sed -i "s|/home/morci|$HOME|g"
+	local f home="${HOME//&/\\&}"
+	while IFS= read -rd '' f; do
+		[[ -f "$HOME/$f" ]] && sed -i "s|@HOME@|$home|g" "$HOME/$f"
+	done < <(cd "$REPO" && grep -rlIZ '@HOME@' .config .local 2>/dev/null)
+	return 0
 }
 
 aur_install() {
@@ -102,11 +146,18 @@ aur_install() {
 			info "$pkg ya está instalado"
 			continue
 		fi
-		dir="$(mktemp -d)"
-		git clone --depth 1 "https://aur.archlinux.org/$pkg.git" "$dir/$pkg"
-		(cd "$dir/$pkg" && makepkg -si --needed --noconfirm)
-		rm -rf "$dir"
+		if command -v paru >/dev/null; then
+			paru -S --needed --noconfirm "$pkg" || warn "AUR: $pkg falló, sigo"
+		elif command -v yay >/dev/null; then
+			yay -S --needed --noconfirm "$pkg" || warn "AUR: $pkg falló, sigo"
+		else
+			dir="$(mktemp -d)"
+			{ git clone --depth 1 "https://aur.archlinux.org/$pkg.git" "$dir/$pkg" &&
+				(cd "$dir/$pkg" && makepkg -si --needed --noconfirm); } || warn "AUR: $pkg falló, sigo"
+			rm -rf "$dir"
+		fi
 	done
+	return 0
 }
 
 # ---------------------------------------------------------------- 1. paquetes
@@ -114,7 +165,8 @@ aur_install() {
 step "1. Paquetes del escritorio"
 info "${#DESKTOP[@]} de escritorio, ${#TERMINAL[@]} de terminal, ${#FONTS[@]} fuentes, ${#SYSTEM[@]} de login/arranque, AUR: ${AUR[*]}"
 if ask "¿Instalarlos?"; then
-	sudo pacman -Syu --needed --noconfirm "${DESKTOP[@]}" "${TERMINAL[@]}" "${FONTS[@]}" "${SYSTEM[@]}"
+	sudo pacman -Syu --noconfirm || warn "no se pudo actualizar el sistema, sigo"
+	pacman_install "${DESKTOP[@]}" "${TERMINAL[@]}" "${FONTS[@]}" "${SYSTEM[@]}"
 	aur_install "${AUR[@]}"
 fi
 
@@ -123,7 +175,7 @@ fi
 step "2. Apps extra"
 info "${APPS[*]}"
 if ask "¿Instalarlas?"; then
-	sudo pacman -S --needed --noconfirm "${APPS[@]}" || warn "alguna no se pudo instalar, sigo"
+	pacman_install "${APPS[@]}"
 fi
 
 # ---------------------------------------------------------------- 3. dotfiles
@@ -132,6 +184,7 @@ step "3. Dotfiles"
 info "$REPO/.config -> ~/.config, .bashrc, .bash_profile, .profile, webapps"
 info "lo que se sobrescriba se guarda en $BACKUP"
 if ask "¿Copiarlos?"; then
+	command -v rsync >/dev/null || sudo pacman -S --needed --noconfirm rsync
 	copy_tree "$REPO/.config" "$HOME/.config"
 	copy_tree "$REPO/.local/share/applications" "$HOME/.local/share/applications"
 	for f in .bashrc .bash_profile .profile; do
@@ -141,20 +194,26 @@ if ask "¿Copiarlos?"; then
 		fi
 		cp "$REPO/$f" "$HOME/$f"
 	done
-	fix_home "$HOME/.config/quickshell" "$HOME/.config/networkmanager-dmenu" \
-		"$HOME/.config/ghostty" "$HOME/.local/share/applications"
+	fix_home
 	chmod +x "$HOME/.config/themes/theme-set" "$HOME/.config/themes/config-set" "$HOME/.config/themes/background-set" "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
 	# Cursor: la flecha negra de macOS (apple_cursor, no está en los repos de Arch).
 	# Si no se puede descargar se queda Adwaita. ~/.icons/default es para apps X11
 	cursor=Adwaita
-	if [[ -d "$HOME/.local/share/icons/macOS/cursors" ]]; then
+	cursor_dir="$HOME/.local/share/icons/macOS"
+	cursor_sha=9c6e5e13b068ce51a9e90a9abd6ce232ec7d25d4ceb05aa8ac76efbb99c76762
+	if [[ -f "$cursor_dir/index.theme" && -e "$cursor_dir/cursors/left_ptr" ]]; then
 		cursor=macOS
 	else
 		mkdir -p "$HOME/.local/share/icons"
-		if curl -fsSL https://github.com/ful1e5/apple_cursor/releases/download/v2.0.1/macOS.tar.xz |
-			tar -xJ -C "$HOME/.local/share/icons" ./macOS 2>/dev/null; then
+		tmp="$(mktemp)"
+		if curl -fsSL --connect-timeout 10 --retry 2 -o "$tmp" \
+			https://github.com/ful1e5/apple_cursor/releases/download/v2.0.1/macOS.tar.xz &&
+			echo "$cursor_sha  $tmp" | sha256sum -c --quiet - &&
+			rm -rf "$cursor_dir" &&
+			tar -xJf "$tmp" -C "$HOME/.local/share/icons" ./macOS; then
 			cursor=macOS
 		else
+			rm -rf "$cursor_dir"
 			warn "no se pudo descargar el cursor macOS; se usa Adwaita"
 			sed -i 's/^gtk-cursor-theme-name=macOS/gtk-cursor-theme-name=Adwaita/' \
 				"$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
@@ -162,6 +221,7 @@ if ask "¿Copiarlos?"; then
 			sed -i 's/^hl.env("XCURSOR_THEME", "macOS").*/hl.env("XCURSOR_THEME", "Adwaita")/' \
 				"$HOME/.config/hypr/config/environment.lua"
 		fi
+		rm -f "$tmp"
 	fi
 	mkdir -p "$HOME/.icons/default"
 	printf '[Icon Theme]\nName=Default\nInherits=%s\n' "$cursor" >"$HOME/.icons/default/index.theme"
@@ -171,8 +231,8 @@ if ask "¿Copiarlos?"; then
 fi
 
 # CachyOS pone fish de shell por defecto; la config de este repo es la de bash (.bashrc)
-if [[ "$(getent passwd "$USER" | cut -d: -f7)" != */bash ]] && ask "¿Usar bash como shell (en vez de fish)?"; then
-	sudo chsh -s /bin/bash "$USER"
+if [[ "$(getent passwd "$ME" | cut -d: -f7)" != */bash ]] && ask "¿Usar bash como shell (en vez de fish)?"; then
+	sudo chsh -s /bin/bash "$ME"
 	info "shell cambiado a bash: se nota al volver a iniciar sesión"
 fi
 
@@ -182,7 +242,7 @@ step "4. Tema de colores"
 if [[ -x "$HOME/.config/themes/theme-set" ]] && ask "¿Aplicar el tema $THEME?"; then
 	"$HOME/.config/themes/theme-set" "$THEME" || warn "theme-set falló; repítelo dentro de Hyprland"
 fi
-# Perfil del escritorio (Super+Shift+T): "mac" si está macshell (repo plasma-mac), si no "default".
+# Perfil del escritorio (Super+Shift+T): "mac" si está macshell (config aparte), si no "default".
 # Ajusta iconos GTK/Qt y qt6ct a ese perfil (el repo los trae como en "mac")
 if [[ -x "$HOME/.config/themes/config-set" ]]; then
 	"$HOME/.config/themes/config-set" --reapply || warn "config-set falló; repítelo dentro de Hyprland"
@@ -193,7 +253,8 @@ fi
 step "5. Barras de título (hyprbars con parche)"
 info "se compila con la misma versión que el Hyprland instalado"
 if command -v Hyprland >/dev/null && ask "¿Compilar hyprbars?"; then
-	ver="$(pacman -Q hyprland | awk '{print $2}' | cut -d- -f1)"
+	ver="$(Hyprland --version 2>/dev/null | grep -oP 'Hyprland \K[0-9]+\.[0-9]+\.[0-9]+' | head -1)" || true
+	[[ -n "$ver" ]] || { warn "no sé qué versión de Hyprland hay; pruebo con la de pacman"; ver="$(pacman -Q hyprland 2>/dev/null | awk '{print $2}' | cut -d- -f1)" || true; }
 	dir="$(mktemp -d)"
 	# hyprland-plugins solo etiqueta algunas versiones (v0.57.0 vale para 0.57.1)
 	if git clone https://github.com/hyprwm/hyprland-plugins "$dir/hp" &&
@@ -205,6 +266,7 @@ if command -v Hyprland >/dev/null && ask "¿Compilar hyprbars?"; then
 		mkdir -p "$HOME/.local/lib/hyprland"
 		cp "$dir/hp/hyprbars/hyprbars.so" "$HOME/.local/lib/hyprland/"
 		info "hyprbars v$ver instalado en ~/.local/lib/hyprland"
+		info "si una actualización sube la versión de Hyprland, repite este paso"
 	else
 		warn "no se pudo compilar (¿no hay tag v$ver en hyprland-plugins?). Sin él todo funciona, solo que sin barras de título."
 	fi
@@ -225,9 +287,13 @@ if ask "¿Quitar los botones de ventana propios de GTK y Brave (se quedan solo l
 		python3 - "$prefs" <<-'EOF'
 			import json, sys
 			p = sys.argv[1]
-			d = json.load(open(p))
+			import os
+			with open(p) as f:
+				d = json.load(f)
 			d.setdefault("browser", {})["custom_chrome_frame"] = False
-			json.dump(d, open(p, "w"), separators=(",", ":"))
+			with open(p + ".tmp", "w") as f:
+				json.dump(d, f, separators=(",", ":"))
+			os.replace(p + ".tmp", p)
 		EOF
 		info "Brave usará la barra del sistema"
 	else
@@ -241,19 +307,24 @@ step "6. Sistema (sudo)"
 S="$REPO/system"
 
 if ask "¿Login con greetd + ReGreet (sustituye a SDDM/el login que haya)?"; then
+	backup_sys /etc/greetd/{config.toml,regreet.toml,regreet.css,environments}
 	sudo install -Dm644 -t /etc/greetd "$S"/etc/greetd/{config.toml,regreet.toml,regreet.css,environments}
 	sudo install -Dm644 "$S/usr/share/backgrounds/greeter.jpg" /usr/share/backgrounds/greeter.jpg
 	sudo sed -i "s|^greeting_msg = .*|greeting_msg = \"$(cat /etc/hostname 2>/dev/null || echo cachyos)\"|" /etc/greetd/regreet.toml
-	for dm in sddm gdm lightdm ly; do
-		systemctl is-enabled "$dm" &>/dev/null && sudo systemctl disable "$dm"
-	done
-	sudo systemctl enable greetd
+	# El login que esté activo (sea cual sea) se desactiva para que greetd ocupe display-manager.service
+	cur="$(basename "$(readlink /etc/systemd/system/display-manager.service 2>/dev/null)" .service)"
+	if [[ -n "$cur" && "$cur" != greetd ]]; then
+		sudo systemctl disable "$cur" || warn "no se pudo desactivar $cur"
+	fi
+	sudo systemctl enable greetd || warn "no se pudo activar greetd: revisa display-manager.service"
 fi
 
 if ask "¿Tema de arranque Plymouth \"canalla\"?"; then
 	sudo rm -rf /usr/share/plymouth/themes/canalla
 	sudo cp -r "$S/usr/share/plymouth/themes/canalla" /usr/share/plymouth/themes/
 	sudo plymouth-set-default-theme canalla
+	grep -qw plymouth /etc/mkinitcpio.conf 2>/dev/null ||
+		warn "falta el hook plymouth en /etc/mkinitcpio.conf (y 'splash' en la línea del kernel): sin eso no se verá"
 	info "regenerando el initramfs..."
 	if command -v limine-mkinitcpio >/dev/null; then
 		sudo limine-mkinitcpio
@@ -262,12 +333,13 @@ if ask "¿Tema de arranque Plymouth \"canalla\"?"; then
 	fi
 fi
 
-if ask "¿Intercambiar Alt y Super en el teclado del portátil (keyd, ThinkPad)?"; then
+if ask "¿Teclado del portátil con keyd: intercambiar Alt y Super y CapsLock como Control (hecho para ThinkPad)?"; then
+	backup_sys /etc/keyd/thinkpad.conf
 	sudo install -Dm644 "$S/etc/keyd/thinkpad.conf" /etc/keyd/thinkpad.conf
 	sudo systemctl enable --now keyd
 	# hypr/config/keyd.lua cambia el mapa con "keyd bind": hace falta el grupo keyd
-	if getent group keyd >/dev/null && ! id -nG "$USER" | grep -qw keyd; then
-		sudo usermod -aG keyd "$USER"
+	if getent group keyd >/dev/null && ! id -nG "$ME" | grep -qw keyd; then
+		sudo usermod -aG keyd "$ME"
 		info "añadido al grupo keyd: se nota al volver a iniciar sesión"
 	fi
 fi
@@ -279,6 +351,7 @@ fi
 # ---------------------------------------------------------------- fin
 
 step "Listo"
+[[ -d "$BACKUP" ]] && info "copias de lo que se sobrescribió (incluido /etc) en $BACKUP"
 info "Reinicia y entra en la sesión Hyprland (uwsm)."
 info "Cosas que seguramente quieras cambiar:"
 info "  ~/.config/hypr/config/monitors.lua y variables.lua   monitores y apps por defecto"

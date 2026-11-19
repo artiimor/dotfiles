@@ -16,7 +16,7 @@
 # hasta el próximo cambio de tema o --reapply). En Modo normal el tema claro pone
 # GTK claro (adw-gtk3, prefer-light) e iconos Papirus-Light.
 #
-#   mac      barra macshell (repo plasma-mac) con Spotlight (Super+Espacio),
+#   mac      barra macshell (config aparte, no incluida) con Spotlight (Super+Espacio),
 #            PowerMenu (Super+Esc) y centro de notificaciones (Super+A); ventanas
 #            con esquinas redondeadas y sombra; hyprbars gris Sur-Gris; iconos
 #            Sur-Transparente; Qt con estilo Breeze, colores mac-dark y Noto Sans;
@@ -325,7 +325,7 @@ def write_files(name, css=True):
 def apply(name, notify=True):
     if name in MAC_PROFILES and not has_macshell():
         print(f"Aviso: no está macshell ({MACSHELL}); \"{name}\" se verá como \"default\" "
-              "en la barra (instálalo desde el repo plasma-mac)", file=sys.stderr)
+              "en la barra (macshell no está incluido en este repo)", file=sys.stderr)
     write_state(name)
     write_files(name)
     restart_shell(name, notify)

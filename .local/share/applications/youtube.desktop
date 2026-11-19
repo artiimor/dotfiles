@@ -2,7 +2,7 @@
 Name=YouTube
 Comment=YouTube
 Exec=brave --new-window --ozone-platform=wayland --app="https://www.youtube.com"
-Icon=/home/morci/.local/share/applications/icons/youtube.png
+Icon=@HOME@/.local/share/applications/icons/youtube.png
 Terminal=false
 Type=Application
 StartupNotify=true
