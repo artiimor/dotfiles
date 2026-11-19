@@ -19,7 +19,9 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-THEME="grafito"
+# Tema de colores: el que ya tengas (al repetir la instalación no se pierde), si no grafito
+THEME="$(basename "$(readlink "$HOME/.config/themes/current" 2>/dev/null)" 2>/dev/null)"
+[[ -f "$REPO/.config/themes/$THEME/theme.json" ]] || THEME="grafito"
 YES=0
 [[ "${1:-}" == "--yes" || "${1:-}" == "-y" ]] && YES=1
 
@@ -32,13 +34,13 @@ DESKTOP=(
 	cliphist wl-clipboard brightnessctl playerctl ddcutil
 	pipewire-pulse wireplumber pavucontrol power-profiles-daemon upower
 	networkmanager networkmanager-dmenu bluez bluez-utils
-	gnome-keyring seahorse
+	gnome-keyring seahorse libnotify xdg-user-dirs
 	dolphin kde-cli-tools ffmpegthumbnailer qview gnome-calculator gnome-text-editor swash
-	qt6ct nwg-look adw-gtk-theme papirus-icon-theme
+	qt6ct breeze nwg-look adw-gtk-theme papirus-icon-theme
 )
 # Terminal, shell y Neovim
 TERMINAL=(
-	ghostty kitty starship btop fastfetch bash-completion
+	ghostty kitty starship btop fastfetch bash-completion fzf eza bat
 	neovim lazygit ripgrep tree-sitter-cli nodejs npm micro
 	python python-defusedxml git base-devel rsync
 )
@@ -263,6 +265,11 @@ fi
 if ask "¿Intercambiar Alt y Super en el teclado del portátil (keyd, ThinkPad)?"; then
 	sudo install -Dm644 "$S/etc/keyd/thinkpad.conf" /etc/keyd/thinkpad.conf
 	sudo systemctl enable --now keyd
+	# hypr/config/keyd.lua cambia el mapa con "keyd bind": hace falta el grupo keyd
+	if getent group keyd >/dev/null && ! id -nG "$USER" | grep -qw keyd; then
+		sudo usermod -aG keyd "$USER"
+		info "añadido al grupo keyd: se nota al volver a iniciar sesión"
+	fi
 fi
 
 if ask "¿Activar servicios (NetworkManager, bluetooth, power-profiles-daemon)?"; then
