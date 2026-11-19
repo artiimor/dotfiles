@@ -2,16 +2,20 @@
 
 My **Hyprland** desktop for **CachyOS / Arch Linux**: Hyprland with a Lua config, and **Quickshell** for everything else
 (bar, launcher, menus, notifications, OSD, wallpaper, lock screen, polkit dialog and dock).
+Two looks, switchable live: a tiling **Normal mode** and a floating, macOS-style **Mac mode**, with 13 color themes on top.
+
+![Mac mode with floating windows, the macshell top bar and the dock](screenshots/mac.png)
 
 Designed by me and implemented with help from [Claude Code](https://claude.com/claude-code).
 [Omarchy](https://omarchy.org) inspired the desktop mode, the theme switcher and the per-theme backgrounds.
 
-| Mac mode | Normal mode |
-|---|---|
-| ![Mac mode](screenshots/mac.png) | ![Normal mode](screenshots/tiling.png) |
+```sh
+git clone https://github.com/artiimor/dotfiles.git ~/dotfiles && ~/dotfiles/install.sh
+```
 
 ## Contents
 
+- [Tour](#tour)
 - [Features](#features)
 - [Requirements](#requirements)
 - [Installation](#installation)
@@ -28,13 +32,63 @@ Designed by me and implemented with help from [Claude Code](https://claude.com/c
 - [Troubleshooting](#troubleshooting)
 - [Credits and third-party assets](#credits-and-third-party-assets)
 
+## Tour
+
+"Super" below is whatever key Hyprland receives as Super. With the bundled keyd config it's the physical left **Alt** key
+(see [keyd](#keyboard-remapping-keyd)).
+
+### Tiling (Normal mode)
+
+![Normal mode: three tiled Ghostty windows with fastfetch, Neovim and a file tree](screenshots/tiling.png)
+
+Dwindle tiling with square corners and the Quickshell top bar; every workspace starts tiling.
+**Super+Enter** opens a terminal, **Super+H/J/K/L** moves focus, **Super+B** hides or shows the bar.
+
+### Floating workspaces (desktop mode)
+
+![Desktop mode in Normal mode: floating windows with macOS-style titlebars and the dock](screenshots/desktop-mode.png)
+
+**Super+Alt+D** turns the current workspace into a floating desktop: macOS-style titlebars, minimize (**Super+M**),
+edge snapping and an auto-hiding dock at the bottom. The workspace number gets a box in the bar.
+[Details](#desktop-mode-floating-workspaces).
+
+### Mac mode, dark and light
+
+| Mac mode with a light theme | Spotlight (Super+Space) |
+|---|---|
+| ![Mac mode with the Rosé Pine Dawn light theme](screenshots/mac-light.png) | ![Spotlight search open in Mac mode](screenshots/mac-spotlight.png) |
+
+The second profile (dark, in the picture at the top): the macshell top bar, Spotlight, rounded corners and shadows,
+and every workspace floating. A light color theme turns it light automatically.
+Switch profiles with **Super+Shift+T**. [Details](#desktop-profiles-mac-mode--normal-mode).
+
+### Theme switching
+
+![The same desktop in Grafito, Tokyo Night, Gruvbox and Rosé Pine Dawn](screenshots/themes.png)
+
+One `theme.json` per theme recolors Hyprland, Quickshell, the terminals, Neovim, GTK, Qt and more at once.
+**Super+T** opens the picker; each row shows the palette and a sun or moon for light or dark. [Details](#color-themes).
+
+![Theme picker with palette swatches](screenshots/theme-menu.png)
+
+### Launcher, backgrounds and menus
+
+| Launcher (Super+Space) | Background picker (Super+Ctrl+B) |
+|---|---|
+| ![App launcher](screenshots/launcher.png) | ![Background picker](screenshots/backgrounds.png) |
+| **Profile menu (Super+Shift+T)** | **Keybinding cheatsheet (Super+/)** |
+| ![Profile menu: Modo Mac / Modo normal](screenshots/config-menu.png) | ![Keybinding cheatsheet](screenshots/keybindings.png) |
+
+App launcher, clipboard history, emoji picker, power menu, file search, the theme / background / profile menus and the
+cheatsheet are all the same Quickshell launcher in different modes. Their labels are in Spanish.
+
 ## Features
 
 - **Hyprland 0.57+ with a Lua config** (`.config/hypr/hyprland.lua` + `config/*.lua`): dwindle tiling,
   10 independent workspaces per monitor, touchpad gestures, gaming workspace rules, zoom.
 - **Quickshell** (`.config/quickshell`) replaces waybar, wofi, swaync, swayosd, hyprpaper, hyprlock and the polkit agent:
   bar, app launcher and menus (power, power profiles, clipboard, emoji, themes, backgrounds, profiles, keybinding cheatsheet,
-  Wi-Fi via `networkmanager_dmenu` and Bluetooth via `bzmenu`), notifications, volume/brightness OSD, night light
+  file search, Wi-Fi via `networkmanager_dmenu` and Bluetooth via `bzmenu`), notifications, volume/brightness OSD, night light
   (hyprsunset), wallpaper, lock screen and polkit dialog. `hyprlock` stays as a fallback.
 - **Two desktop profiles**, *Modo Mac* and *Modo normal*, switchable live with **Super+Shift+T** (`config-set`).
 - **Per-workspace desktop mode** (**Super+Alt+D**): floating windows, minimize, a dock and macOS-style edge snapping.
@@ -49,8 +103,6 @@ Designed by me and implemented with help from [Claude Code](https://claude.com/c
   and a keyd config for a ThinkPad keyboard.
 - **Web apps** (`.local/share/applications`): Proton Mail, Proton Calendar, Proton Drive, WhatsApp and YouTube as Brave app windows.
 
-![Launcher](screenshots/launcher.png)
-
 ## Requirements
 
 - **CachyOS or Arch Linux** (the installer needs `pacman`; it refuses to run without it).
@@ -60,6 +112,7 @@ Designed by me and implemented with help from [Claude Code](https://claude.com/c
 - Optional, for Mac mode only: **macshell** and the **Sur** icon themes (`Sur-Transparente`, `Sur`). Neither is part of
   this repo nor installed by `install.sh`; without macshell, Mac mode falls back to Normal mode
   (see [below](#desktop-profiles-mac-mode--normal-mode)).
+- Optional: `fd`, used by the file search (**Super+Alt+Space**). `install.sh` doesn't install it.
 
 ## Installation
 
@@ -73,6 +126,8 @@ The script is safe to re-run: `pacman` uses `--needed`, overwritten files are ba
 `monitors.lua`, `variables.lua`, `inputs.lua` and chosen theme are kept if they already exist.
 It asks for `sudo` once at the start and keeps it alive. A failed package, AUR build or download is only a warning.
 Its prompts are in Spanish (`[S/n]`: `s`/`y` or Enter means yes).
+
+When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 
 ### What `install.sh` does
 
@@ -98,8 +153,6 @@ Details of step 3:
   `~/.local/share/icons/macOS` and checks its SHA-256. If the download fails it switches GTK, `uwsm/env` and `hypr/config/environment.lua`
   to Adwaita instead. It also writes `~/.icons/default/index.theme` (for X11 apps) and sets the GNOME cursor setting.
 - Makes `theme-set`, `config-set`, `background-set` and the Quickshell scripts executable, and runs `xdg-user-dirs-update`.
-
-When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 
 ### Packages
 
@@ -127,8 +180,6 @@ Then replace the `@HOME@` placeholder yourself:
 
 ## Desktop profiles: Mac mode / Normal mode
 
-![Config menu](screenshots/config-menu.png)
-
 **Super+Shift+T** opens the "Config" menu with *Modo Mac* and *Modo normal* (the active one has a check mark). From a terminal:
 
 ```sh
@@ -144,8 +195,9 @@ and KDE icon/style settings. Apps that are already open pick up new icons and Qt
 | | Mac mode (`mac`) | Normal mode (`default`) |
 |---|---|---|
 | Bar and notifications | macshell: macOS-style top bar, control center, notification center | Quickshell bar, notifications and notification center from this repo |
-| Super+Space | Spotlight (macshell) | App launcher |
+| Super+Space | Spotlight (macshell): apps, calculator and files | App launcher |
 | Super+Esc / Super+A | macshell power menu / control center | Power menu / notification center |
+| Super+B | not bound (the bar belongs to macshell) | Show / hide the top bar |
 | Windows | 10 px rounded corners and a soft shadow | Square corners, default shadow |
 | Titlebars (hyprbars) | macOS gray, Noto Sans, 32 px | Theme colors, JetBrains Mono, 28 px |
 | Icons (GTK, Qt, Dolphin) | Sur-Transparente (Sur with a light theme) | Papirus-Dark (Papirus-Light with a light theme) |
@@ -155,8 +207,6 @@ and KDE icon/style settings. Apps that are already open pick up new icons and Qt
 Shared by both: the color theme, desktop mode, the rest of the keybindings, the macOS cursor, keyd and
 Super+Shift+Space for the Quickshell app launcher. In Mac mode the color theme doesn't recolor Qt apps or the
 titlebars (they keep the macOS gray), and the Quickshell menus, OSD, polkit dialog and dock copy macshell's look.
-
-![Spotlight in Mac mode](screenshots/mac-spotlight.png)
 
 ### Light and dark: `mac-light`
 
@@ -180,7 +230,7 @@ It is **not included in this repo**. If it's missing, `mac` / `mac-light` behave
 
 ## Color themes
 
-**Super+T** opens the theme menu; each row shows the theme's palette and a sun or moon for light or dark. From a terminal:
+**Super+T** opens the theme menu. From a terminal:
 
 ```sh
 ~/.config/themes/theme-set              # list themes (* = active)
@@ -253,8 +303,6 @@ is gone), the first one in the list is used.
 
 ## Desktop mode (floating workspaces)
 
-![Desktop mode](screenshots/desktop-mode.png)
-
 - **Super+Alt+D** toggles desktop mode on the current workspace. In Normal mode every workspace starts tiling and
   Super+Alt+D makes it floating; in Mac mode every numbered workspace starts floating and Super+Alt+D makes it tiling.
   Desktop-mode workspaces have their number inside a box in the bar.
@@ -288,6 +336,7 @@ left **Alt** key (see [keyd](#keyboard-remapping-keyd)).
 |---|---|
 | Super+Space | App launcher (Spotlight in Mac mode) |
 | Super+Shift+Space | Quickshell app launcher (both profiles) |
+| Super+Alt+Space | File search (`fd` over your home; the file opens in a floating window) |
 | Super+Enter | Terminal (Ghostty) |
 | Super+F | File manager (Dolphin) |
 | Super+Ctrl+T | Text editor (GNOME Text Editor) |
@@ -314,8 +363,8 @@ left **Alt** key (see [keyd](#keyboard-remapping-keyd)).
 | Super+Shift+Esc | Kill a window (click it) |
 | Super+H / J / K / L | Move focus left / down / up / right |
 | Super+Shift+H / J / K / L | Move window left / down / up / right |
-| Super+D | Maximize (toggle) |
-| Super+Alt+Space | Toggle floating / tiling |
+| Super+D | Toggle floating / tiling |
+| Super+Shift+M | Maximize (toggle) |
 | Super+Alt+J | Toggle split direction |
 | Super+Alt+D | Toggle desktop mode on this workspace |
 | Super+M | Minimize |
@@ -410,7 +459,7 @@ dotfiles/
 │   ├── etc/greetd/               greetd + ReGreet config and style
 │   ├── etc/keyd/thinkpad.conf    Alt/Super swap, Caps Lock → Ctrl
 │   └── usr/share/                greeter background, Plymouth "sobrio" theme
-└── screenshots/
+└── screenshots/                  the images in this README
 ```
 
 Runtime state (not in the repo) lives in `~/.local/state/`: `desktop-profile`, `desktop-workspaces`,
@@ -483,6 +532,7 @@ There's no uninstall script. To go back:
 | Mac mode looks exactly like Normal mode | macshell isn't installed at `~/.config/quickshell/macshell/`. That's expected: it isn't part of this repo. |
 | Missing icons in Mac mode | The Sur / Sur-Transparente icon themes aren't installed by `install.sh`; install them or use Normal mode. |
 | Super shortcuts do nothing, or Alt and Super are swapped on a non-ThinkPad keyboard | `hypr/config/keyd.lua` rebinds keyd at startup. If you run keyd with your own configs, remove `require("config.keyd")` from `hyprland.lua` and run `keyd bind reset`. If you're not in the `keyd` group, log out and back in after the installer adds you. |
+| File search (Super+Alt+Space) lists nothing | It needs `fd`, which `install.sh` doesn't install: `sudo pacman -S fd`. |
 | Bar, launcher or wallpaper missing | Start Quickshell by hand to see errors: `qs` (and `qs -p ~/.config/quickshell/macshell` in Mac mode). |
 | Colors look wrong or half-applied | `~/.config/themes/theme-set --reapply`, then reopen GTK/Qt apps and btop. |
 | Qt apps ignore the theme | They need `QT_QPA_PLATFORMTHEME=qt6ct` (set in `uwsm/env` and `environment.lua`); log in through the uwsm session. |
