@@ -11,7 +11,7 @@
 #   3. Dotfiles: .config, .bashrc, webapps -> ~ (lo que pisa va a ~/.dotfiles-old/<fecha>) y bash como shell
 #   4. Tema de colores (theme-set) y perfil Modo Mac / Modo normal (config-set)
 #   5. Plugin hyprbars con el parche del modo escritorio (y quita los botones propios de GTK/Brave)
-#   6. Sistema (sudo): greetd + ReGreet, Plymouth "canalla", keyd (ThinkPad), servicios
+#   6. Sistema (sudo): greetd + ReGreet, Plymouth "sobrio", keyd (ThinkPad), servicios
 #
 # Ejecútalo como tu usuario, no como root: pide sudo cuando lo necesita.
 # Se puede repetir sin miedo: pacman usa --needed, lo que se sobrescribe va a ~/.dotfiles-old
@@ -319,10 +319,10 @@ if ask "¿Login con greetd + ReGreet (sustituye a SDDM/el login que haya)?"; the
 	sudo systemctl enable greetd || warn "no se pudo activar greetd: revisa display-manager.service"
 fi
 
-if ask "¿Tema de arranque Plymouth \"canalla\"?"; then
-	sudo rm -rf /usr/share/plymouth/themes/canalla
-	sudo cp -r "$S/usr/share/plymouth/themes/canalla" /usr/share/plymouth/themes/
-	sudo plymouth-set-default-theme canalla
+if ask "¿Tema de arranque Plymouth \"sobrio\" (gris neutro)?"; then
+	sudo rm -rf /usr/share/plymouth/themes/sobrio /usr/share/plymouth/themes/canalla
+	sudo cp -r "$S/usr/share/plymouth/themes/sobrio" /usr/share/plymouth/themes/
+	sudo plymouth-set-default-theme sobrio
 	grep -qw plymouth /etc/mkinitcpio.conf 2>/dev/null ||
 		warn "falta el hook plymouth en /etc/mkinitcpio.conf (y 'splash' en la línea del kernel): sin eso no se verá"
 	info "regenerando el initramfs..."

@@ -44,7 +44,7 @@ Designed by me and implemented with help from [Claude Code](https://claude.com/c
 - **Per-theme backgrounds** (**Super+Ctrl+B**, `background-set`), remembered per theme.
 - **Terminal setup**: Ghostty, bash + starship, Neovim with LazyVim (custom `miami` and `vantablack` colorschemes),
   btop, eza/bat/fzf aliases, fastfetch with an ASCII Pepe tinted with the theme accent.
-- **System extras** (optional, under `system/`): greetd + ReGreet login screen, the "canalla" Plymouth boot theme
+- **System extras** (optional, under `system/`): greetd + ReGreet login screen, the "sobrio" Plymouth boot theme (plain neutral gray)
   and a keyd config for a ThinkPad keyboard.
 - **Web apps** (`.local/share/applications`): Proton Mail, Proton Calendar, Proton Drive, WhatsApp and YouTube as Brave app windows.
 
@@ -83,7 +83,7 @@ Its prompts are in Spanish (`[S/n]`: `s`/`y` or Enter means yes).
 | **3b. Shell** | If your login shell isn't bash (CachyOS defaults to fish), offers `chsh -s /bin/bash`. |
 | **4. Theme and profile** | Runs `theme-set <theme>` (your current theme if you already had one, otherwise **grafito**) and `config-set --reapply` (Mac mode if macshell is installed, otherwise Normal mode). |
 | **5. hyprbars** | Clones `hyprwm/hyprland-plugins` at the tag matching your installed Hyprland (falls back to `vX.Y.0`), applies the two patches in `.config/hypr/`, builds it and copies `hyprbars.so` to `~/.local/lib/hyprland/`. Then offers to remove the apps' own window buttons (GTK `button-layout`, and Brave's "use system title bar", only if Brave is closed). |
-| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname, disables whatever display manager is active and enables greetd); **Plymouth "canalla"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
+| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname, disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
 
 Details of step 3:
 
@@ -408,7 +408,7 @@ dotfiles/
 ├── system/                       copied to / by the installer (sudo)
 │   ├── etc/greetd/               greetd + ReGreet config and style
 │   ├── etc/keyd/thinkpad.conf    Alt/Super swap, Caps Lock → Ctrl
-│   └── usr/share/                greeter background, Plymouth "canalla" theme
+│   └── usr/share/                greeter background, Plymouth "sobrio" theme
 └── screenshots/
 ```
 
