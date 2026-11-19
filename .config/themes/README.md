@@ -82,7 +82,7 @@ En Modo Mac, las ventanas de la Quickshell de aquí que se siguen usando
 y dock) copian el aspecto de macshell (`Theme.mac` en `quickshell/Theme.qml`).
 
 Común a los dos: tema de colores (en Mac no recolorea las apps Qt ni hyprbars),
-cursor macOS (negro), keyd (Alt/Super intercambiados, HHKB intacto), Super+Shift+Espacio
+cursor Adwaita, keyd (Alt/Super intercambiados, HHKB intacto), Super+Shift+Espacio
 = lanzador de apps, `QT_QPA_PLATFORMTHEME=qt6ct`, reglas de ventanas, etc.
 
 El perfil se guarda en `~/.local/state/desktop-profile` y lo leen

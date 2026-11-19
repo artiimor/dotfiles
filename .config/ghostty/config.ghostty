@@ -62,3 +62,7 @@ background-opacity = 1
 
 # Colores generados por ~/.config/themes/theme-set
 theme = current
+
+# Cambiar de pestaña con Alt+H / Alt+L (Tab y Ctrl se usan en nvim)
+keybind = alt+h=previous_tab
+keybind = alt+l=next_tab
