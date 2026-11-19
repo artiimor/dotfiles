@@ -34,16 +34,20 @@ Singleton {
     readonly property bool centered: ["apps", "clipboard", "emoji", "power", "themes", "backgrounds", "configs", "keys"].includes(mode)
 
     // Abre un modo, o lo cierra si ya estaba abierto (como `pkill wofi || wofi`)
-    function toggle(m) {
-        if (open && mode === m)
+    function toggle(m, float) {
+        if (open && mode === m && floatLaunch === !!float)
             close();
         else
-            show(m);
+            show(m, float);
     }
 
-    function show(m) {
+    // Modo "apps" con floatLaunch (Super+Alt+Espacio): la app elegida se abre flotante
+    property bool floatLaunch: false
+
+    function show(m, float) {
         cancelDmenu();
         mode = m;
+        floatLaunch = !!float;
         password = false;
         if (m === "apps") {
             prompt = ""; // sin texto: la lupa ya dice que es un buscador
@@ -115,7 +119,15 @@ Singleton {
         if (m === "apps") {
             const e = item.data;
             const cmd = e.runInTerminal ? ["ghostty", "-e", ...e.command] : e.command;
-            Quickshell.execDetached(["uwsm-app", "--", ...cmd]);
+            if (root.floatLaunch) {
+                // Lo lanza Hyprland con la regla float (sigue al proceso a través de uwsm-app),
+                // centrada y al 65% de la pantalla como en el modo escritorio (no maximizada)
+                const q = a => "'" + String(a).replace(/'/g, "'\\''") + "'";
+                const sh = ["uwsm-app", "--", ...cmd].map(q).join(" ");
+                Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.exec_cmd(${JSON.stringify(sh)}, { float = true, size = { "monitor_w*0.65", "monitor_h*0.65" }, center = true })`]);
+            } else {
+                Quickshell.execDetached(["uwsm-app", "--", ...cmd]);
+            }
         } else if (m === "power") {
             const cmds = {
                 lock: "loginctl lock-session",
@@ -345,6 +357,7 @@ for t in sorted(os.listdir(d)):
     IpcHandler {
         target: "launcher"
         function apps(): void { root.toggle("apps"); }
+        function appsFloat(): void { root.toggle("apps", true); }
         function power(): void { root.toggle("power"); }
         function clipboard(): void { root.toggle("clipboard"); }
         function emoji(): void { root.toggle("emoji"); }

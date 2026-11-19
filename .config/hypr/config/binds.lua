@@ -24,8 +24,8 @@ end
 -- Window manipulation
 hl.bind(mainMod .. " + SHIFT + Escape", hl.dsp.exec_cmd("hyprctl kill"), { description = "Matar ventana (clic)" })
 hl.bind(mainMod .. " + W", hl.dsp.window.close(), { description = "Cerrar ventana" })
-hl.bind(mainMod .. " + ALT + Space", hl.dsp.window.float({ action = "toggle" }), { description = "Flotante / tiling" })
-hl.bind(mainMod .. " + D", hl.dsp.window.fullscreen({ mode = 1 }), { description = "Maximizar" })
+hl.bind(mainMod .. " + D", hl.dsp.window.float({ action = "toggle" }), { description = "Flotante / tiling" })
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.window.fullscreen({ mode = 1 }), { description = "Maximizar" })
 hl.bind(mainMod .. " + ALT + J", hl.dsp.layout("togglesplit"), { description = "Cambiar división" })
 
 -- Change focus
@@ -103,6 +103,7 @@ local function shellCmd(mac, own)
 end
 hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd(shellCmd("spotlight toggle", "qs ipc call launcher apps")), { description = PROFILE_MAC and "Buscar" or "Lanzador de apps" })
 hl.bind(mainMod .. " + SHIFT + Space", hl.dsp.exec_cmd("qs ipc call launcher apps"), { description = "Lanzador de apps" })
+hl.bind(mainMod .. " + ALT + Space", hl.dsp.exec_cmd("qs ipc call launcher appsFloat"), { description = "Lanzador de apps (abre en flotante)" })
 hl.bind(mainMod .. " + CTRL + V", hl.dsp.exec_cmd("qs ipc call launcher clipboard"), { description = "Portapapeles" })
 hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd(shellCmd("power toggle", "qs ipc call launcher power")), { description = "Menú de energía" })
 hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("qs ipc call launcher emoji"), { description = "Emojis" })

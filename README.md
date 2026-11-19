@@ -112,7 +112,6 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 - Optional, for Mac mode only: **macshell** and the **Sur** icon themes (`Sur-Transparente`, `Sur`). Neither is part of
   this repo nor installed by `install.sh`; without macshell, Mac mode falls back to Normal mode
   (see [below](#desktop-profiles-mac-mode--normal-mode)).
-- Optional: `fd`, used by the file search (**Super+Alt+Space**). `install.sh` doesn't install it.
 
 ## Installation
 
@@ -336,7 +335,7 @@ left **Alt** key (see [keyd](#keyboard-remapping-keyd)).
 |---|---|
 | Super+Space | App launcher (Spotlight in Mac mode) |
 | Super+Shift+Space | Quickshell app launcher (both profiles) |
-| Super+Alt+Space | File search (`fd` over your home; the file opens in a floating window) |
+| Super+Alt+Space | Quickshell app launcher; the app opens in a floating window |
 | Super+Enter | Terminal (Ghostty) |
 | Super+F | File manager (Dolphin) |
 | Super+Ctrl+T | Text editor (GNOME Text Editor) |
@@ -532,7 +531,6 @@ There's no uninstall script. To go back:
 | Mac mode looks exactly like Normal mode | macshell isn't installed at `~/.config/quickshell/macshell/`. That's expected: it isn't part of this repo. |
 | Missing icons in Mac mode | The Sur / Sur-Transparente icon themes aren't installed by `install.sh`; install them or use Normal mode. |
 | Super shortcuts do nothing, or Alt and Super are swapped on a non-ThinkPad keyboard | `hypr/config/keyd.lua` rebinds keyd at startup. If you run keyd with your own configs, remove `require("config.keyd")` from `hyprland.lua` and run `keyd bind reset`. If you're not in the `keyd` group, log out and back in after the installer adds you. |
-| File search (Super+Alt+Space) lists nothing | It needs `fd`, which `install.sh` doesn't install: `sudo pacman -S fd`. |
 | Bar, launcher or wallpaper missing | Start Quickshell by hand to see errors: `qs` (and `qs -p ~/.config/quickshell/macshell` in Mac mode). |
 | Colors look wrong or half-applied | `~/.config/themes/theme-set --reapply`, then reopen GTK/Qt apps and btop. |
 | Qt apps ignore the theme | They need `QT_QPA_PLATFORMTHEME=qt6ct` (set in `uwsm/env` and `environment.lua`); log in through the uwsm session. |
