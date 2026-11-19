@@ -54,11 +54,13 @@ edge snapping and an auto-hiding dock at the bottom. The workspace number gets a
 
 ### Mac mode, dark and light
 
-| Mac mode with a light theme | Spotlight (Super+Space) |
+| Dark | Dark, Spotlight (Super+Space) |
 |---|---|
-| ![Mac mode with the Rosé Pine Dawn light theme](screenshots/mac-light.png) | ![Spotlight search open in Mac mode](screenshots/mac-spotlight.png) |
+| ![Mac mode with the dark Grafito theme](screenshots/mac.png) | ![Spotlight search open in dark Mac mode](screenshots/mac-spotlight.png) |
+| **Light** | **Light, Spotlight (Super+Space)** |
+| ![Mac mode with the Rosé Pine Dawn light theme](screenshots/mac-light.png) | ![Spotlight search open in light Mac mode](screenshots/mac-light-spotlight.png) |
 
-The second profile (dark, in the picture at the top): the macshell top bar, Spotlight, rounded corners and shadows,
+The second profile: the macshell top bar, Spotlight, rounded corners and shadows,
 and every workspace floating. A light color theme turns it light automatically.
 Switch profiles with **Super+Shift+T**. [Details](#desktop-profiles-mac-mode--normal-mode).
 
