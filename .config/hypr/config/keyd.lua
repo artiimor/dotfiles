@@ -8,13 +8,16 @@
 local binds = {
 	"main.leftalt=layer(meta)",
 	"main.leftmeta=layer(alt)",
-	"alt.left=left", "alt.right=right", "alt.backspace=backspace",
-	"alt.c=c", "alt.v=v", "alt.w=w", "alt.f=f",
-	"alt.space=space", "alt.enter=enter",
+	-- Ojo: en keyd una tecla asignada explícitamente en una capa pierde el modificador
+	-- de esa capa, así que "alt.space=space" mandaba Espacio SIN Alt (Super+Alt+Espacio
+	-- llegaba como Super+Espacio). Por eso se reasignan con el Alt puesto: A-<tecla>.
+	"alt.left=A-left", "alt.right=A-right", "alt.backspace=A-backspace",
+	"alt.c=A-c", "alt.v=A-v", "alt.w=A-w", "alt.f=A-f",
+	"alt.space=A-space", "alt.enter=A-enter",
 }
 for i = 1, 5 do
-	table.insert(binds, "alt." .. i .. "=" .. i)
-	table.insert(binds, "alt+shift." .. i .. "=" .. i)
+	table.insert(binds, "alt." .. i .. "=A-" .. i)
+	table.insert(binds, "alt+shift." .. i .. "=A-S-" .. i)
 end
 -- HHKB: sin swap (◇ = Super, Alt = Alt). Van al final para pisar el swap de arriba,
 -- y usan los aliases de /etc/keyd/hhkb.conf, que solo existen en ese teclado.

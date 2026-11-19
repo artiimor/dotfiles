@@ -21,8 +21,8 @@
 #                sus colores en kdeglobals (Dolphin)
 #   fastfetch    fastfetch/themed/pepe-*.txt: Pepes teñidos con el     (terminales nuevas)
 #                acento (los originales los genera fastfetch/pepe.py)
-#   Neovim       lee "nvim" de theme.json en plugins/colorscheme.lua (al abrirlo;
-#                los ya abiertos lo reciben por su socket)
+#   Neovim       nvim (mini.nvim): mini.hues con ui.bg/ui.fg; lazyvim: campo "nvim"
+#                (al abrirlo; los ya abiertos lo reciben por su socket)
 #   Fondo        Quickshell lo pide a background-set al recargar  (al momento)
 #
 # Temas claros: "light": true en theme.json (sin él, oscuro). Al cambiar de tema
@@ -361,7 +361,10 @@ def reload_nvim(t):
     # en light y rose-pine, gruvbox, everforest... cargarían su variante clara
     cs = t.get("nvim", "catppuccin")
     bg = "light" if t.get("light") else "dark"
-    expr = f"execute(['set background={bg}', 'colorscheme {cs}'])"
+    # El nvim por defecto (mini.nvim) define MiniThemeReload() y relee theme.json él
+    # solo; LazyVim (comando lazyvim) recibe background + colorscheme
+    expr = (f"exists('*MiniThemeReload') ? MiniThemeReload() : "
+            f"execute(['set background={bg}', 'colorscheme {cs}'])")
     # Todos a la vez (antes uno detrás de otro, y uno colgado retrasaba al resto)
     procs = [subprocess.Popen(["nvim", "--server", sock, "--remote-expr", expr],
                               stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)

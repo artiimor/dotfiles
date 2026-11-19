@@ -42,7 +42,8 @@ Designed by me and implemented with help from [Claude Code](https://claude.com/c
 - **Color theme switcher** (**Super+T**, `theme-set`): one `theme.json` per theme recolors Hyprland, Quickshell, hyprlock,
   Ghostty, kitty, btop, fzf, GTK, Qt/KDE, fastfetch and running Neovim instances at once. 13 themes, 2 of them light.
 - **Per-theme backgrounds** (**Super+Ctrl+B**, `background-set`), remembered per theme.
-- **Terminal setup**: Ghostty, bash + starship, Neovim with LazyVim (custom `miami` and `vantablack` colorschemes),
+- **Terminal setup**: Ghostty, bash + starship, a minimal Neovim built on mini.nvim (colors generated from the theme with
+  mini.hues; LazyVim with custom `miami` and `vantablack` colorschemes still available as `lazyvim`),
   btop, eza/bat/fzf aliases, fastfetch with an ASCII Pepe tinted with the theme accent.
 - **System extras** (optional, under `system/`): greetd + ReGreet login screen, the "sobrio" Plymouth boot theme (plain neutral gray)
   and a keyd config for a ThinkPad keyboard.
@@ -210,7 +211,7 @@ It is **not included in this repo**. If it's missing, `mac` / `mac-light` behave
 | Quickshell | reads `themes/current/theme.json` | immediately |
 | Hyprland | `hypr/config/theme.lua` | immediately |
 | kitty / Ghostty | `kitty/themes/current.conf`, `ghostty/themes/current` | immediately |
-| Neovim | `nvim` key of `theme.json`, sent to running instances over their socket | immediately |
+| Neovim | `ui.bg`/`ui.fg` through mini.hues (`lazyvim`: `nvim` key of `theme.json`), sent to running instances over their socket | immediately |
 | Background | asked from `background-set` | immediately |
 | btop | `btop/themes/current.theme` | next launch |
 | GTK | `gtk-3.0/gtk.css`, `gtk-4.0/gtk.css` (not in `mac-light`) | next launch of the app |
@@ -401,7 +402,7 @@ dotfiles/
 │   ├── themes/                   one folder per theme + theme-set, config-set, background-set
 │   ├── backgrounds/              default wallpapers (Pepes) and the script that made them
 │   ├── uwsm/env                  session environment (Qt, cursor, Electron)
-│   ├── ghostty/ kitty/ nvim/ btop/ fastfetch/ starship.toml micro/
+│   ├── ghostty/ kitty/ nvim/ nvim-lazyvim/ btop/ fastfetch/ starship.toml micro/
 │   ├── gtk-3.0/ gtk-4.0/ qt6ct/ kdeglobals dolphinrc
 │   └── networkmanager-dmenu/ mimeapps.list swash/ …
 ├── .local/share/applications/    web app launchers and their icons
@@ -498,7 +499,7 @@ There's no uninstall script. To go back:
 - Color palettes are based on their original projects: Catppuccin, Dracula, Everforest, Gruvbox, Kanagawa, Rosé Pine and Tokyo Night.
 - [apple_cursor](https://github.com/ful1e5/apple_cursor) (macOS cursor), downloaded at install time; not redistributed here.
 - Papirus icons, Breeze and adw-gtk3 come from the distribution packages.
-- [LazyVim](https://www.lazyvim.org) for the Neovim setup.
+- [mini.nvim](https://github.com/nvim-mini/mini.nvim) for the default Neovim setup and [LazyVim](https://www.lazyvim.org) for `lazyvim`.
 - Pepe the Frog is a character created by Matt Furie. The wallpapers in `.config/backgrounds/` and the ASCII art in
   `.config/fastfetch/` are derived from Pepe images by the scripts in those folders.
 - The web app icons in `.local/share/applications/icons/` are trademarks of their respective owners (Proton, WhatsApp, YouTube).

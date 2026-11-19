@@ -35,3 +35,6 @@ command -v bat >/dev/null && alias cat='bat --paging=never --style=plain'
 
 # fzf: Ctrl+R historial, Ctrl+T archivos, Alt+C carpetas (colores del tema activo)
 command -v fzf >/dev/null && eval "$(fzf --bash)"
+
+# Neovim: `nvim` es la config sobria con mini.nvim; `lazyvim` abre la de LazyVim
+lazyvim() { NVIM_APPNAME=nvim-lazyvim nvim "$@"; }
