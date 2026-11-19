@@ -9,7 +9,7 @@
 #   1. Paquetes del escritorio (pacman) y los de AUR (bzmenu) con makepkg
 #   2. Apps extra (Firefox, Brave, Spotify, Discord, Proton...)
 #   3. Dotfiles: .config, .bashrc, webapps -> ~ (lo que pisa va a ~/.dotfiles-old/<fecha>) y bash como shell
-#   4. Tema de colores (theme-set) y perfil Mac/Default (config-set)
+#   4. Tema de colores (theme-set) y perfil Modo Mac / Modo normal (config-set)
 #   5. Plugin hyprbars con el parche del modo escritorio (y quita los botones propios de GTK/Brave)
 #   6. Sistema (sudo): greetd + ReGreet, Plymouth "canalla", keyd (ThinkPad), servicios
 #

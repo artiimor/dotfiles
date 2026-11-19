@@ -26,6 +26,13 @@ Item {
         brightness: -0.15
     }
 
+    // Texto sobre el fondo de noche (fecha, usuario, batería): con un tema claro
+    // (o Mac claro) el fg/muted del tema es oscuro y no se leería, así que va casi
+    // blanco y con sombra
+    readonly property bool lightText: Theme.themeLight || Theme.macLight
+    readonly property color wallFg: lightText ? "#f5f5f7" : Theme.fg
+    readonly property color wallMuted: lightText ? "#d8d8de" : Theme.muted
+
     SystemClock {
         id: clock
         precision: SystemClock.Seconds
@@ -55,9 +62,15 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: -105
         text: clock.date.toLocaleDateString(Qt.locale(), "dddd, d 'de' MMMM")
-        color: Theme.muted
+        color: root.wallMuted
         font.family: Theme.font
         font.pixelSize: 20
+        layer.enabled: root.lightText
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowBlur: 0.6
+            shadowOpacity: 0.6
+        }
     }
 
     // Usuario
@@ -66,10 +79,16 @@ Item {
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: -15
         text: "󰀄  " + Quickshell.env("USER")
-        color: Theme.fg
+        color: root.wallFg
         font.family: Theme.font
         font.pixelSize: 16
         font.bold: true
+        layer.enabled: root.lightText
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowBlur: 0.6
+            shadowOpacity: 0.6
+        }
     }
 
     // ── Contraseña ────────────────────────────────────────
@@ -184,9 +203,15 @@ Item {
             const p = UPower.displayDevice?.percentage ?? 0;
             return "󰁹  " + Math.round(p > 1 ? p : p * 100) + "%";
         }
-        color: Theme.muted
+        color: root.wallMuted
         font.family: Theme.font
         font.pixelSize: 16
         font.bold: true
+        layer.enabled: root.lightText
+        layer.effect: MultiEffect {
+            shadowEnabled: true
+            shadowBlur: 0.6
+            shadowOpacity: 0.6
+        }
     }
 }

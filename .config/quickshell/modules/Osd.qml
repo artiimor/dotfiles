@@ -98,7 +98,7 @@ PanelWindow {
         radius: Theme.radius
         color: Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.92)
         border.width: 1
-        border.color: Theme.accentDim
+        border.color: Theme.frame
 
         Row {
             id: row

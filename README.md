@@ -7,69 +7,82 @@ Designed by me and implemented with help from [Claude Code](https://claude.com/c
 
 It has **two desktop configs** you can switch between at any time, without logging out:
 
-| Config Mac | Config Default |
+| Mac mode | Normal mode |
 |---|---|
-| ![Config Mac](screenshots/mac.png) | ![Config Default](screenshots/tiling.png) |
+| ![Mac mode](screenshots/mac.png) | ![Normal mode](screenshots/tiling.png) |
 | macOS-style top bar, Spotlight and control center (macshell), rounded windows with shadows, Sur icons | My original Quickshell bar and launcher, square windows, Papirus icons, colors from the active theme |
+
+Light or dark comes from the color theme: pick a light theme and either config turns light.
 
 ## What's inside
 
 - **Hyprland 0.57 with a Lua config** (`.config/hypr/hyprland.lua` + `config/*.lua`), dwindle tiling,
-  per-monitor workspaces and dimmed inactive windows (square corners in Default, rounded with shadows in Mac).
+  per-monitor workspaces and dimmed inactive windows (square corners in Normal mode, rounded with shadows in Mac mode).
 - **Quickshell** (`.config/quickshell`) replaces waybar, wofi, swaync, swayosd, hyprpaper and the polkit agent:
   bar, app launcher and menus (power, clipboard, emoji, themes, keybinding cheatsheet, wifi and bluetooth via dmenu),
   notifications, volume and brightness OSD, night light, wallpaper, lock screen and polkit dialog.
 - **Per-workspace desktop mode**: on the workspaces you pick, windows float, can be minimized
   and a dock shows up at the bottom. In the bar, those workspaces have their number inside a box.
-- **Two desktop configs, Mac and Default** (`config-set`): switch the whole look and the bar from a menu. See [below](#desktop-configs-mac--default).
+- **Two desktop configs, Mac mode and Normal mode** (`config-set`): switch the whole look and the bar from a menu. See [below](#desktop-configs-mac-mode--normal-mode).
 - **macOS-style titlebars** on every floating window (close, minimize, maximize), using a patched `hyprbars` plugin.
 - **Color theme switcher** (`.config/themes`): one `theme.json` per theme that colors Hyprland, Quickshell,
   hyprlock, ghostty, kitty, btop, GTK, Qt/KDE, fzf, fastfetch and running Neovims at once.
-  Ships with kanagawa-dragon, everforest, miami, catppuccin, tokyo-night, rose-pine, gruvbox and vantablack. See `.config/themes/README.md`.
+  Ships with kanagawa-dragon, everforest, miami, catppuccin, tokyo-night, rose-pine, gruvbox and vantablack,
+  plus two light themes, catppuccin-latte and rose-pine-dawn. The theme menu (Super+T) shows each theme's palette. See `.config/themes/README.md`.
 - **ghostty** as the terminal, bash + starship prompt, Neovim with LazyVim (own miami and vantablack colorschemes),
   btop, and fastfetch with a random ASCII Pepe tinted with the theme accent.
 
 ![Launcher](screenshots/launcher.png)
 
-## Desktop configs: Mac / Default
+## Desktop configs: Mac mode / Normal mode
 
 ![Config menu](screenshots/config-menu.png)
 
-**Super+Shift+T** opens the "Config" menu (the active one has a ✓), or from a terminal:
+**Super+Shift+T** opens the "Config" menu with two entries, *Modo Mac* and *Modo normal* (the active one has a ✓), or from a terminal:
 
 ```sh
-~/.config/themes/config-set mac       # macOS style
-~/.config/themes/config-set default   # the original setup
+~/.config/themes/config-set mac       # macOS style (light if the color theme is light)
+~/.config/themes/config-set default   # the original setup (also: normal)
 ~/.config/themes/config-set           # list them (* = active)
 ```
 
 It applies in about 2 seconds: reloads Hyprland, restarts Quickshell and rewrites the icon and Qt settings.
 Apps that are already open pick up the new icons and Qt style the next time you open them.
 
-| | Config Mac | Config Default |
+| | Mac mode | Normal mode |
 |---|---|---|
 | Bar and notifications | macshell: macOS-style top bar, control center, notification center | Quickshell bar, notifications and dock from this repo |
 | Super+Space | Spotlight | App launcher |
 | Super+Esc / Super+A | macshell power menu / calendar and notifications | Power menu / notification center |
 | Windows | 10 px rounded corners and a soft shadow | Square corners, default shadow |
 | Titlebars (hyprbars) | Sur gray, Noto Sans, 32 px | Theme background, JetBrains Mono, 28 px |
-| Icons (GTK, Qt) | Sur-Transparente | Papirus-Dark |
+| Icons (GTK, Qt) | Sur-Transparente (Sur with a light theme) | Papirus-Dark (Papirus-Light with a light theme) |
 | Qt apps (qt6ct) | Breeze, `mac-dark` colors, Noto Sans | Fusion, colors from the active theme |
+| Workspaces | All floating (desktop mode); Super+Alt+D makes one tiling | All tiling; Super+Alt+D makes one floating |
 
-![Spotlight in Config Mac](screenshots/mac-spotlight.png)
+**Light and dark follow the color theme** (themes with `"light": true` in their `theme.json`).
+In Mac mode, a light theme switches to Mac light (internal profile `mac-light`): light macshell and titlebars, Sur icons,
+light GTK (`adw-gtk3`, `prefer-light`, a fixed light `gtk.css` the color theme doesn't overwrite) and Qt `mac-light` colors;
+a dark theme switches back. `theme-set` does it by itself when you change themes, and choosing Mac mode with a light theme
+already gives Mac light (`config-set mac-light` still forces it by hand). In Normal mode, a light theme makes GTK light
+(`adw-gtk3`, `prefer-light`) with Papirus-Light icons, and everything else takes the theme's colors as usual.
+
+![Spotlight in Mac mode](screenshots/mac-spotlight.png)
 
 Shared by both: the color theme (Super+T), desktop mode, the rest of the keybindings, the cursor and the keyd keyboard layout.
-In Mac, the color theme doesn't recolor Qt apps or the titlebars, to keep the macOS gray.
+In Mac mode, the color theme doesn't recolor Qt apps or the titlebars, to keep the macOS gray.
 
 The active config is saved in `~/.local/state/desktop-profile`; `hypr/config/profile.lua` and `quickshell/shell.qml` read it.
 **Mac needs macshell** (`~/.config/quickshell/macshell`), a separate Quickshell config that is not in this repo;
-without it, Mac behaves like Default. Details in `.config/themes/README.md`.
+without it, Mac mode behaves like Normal mode. Details in `.config/themes/README.md`.
 
 ## Desktop mode
 
 ![Desktop mode](screenshots/desktop-mode.png)
 
 - **Super+Alt+D** turns it on or off for the current workspace. New windows open floating, centered and at 65% of the screen.
+  In Mac mode every numbered workspace starts in desktop mode. Each config remembers its own exceptions
+  (`~/.local/state/desktop-exceptions-mac`, `desktop-workspaces-default`); open windows adapt when you switch configs.
 - **Super+M** (or the yellow titlebar button) minimizes the window.
 - **Dock** (auto-hides, hover the bottom edge): click a window to bring it to the front; click the active one to minimize it; click a minimized one to restore it.
 - **Snapping**: drop a window against the left or right edge for half the screen, against the top to maximize. Dragging it away restores its size.
@@ -87,7 +100,7 @@ Without the plugin everything else still works, just without titlebars.
 
 | Keys | Action |
 |---|---|
-| Super+Space | App launcher (Spotlight in Config Mac) |
+| Super+Space | App launcher (Spotlight in Mac mode) |
 | Super+Shift+Space | App launcher (in both configs) |
 | Super+Enter | Terminal (ghostty) |
 | Super+F | Files (Dolphin) |
@@ -110,12 +123,12 @@ Without the plugin everything else still works, just without titlebars.
 | Alt+Tab | Next window |
 | Super+S / Super+Shift+S | Scratchpad: show / send window |
 | Super+Plus / Super+Minus | Zoom in / out |
-| Super+Esc | Power menu (macshell's in Config Mac) |
+| Super+Esc | Power menu (macshell's in Mac mode) |
 | Super+Ctrl+V | Clipboard history |
 | Super+. | Emoji |
 | Super+T | Switch theme |
-| Super+Shift+T | Switch desktop config (Mac / Default) |
-| Super+A | Notification center (macshell's in Config Mac) |
+| Super+Shift+T | Switch desktop config (Mac mode / Normal mode) |
+| Super+A | Notification center (macshell's in Mac mode) |
 | Super+Alt+L | Lock |
 | Super+Shift+P | Screenshot a region |
 | Super+C / Super+V / Super+X | Copy / paste / cut in any app |
@@ -133,7 +146,7 @@ git clone https://github.com/artiimor/dotfiles.git ~/dotfiles
 
 It installs the packages (plus `bzmenu` from the AUR), copies the dotfiles and web apps into `~`
 (anything it overwrites goes to `~/.dotfiles-old/<date>`), applies a theme and the desktop config
-(Default unless macshell is installed), builds the patched `hyprbars`
+(Normal mode unless macshell is installed), builds the patched `hyprbars`
 and, optionally, sets up the system parts in `system/`: greetd + ReGreet login, the Plymouth boot theme
 and the keyd Alt/Super swap for the ThinkPad keyboard.
 

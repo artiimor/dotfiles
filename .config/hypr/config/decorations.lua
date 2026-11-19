@@ -60,8 +60,8 @@ if PROFILE_MAC then
                 range = 24,
                 render_power = 3,
                 offset = "0 6",
-                color = "rgba(00000077)",
-                color_inactive = "rgba(00000044)",
+                color = PROFILE_LIGHT and "rgba(00000040)" or "rgba(00000077)",
+                color_inactive = PROFILE_LIGHT and "rgba(00000022)" or "rgba(00000044)",
             },
         },
     })

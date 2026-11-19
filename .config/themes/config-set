@@ -1,20 +1,33 @@
 #!/usr/bin/env python3
-# Cambia el perfil ("config") del escritorio en Hyprland: Mac o Default.
+# Cambia el perfil ("config") del escritorio en Hyprland: Modo Mac o Modo normal.
 #
 #   config-set              lista los perfiles (* = el actual)
-#   config-set <perfil>     aplica un perfil: mac | default
-#   config-set --reapply    vuelve a aplicar el actual (p.ej. tras install.sh)
+#   config-set <perfil>     aplica un perfil: mac | default (o normal: Modo normal)
+#   config-set --reapply    vuelve a aplicar el actual (p.ej. tras install.sh), con
+#                           Mac claro u oscuro según el tema
 #   config-set --list       para el menú de Quickshell: "<perfil>\t<nombre>\t<1 si es el actual>"
 #
 # También desde el menú: Super+Shift+T (modo "configs" del launcher de Quickshell).
 #
+# Claro u oscuro lo decide el tema de colores ("light": true en su theme.json):
+# `config-set mac` guarda "mac-light" si el tema activo es claro y "mac" si es
+# oscuro, y theme-set llama a sync_theme() de aquí al cambiar de tema para pasar
+# de uno a otro. `config-set mac-light` sigue funcionando a mano (fuerza el claro
+# hasta el próximo cambio de tema o --reapply). En Modo normal el tema claro pone
+# GTK claro (adw-gtk3, prefer-light) e iconos Papirus-Light.
+#
 #   mac      barra macshell (repo plasma-mac) con Spotlight (Super+Espacio),
 #            PowerMenu (Super+Esc) y centro de notificaciones (Super+A); ventanas
 #            con esquinas redondeadas y sombra; hyprbars gris Sur-Gris; iconos
-#            Sur-Transparente; Qt con estilo Breeze, colores mac-dark y Noto Sans
-#   default  lo de antes del estilo Mac: barra, lanzador, menú de energía y
-#            notificaciones de Quickshell; esquinas rectas; hyprbars con el color
-#            del tema; iconos Papirus-Dark; Qt con Fusion y los colores del tema
+#            Sur-Transparente; Qt con estilo Breeze, colores mac-dark y Noto Sans;
+#            todos los workspaces flotantes (Super+Alt+D pasa uno a tiling)
+#   mac-light  (interno, con un tema claro) igual que mac pero en claro: macshell y
+#            hyprbars claros, iconos Sur, GTK adw-gtk3 claro (sin los colores del
+#            tema), Qt con mac-light
+#   default  Modo normal, lo de antes del estilo Mac: barra, lanzador, menú de
+#            energía y notificaciones de Quickshell; esquinas rectas; hyprbars con
+#            el color del tema; iconos Papirus-Dark (Papirus-Light con un tema
+#            claro); Qt con Fusion y los colores del tema
 #
 # Lo común a los dos (cursor Adwaita, keyd, qt6ct como tema de plataforma Qt,
 # temas de color, etc.) no lo toca este script.
@@ -27,7 +40,9 @@
 #
 # y este script escribe además (al abrir cada app):
 #
-#   GTK          gtk-3.0/settings.ini, gtk-4.0/settings.ini y gsettings: iconos
+#   GTK          gtk-3.0/settings.ini, gtk-4.0/settings.ini y gsettings: iconos,
+#                tema claro/oscuro; y gtk.css (en mac-light uno claro fijo, en los
+#                demás el del tema de colores, que genera theme-set)
 #   Qt           qt6ct/qt6ct.conf: estilo, colores, iconos y fuentes
 #   KDE          kdeglobals [Icons] (Dolphin)
 #
@@ -36,6 +51,7 @@
 
 import configparser
 import fcntl
+import json
 import os
 import re
 import subprocess
@@ -47,24 +63,54 @@ CONF = f"{HOME}/.config"
 STATE = f"{HOME}/.local/state/desktop-profile"
 MACSHELL = f"{CONF}/quickshell/macshell"
 
+MAC_FONTS = {
+    "fixed": '"Noto Sans Mono,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"',
+    "general": '"Noto Sans,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"',
+}
+
 PROFILES = {
     "mac": {
-        "name": "Config Mac",
+        "name": "Modo Mac",
         "icons": "Sur-Transparente",
         "qt_style": "Breeze",
         "qt_colors": "mac-dark.conf",  # no la toca theme-set
-        "qt_fonts": {
-            "fixed": '"Noto Sans Mono,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"',
-            "general": '"Noto Sans,10,-1,5,400,0,0,0,0,0,0,0,0,0,0,1"',
-        },
+        "qt_fonts": MAC_FONTS,
+        "light": False,
+    },
+    "mac-light": {
+        "name": "Modo Mac (claro)",
+        "icons": "Sur",
+        "qt_style": "Breeze",
+        "qt_colors": "mac-light.conf",
+        "qt_fonts": MAC_FONTS,
+        "light": True,
+        "fixed_css": True,  # gtk.css claro fijo (GTK_LIGHT), no el del tema
     },
     "default": {
-        "name": "Config Default",
-        "icons": "Papirus-Dark",
+        "name": "Modo normal",
+        "icons": "Papirus-Dark",  # Papirus-Light con un tema claro (ver settings())
         "qt_style": "Fusion",
         "qt_colors": "current.conf",  # la genera theme-set con el tema activo
         "qt_fonts": None,
+        "light": False,  # con un tema claro, True (ver settings())
     },
+}
+
+MAC_PROFILES = ("mac", "mac-light")
+
+# Lo que sale en el menú (Super+Shift+T): "mac" vale para mac y mac-light
+MENU = (("mac", "Modo Mac"), ("default", "Modo normal"))
+
+# gtk.css de mac-light: colores claros de macOS (theme-set no lo pisa en este perfil)
+GTK_LIGHT = {
+    "accent": "#007aff", "accent-bg": "#007aff", "accent-fg": "#ffffff",
+    "window-bg": "#ececec", "window-fg": "#1d1d1f",
+    "view-bg": "#ffffff", "view-fg": "#1d1d1f",
+    "headerbar-bg": "#e8e8e8", "headerbar-fg": "#1d1d1f",
+    "sidebar-bg": "#f2f2f2", "sidebar-fg": "#1d1d1f",
+    "card-bg": "#ffffff",
+    "popover-bg": "#f6f6f6", "popover-fg": "#1d1d1f",
+    "dialog-bg": "#f6f6f6", "dialog-fg": "#1d1d1f",
 }
 
 quiet = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
@@ -74,15 +120,61 @@ def has_macshell():
     return os.path.isfile(f"{MACSHELL}/shell.qml")
 
 
-def current():
-    # Igual que profile.lua y shell.qml: sin archivo, "mac" si está macshell
+def saved():
+    # Lo que hay en el archivo de estado, o None si no hay (o no vale)
     try:
         p = open(STATE).read().strip()
     except OSError:
-        p = ""
-    if p not in PROFILES:
-        p = "mac" if has_macshell() else "default"
+        return None
+    return p if p in PROFILES else None
+
+
+def current():
+    # Sin archivo, como profile.lua y shell.qml: Modo Mac si está macshell (aquí ya
+    # claro u oscuro según el tema; ellos lo toman como "mac" hasta que config-set
+    # escriba el archivo, cosa que hacen --reapply y sync_theme)
+    return saved() or (resolve("mac") if has_macshell() else "default")
+
+
+def write_state(name):
+    os.makedirs(os.path.dirname(STATE), exist_ok=True)
+    tmp = STATE + ".tmp"
+    open(tmp, "w").write(name + "\n")
+    os.replace(tmp, STATE)
+
+
+def theme_light():
+    # "light": true en el theme.json del tema activo (sin él, oscuro)
+    try:
+        with open(f"{CONF}/themes/current/theme.json") as f:
+            return bool(json.load(f).get("light"))
+    except (OSError, ValueError):
+        return False
+
+
+def resolve(name):
+    # "mac" → "mac-light" si el tema de colores es claro; "normal" = "default"
+    if name == "normal":
+        return "default"
+    if name == "mac" and theme_light():
+        return "mac-light"
+    return name
+
+
+def settings(name):
+    # Ajustes del perfil; en Modo normal claro/oscuro e iconos siguen al tema
+    p = dict(PROFILES[name])
+    if name == "default" and theme_light():
+        p["light"] = True
+        p["icons"] = "Papirus-Light"
     return p
+
+
+def lock():
+    # Uno detrás de otro: dos a la vez (doble clic en el menú) arrancarían qs dos veces
+    f = open(f"{os.environ.get('XDG_RUNTIME_DIR', '/tmp')}/config-set.lock", "w")
+    fcntl.flock(f, fcntl.LOCK_EX)
+    return f
 
 
 # ── Archivos de cada programa ────────────────────────────────
@@ -100,10 +192,44 @@ def set_key(path, key, value):
     open(path, "w").write(text)
 
 
-def set_gtk(p):
+def gtk_css(p):
+    if p.get("fixed_css"):
+        old = "\n".join(f"@define-color {k.replace('-', '_')}_color {v};" for k, v in GTK_LIGHT.items())
+        new = "\n".join(f"    --{k}-color: {v};" for k, v in GTK_LIGHT.items())
+        head = "/* Generado por config-set (perfil mac-light): no editar */\n"
+        for d, text in (("gtk-3.0", old + "\n"),
+                        ("gtk-4.0", ":root {\n" + new + "\n}\n\n" + old + "\n")):
+            with open(f"{CONF}/{d}/gtk.css", "w") as f:
+                f.write(head + text)
+        return
+    # Los demás perfiles usan el gtk.css del tema de colores: lo regenera theme-set
+    import importlib.util
+    sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
+    from importlib.machinery import SourceFileLoader
+    loader = SourceFileLoader("theme_set", f"{CONF}/themes/theme-set")
+    ts = importlib.util.module_from_spec(importlib.util.spec_from_loader("theme_set", loader))
+    loader.exec_module(ts)
+    name = ts.current()
+    try:
+        with open(f"{CONF}/themes/{name}/theme.json") as f:
+            ts.gen_gtk(name, json.load(f))
+    except OSError:
+        pass
+
+
+def set_gtk(p, css=True):
+    light = p["light"]
     for d in ("gtk-3.0", "gtk-4.0"):
-        set_key(f"{CONF}/{d}/settings.ini", "gtk-icon-theme-name", p["icons"])
-    subprocess.run(["gsettings", "set", "org.gnome.desktop.interface", "icon-theme", p["icons"]], **quiet)
+        ini = f"{CONF}/{d}/settings.ini"
+        set_key(ini, "gtk-icon-theme-name", p["icons"])
+        set_key(ini, "gtk-theme-name", "adw-gtk3" if light else "adw-gtk3-dark")
+        set_key(ini, "gtk-application-prefer-dark-theme", "0" if light else "1")
+    gs = ["gsettings", "set", "org.gnome.desktop.interface"]
+    subprocess.run(gs + ["icon-theme", p["icons"]], **quiet)
+    subprocess.run(gs + ["gtk-theme", "adw-gtk3" if light else "adw-gtk3-dark"], **quiet)
+    subprocess.run(gs + ["color-scheme", "prefer-light" if light else "prefer-dark"], **quiet)
+    if css:
+        gtk_css(p)
 
 
 def set_qt(p):
@@ -159,7 +285,7 @@ def qs_running(path):
     return "Process ID" in r.stdout
 
 
-def restart_shell(name):
+def restart_shell(name, notify=True):
     if not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
         return  # fuera de Hyprland (p.ej. install.sh): ya se verá al entrar
     subprocess.run(["hyprctl", "reload"], **quiet)
@@ -179,46 +305,81 @@ def restart_shell(name):
         time.sleep(0.1)
     # Se arrancan desde Hyprland, igual que en autostart.lua (mismo entorno)
     start = ["qs"]
-    if name == "mac" and has_macshell():
+    if name in MAC_PROFILES and has_macshell():
         start.append(f"qs -p {MACSHELL}")
     for cmd in start:
         subprocess.run(["hyprctl", "dispatch", f"hl.dsp.exec_cmd('{cmd}')"], **quiet)
-    time.sleep(1.5)  # que haya servidor de notificaciones para el aviso
-    subprocess.run(["notify-send", "-a", "Config", "Config del escritorio", PROFILES[name]["name"]], **quiet)
+    if notify:
+        time.sleep(1.5)  # que haya servidor de notificaciones para el aviso
+        subprocess.run(["notify-send", "-a", "Config", "Config del escritorio", PROFILES[name]["name"]], **quiet)
 
 
-def apply(name):
-    if name == "mac" and not has_macshell():
-        print(f"Aviso: no está macshell ({MACSHELL}); \"mac\" se verá como \"default\" "
+def apply(name, notify=True):
+    if name in MAC_PROFILES and not has_macshell():
+        print(f"Aviso: no está macshell ({MACSHELL}); \"{name}\" se verá como \"default\" "
               "en la barra (instálalo desde el repo plasma-mac)", file=sys.stderr)
-    os.makedirs(os.path.dirname(STATE), exist_ok=True)
-    tmp = STATE + ".tmp"
-    open(tmp, "w").write(name + "\n")
-    os.replace(tmp, STATE)
-    p = PROFILES[name]
+    write_state(name)
+    p = settings(name)
     set_gtk(p)
     set_qt(p)
     set_kde(p)
-    restart_shell(name)
+    restart_shell(name, notify)
+
+
+def sync_theme():
+    # La llama theme-set después de escribir los archivos del nuevo tema (ya con
+    # el enlace current cambiado). En Modo Mac pasa a mac-light o a mac si cambia
+    # la claridad: reinicia Quickshell y hace hyprctl reload (sin aviso: ya avisa
+    # theme-set). En Modo normal solo pone GTK e iconos claros u oscuros.
+    # Devuelve True si ha reiniciado Quickshell.
+    _lock = lock()
+    cur = current()
+    if cur in MAC_PROFILES:
+        want = resolve("mac")
+        if not has_macshell():
+            # Sin macshell, Mac se ve como Modo normal en Hyprland y Quickshell: no
+            # hace falta reiniciar nada, solo guardar el perfil y poner GTK/Qt/iconos
+            if want != cur or saved() is None:
+                write_state(want)
+            p = settings(want)
+            set_gtk(p)  # con su gtk.css: el claro fijo o el del tema
+            set_qt(p)
+            set_kde(p)
+            return False
+        if want == cur and saved() is not None:
+            return False
+        apply(want, notify=False)
+        return True
+    if saved() is None:
+        write_state(cur)
+    p = settings(cur)
+    set_gtk(p, css=False)  # el gtk.css del tema ya lo ha escrito theme-set
+    set_qt(p)
+    set_kde(p)
+    return False
 
 
 def main():
     args = sys.argv[1:]
     cur = current()
+    family = "mac" if cur in MAC_PROFILES else cur
     if not args:
-        for k in PROFILES:
-            print(("* " if k == cur else "  ") + k)
+        for k, n in MENU:
+            extra = " (claro)" if k == family and cur == "mac-light" else ""
+            print(("* " if k == family else "  ") + f"{k:<8} {n}{extra}")
         return
     if args[0] == "--list":
-        for k, p in PROFILES.items():
-            print(k, p["name"], int(k == cur), sep="\t")
+        for k, n in MENU:
+            print(k, n, int(k == family), sep="\t")
         return
-    name = cur if args[0] == "--reapply" else args[0]
+    if args[0] == "--reapply":
+        # Claro u oscuro otra vez según el tema (y escribe el archivo si no estaba)
+        name = resolve("mac") if cur in MAC_PROFILES else cur
+    else:
+        name = resolve(args[0])
     if name not in PROFILES:
-        sys.exit(f"No existe el perfil «{name}». Perfiles: {', '.join(PROFILES)}")
-    # Uno detrás de otro: dos a la vez (doble clic en el menú) arrancarían qs dos veces
-    lock = open(f"{os.environ.get('XDG_RUNTIME_DIR', '/tmp')}/config-set.lock", "w")
-    fcntl.flock(lock, fcntl.LOCK_EX)
+        sys.exit(f"No existe el perfil «{name}». Perfiles: {', '.join(k for k, _ in MENU)}")
+    _lock = lock()
     apply(name)
 
 

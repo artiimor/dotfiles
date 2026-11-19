@@ -2,7 +2,10 @@
 // está en services/Launcher.qml.
 //
 // Estilo: limpio (buscador arriba, lista plana, sin
-// efectos), todo cuadrado y sin bordes.
+// efectos), todo cuadrado y sin bordes. En el menú de temas cada fila lleva
+// su paleta de colores a la derecha. En los perfiles mac (Theme.mac) va como
+// macshell: esquinas redondeadas, borde fino, fondo translúcido con desenfoque
+// y la fila elegida en azul.
 //
 // Teclas: escribir filtra · ↑/↓ o Ctrl+K/J o Tab moverse · Enter elegir · Esc cerrar
 // Clic fuera también cierra.
@@ -39,6 +42,8 @@ PanelWindow {
     implicitWidth: Launcher.width
     implicitHeight: box.implicitHeight
     color: "transparent"
+    BackgroundEffect.blurRegion: Theme.mac ? blur : null
+    Region { id: blur; item: box; radius: box.radius }
 
     HyprlandFocusGrab {
         windows: [win]
@@ -99,6 +104,9 @@ PanelWindow {
         width: Launcher.width
         implicitHeight: column.implicitHeight + 28
         color: win.bgColor
+        radius: Theme.mac ? Theme.radius : 0
+        border.width: Theme.mac ? 1 : 0
+        border.color: Theme.border
 
         ColumnLayout {
             id: column
@@ -126,7 +134,7 @@ PanelWindow {
                     anchors.leftMargin: 14
                     anchors.verticalCenter: parent.verticalCenter
                     text: "󰌾"
-                    color: Theme.pink
+                    color: Theme.mac ? Theme.accent : Theme.pink
                     font.family: Theme.font
                     font.pixelSize: 16
                 }
@@ -201,6 +209,7 @@ PanelWindow {
                     // Fila elegida: solo un bloque de fondo
                     Rectangle {
                         anchors.fill: parent
+                        radius: Theme.mac ? 8 : 0
                         color: row.selected ? win.selColor : mouse.containsMouse ? Qt.rgba(win.selColor.r, win.selColor.g, win.selColor.b, 0.5) : "transparent"
                     }
 
@@ -216,7 +225,7 @@ PanelWindow {
                             Layout.preferredWidth: 22
                             horizontalAlignment: Text.AlignHCenter
                             text: row.modelData.glyph ?? ""
-                            color: row.selected ? Theme.pink : Theme.accent
+                            color: row.selected ? (Theme.mac ? Theme.onAccent : Theme.pink) : Theme.accent
                             font.family: Theme.font
                             font.pixelSize: 16
                         }
@@ -225,10 +234,55 @@ PanelWindow {
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                             text: row.modelData.text ?? ""
-                            color: row.selected ? Theme.fg : Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, 0.8)
+                            color: row.selected ? (Theme.mac ? Theme.onAccent : Theme.fg) : Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, Theme.mac ? 1 : 0.8)
                             font.family: Theme.font
                             font.pixelSize: 14
-                            font.bold: row.selected
+                            font.bold: row.selected && !Theme.mac
+                        }
+
+                        // Temas: su paleta sobre el fondo de su terminal ("Aa" con el
+                        // color del texto, el acento y 6 colores ANSI). Cuadrada como
+                        // el resto del lanzador, o en píldora con puntos en mac
+                        Rectangle {
+                            id: chip
+                            readonly property var pal: row.modelData.palette ?? null
+                            visible: !!pal
+                            Layout.preferredWidth: chipRow.implicitWidth + 16
+                            Layout.preferredHeight: 22
+                            radius: Theme.mac ? height / 2 : 0
+                            color: pal ? pal.bg : "transparent"
+                            border.width: 1
+                            border.color: row.selected && Theme.mac ? Qt.rgba(1, 1, 1, 0.45)
+                                : Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, Theme.mac ? 0.18 : 0.22)
+
+                            Row {
+                                id: chipRow
+                                anchors.centerIn: parent
+                                spacing: 5
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "Aa"
+                                    color: chip.pal ? chip.pal.fg : "transparent"
+                                    font.family: Theme.font
+                                    font.pixelSize: 11
+                                    font.bold: true
+                                    rightPadding: 2
+                                }
+
+                                Repeater {
+                                    model: chip.pal ? chip.pal.colors : []
+
+                                    Rectangle {
+                                        required property var modelData
+                                        anchors.verticalCenter: parent.verticalCenter
+                                        width: 10
+                                        height: 10
+                                        radius: Theme.mac ? 5 : 0
+                                        color: modelData
+                                    }
+                                }
+                            }
                         }
 
                         // Descripción corta a la derecha (p. ej. "Navegador web")
@@ -237,7 +291,7 @@ PanelWindow {
                             Layout.maximumWidth: Launcher.mode === "keys" ? 240 : 180
                             elide: Text.ElideRight
                             text: row.modelData.sub ?? ""
-                            color: Launcher.mode === "keys" ? Theme.accent : Theme.muted
+                            color: row.selected && Theme.mac ? Qt.rgba(1, 1, 1, 0.75) : Launcher.mode === "keys" ? Theme.accent : Theme.muted
                             font.family: Theme.font
                             font.pixelSize: 12
                         }

@@ -8,7 +8,7 @@
 //   emoji       selector de emojis                (Super+.)
 //   profiles    perfil de energía                 (clic en el icono de la barra)
 //   themes      tema de colores                   (Super+T)
-//   configs     perfil del escritorio: Config Mac / Config Default  (Super+Shift+T)
+//   configs     perfil del escritorio: Modo Mac / Modo normal  (Super+Shift+T)
 //   keys        chuleta de atajos de Hyprland     (Super+?)
 //   dmenu       menú genérico para scripts: lo usa scripts/dmenu-qs
 //               (wifi con networkmanager_dmenu, bluetooth con bzmenu)
@@ -29,7 +29,7 @@ Singleton {
     property var items: []         // [{ text, icon, glyph, sub, data }]
 
     // Tamaño y sitio de la ventana según el modo (como estaba en wofi)
-    readonly property int width: ({ apps: 360, clipboard: 640, emoji: 420, power: 220, themes: 260, configs: 260, keys: 520 })[mode] ?? 320
+    readonly property int width: ({ apps: 360, clipboard: 640, emoji: 420, power: 220, themes: 420, configs: 260, keys: 520 })[mode] ?? 320
     readonly property bool centered: ["apps", "clipboard", "emoji", "power", "themes", "configs", "keys"].includes(mode)
 
     // Abre un modo, o lo cierra si ya estaba abierto (como `pkill wofi || wofi`)
@@ -127,7 +127,9 @@ Singleton {
         } else if (m === "emoji") {
             copyAndPaste(`printf '%s' "$1" | wl-copy`, item.glyph);
         } else if (m === "themes") {
-            Quickshell.execDetached([root.themesDir + "/theme-set", item.data]);
+            // theme-set puede reiniciar Quickshell (Modo Mac al pasar de tema claro a
+            // oscuro, ver config-set): setsid para que no muera con él
+            Quickshell.execDetached(["setsid", "-f", root.themesDir + "/theme-set", item.data]);
         } else if (m === "configs") {
             // config-set reinicia Quickshell (este proceso incluido): setsid para que no muera con él
             Quickshell.execDetached(["setsid", "-f", root.themesDir + "/config-set", item.data]);
@@ -217,12 +219,14 @@ Singleton {
 
     // ── Temas de color ────────────────────────────────────
     // Cada carpeta de ~/.config/themes con un theme.json es un tema; al elegir
-    // uno se ejecuta theme-set, que recolorea todo (ver ese script)
+    // uno se ejecuta theme-set, que recolorea todo (ver ese script). Cada fila
+    // lleva su paleta (fondo y texto del terminal, acento y 6 colores ANSI) para
+    // verla antes de elegir, y un sol o una luna según sea claro u oscuro.
     readonly property string themesDir: Quickshell.env("HOME") + "/.config/themes"
 
     Process {
         id: themeList
-        // Cada línea: "<carpeta>\t<nombre bonito>\t<1 si es el actual>"
+        // Cada línea, un JSON: { dir, name, cur, light, bg, fg, colors }
         command: ["python3", "-c", `
 import json, os
 d = os.path.expanduser("~/.config/themes")
@@ -230,17 +234,28 @@ try: cur = os.path.basename(os.readlink(d + "/current"))
 except OSError: cur = ""
 for t in sorted(os.listdir(d)):
     f = f"{d}/{t}/theme.json"
-    if t != "current" and os.path.isfile(f):
-        print(t, json.load(open(f)).get("name", t), int(t == cur), sep="\t")
+    if t == "current" or not os.path.isfile(f):
+        continue
+    try:
+        j = json.load(open(f))
+        term, c = j["term"], j["term"]["colors"]
+        print(json.dumps({"dir": t, "name": j.get("name", t), "cur": t == cur,
+                          "light": bool(j.get("light")),
+                          "bg": term["background"], "fg": term["foreground"],
+                          "colors": [j["ui"]["accent"]] + c[1:7]}))
+    except (OSError, ValueError, KeyError, IndexError):
+        pass
 `]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.items = text.split("\n").filter(l => l).map(l => {
-                    const [dir, name, cur] = l.split("\t");
+                    const t = JSON.parse(l);
                     return {
-                        text: name + (cur === "1" ? "  " + String.fromCodePoint(0xF012C) : ""),
-                        glyph: String.fromCodePoint(0xF03D8),
-                        data: dir
+                        text: t.name + (t.cur ? "  " + String.fromCodePoint(0xF012C) : ""),
+                        // Sol (claro) o luna (oscuro)
+                        glyph: String.fromCodePoint(t.light ? 0xF0599 : 0xF0594),
+                        palette: { bg: t.bg, fg: t.fg, colors: t.colors },
+                        data: t.dir
                     };
                 });
             }
@@ -248,7 +263,8 @@ for t in sorted(os.listdir(d)):
     }
 
     // ── Configs (perfiles del escritorio) ─────────────────
-    // `config-set --list` da "<perfil>\t<nombre>\t<1 si es el actual>"; al elegir
+    // `config-set --list` da "<perfil>\t<nombre>\t<1 si es el actual>" (solo Modo Mac
+    // y Modo normal: Mac claro u oscuro lo decide el tema de colores); al elegir
     // uno, config-set cambia Hyprland, la barra, iconos y Qt (ver ese script)
     Process {
         id: configList

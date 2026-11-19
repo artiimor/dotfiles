@@ -1,6 +1,7 @@
 -- El colorscheme sale del tema activo (~/.config/themes/current/theme.json, campo
 -- "nvim"); si no hay tema, Catppuccin Mocha. Todos con fondo transparente para
--- que se vea el de kitty. Al cambiar de tema se aplica al abrir Neovim de nuevo.
+-- que se vea el de kitty. Al cambiar de tema, theme-set se lo manda a los Neovim
+-- abiertos por su socket (background y colorscheme); los demás, al abrirlos.
 local function read_theme()
   local f = io.open(vim.fn.expand("~/.config/themes/current/theme.json"))
   if not f then
@@ -12,6 +13,10 @@ local function read_theme()
 end
 
 local theme = read_theme()
+
+-- Claro u oscuro según el tema ("light": true en theme.json), antes de cargar el
+-- colorscheme: rose-pine, gruvbox, everforest y tokyonight eligen variante con esto
+vim.o.background = theme.light and "light" or "dark"
 
 local function theme_colorscheme()
   return theme.nvim or "catppuccin"

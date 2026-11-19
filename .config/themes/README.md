@@ -24,29 +24,62 @@ Cada carpeta con un `theme.json` es un tema. `current` es un enlace al tema acti
 | `hypr.group` | Borde de grupos de ventanas | Hyprland |
 | `term` | Fondo, texto, cursor, selección y los 16 colores ANSI (`colors[0..15]`) | kitty, btop, fzf, starship |
 | `gtk` | Ventanas, cabeceras, tarjetas y acento | apps GTK3/GTK4 |
-| `nvim` | Nombre del colorscheme: `catppuccin`, `tokyonight`, `rose-pine`, `gruvbox`, `kanagawa-dragon`, `everforest`, `dracula` | Neovim |
+| `nvim` | Nombre del colorscheme: `catppuccin`, `catppuccin-latte`, `tokyonight`, `rose-pine`, `rose-pine-dawn`, `gruvbox`, `kanagawa-dragon`, `everforest`, `dracula` | Neovim |
+| `light` | `true` en los temas claros (sin él, oscuro): decide Mac claro u oscuro y GTK claro u oscuro (ver abajo) | config-set |
 
-Cuándo se ve el cambio: Quickshell, Hyprland y kitty al momento; btop, Neovim
-y las apps GTK al volver a abrirlas; fzf en terminales nuevas; hyprlock en el
-próximo bloqueo.
+Cuándo se ve el cambio: Quickshell, Hyprland, kitty, Ghostty y los Neovim abiertos
+(theme-set les manda `background` y el colorscheme por su socket) al momento; btop
+y las apps GTK y Qt al volver a abrirlas; fzf y fastfetch (el Pepe, teñido con el
+acento) en terminales nuevas; hyprlock en el próximo bloqueo.
 
-Fuera de los temas (se quedan con Miami night): ReGreet, Plymouth, Dolphin/Qt,
-fastfetch (el Pepe) y el fondo de pantalla.
+Fuera de los temas (se quedan con Miami night): ReGreet y Plymouth. El fondo de
+pantalla tampoco cambia.
 
-## Configs: Mac / Default
+## Temas claros
+
+`catppuccin-latte` y `rose-pine-dawn` son claros (`"light": true`), con los 16
+colores ANSI de sus paletas originales. En los temas claros theme-set no usa
+`colors[0]`/`colors[15]` para la fila elegida de fzf y btop (usa
+`term.selection_background` y `ui.fg`) ni para los relieves de Qt (los calcula
+desde los botones); en los oscuros todo sigue igual. Los Neovim abiertos reciben
+`background=light|dark` junto con el colorscheme, y la pantalla de bloqueo
+(Quickshell y hyprlock) pone el texto casi blanco sobre el fondo de noche.
+
+En el menú de temas (Super+T) cada fila lleva su paleta (fondo y texto del
+terminal, acento y 6 colores) y un sol o una luna según sea claro u oscuro.
+
+## Configs: Modo Mac / Modo normal
 
 Además del tema de colores hay dos perfiles del escritorio. Se cambian con
-**Super+Shift+T** (menú "Config") o `~/.config/themes/config-set mac|default`
-(`config-set` sin nada lista los perfiles). Se aplica al momento, sin cerrar sesión.
+**Super+Shift+T** (menú "Config": *Modo Mac* y *Modo normal*) o
+`~/.config/themes/config-set mac|default` (`config-set` sin nada lista los
+perfiles). Se aplica al momento, sin cerrar sesión.
 
-| | Config Mac | Config Default |
+| | Modo Mac | Modo normal (`default`) |
 |---|---|---|
 | Barra, notificaciones | macshell (repo plasma-mac) | la de Quickshell de aquí |
 | Super+Espacio / Super+Esc / Super+A | Spotlight / PowerMenu / centro de macshell | lanzador / menú de energía / notificaciones de aquí |
 | Ventanas | esquinas de 10 px y sombra | rectas, sombra por defecto |
 | hyprbars | gris Sur-Gris, Noto Sans, 32 px | color del tema, JetBrains Mono, 28 px |
-| Iconos (GTK, Qt, Dolphin) | Sur-Transparente | Papirus-Dark |
+| Iconos (GTK, Qt, Dolphin) | Sur-Transparente (Sur con tema claro) | Papirus-Dark (Papirus-Light con tema claro) |
 | Qt (qt6ct) | Breeze, colores `mac-dark.conf`, Noto Sans | Fusion, colores del tema (`current.conf`) |
+| Workspaces | todos flotantes; Super+Alt+D pasa uno a tiling | tiling; Super+Alt+D pasa uno a flotante |
+
+**Claro u oscuro lo decide el tema de colores.** En Modo Mac, con un tema claro
+el perfil pasa a **Mac claro** (`mac-light`, interno): macshell y hyprbars claros,
+iconos Sur, GTK `adw-gtk3` + `prefer-light` con un `gtk.css` claro fijo (theme-set
+no lo pisa en este perfil) y Qt con `mac-light.conf`; con uno oscuro vuelve a `mac`.
+Lo hace theme-set al cambiar de tema (llama a `sync_theme()` de config-set, que
+reinicia Quickshell solo si cambia la claridad), y `config-set mac` con un tema
+claro ya guarda `mac-light`. `config-set mac-light` sigue sirviendo para forzarlo a
+mano (hasta el próximo cambio de tema o `--reapply`). Las terminales siguen con el tema de colores.
+
+En Modo normal, un tema claro pone GTK `adw-gtk3` + `prefer-light` (con el `gtk.css`
+del tema) e iconos Papirus-Light; Qt, Hyprland, hyprbars y la barra ya salen del tema.
+
+En Modo Mac, las ventanas de la Quickshell de aquí que se siguen usando
+(menús del lanzador: temas, configs, portapapeles, emojis, atajos...; OSD, polkit
+y dock) copian el aspecto de macshell (`Theme.mac` en `quickshell/Theme.qml`).
 
 Común a los dos: tema de colores (en Mac no recolorea las apps Qt ni hyprbars),
 cursor Adwaita, keyd (Alt/Super intercambiados, HHKB intacto), Super+Shift+Espacio

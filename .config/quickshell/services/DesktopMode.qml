@@ -1,5 +1,5 @@
 // Workspaces en modo escritorio (los gestiona config/desktopmode.lua en
-// Hyprland con Super+Alt+D). Lo usan el dock y los números de la barra.
+// Hyprland: en los perfiles mac todos los numerados, en default los de Super+Alt+D). Lo usan el dock y los números de la barra.
 pragma Singleton
 
 import Quickshell

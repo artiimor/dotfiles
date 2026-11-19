@@ -22,12 +22,14 @@ PanelWindow {
     color: "transparent"
     WlrLayershell.namespace: "quickshell-bar"
 
-    // Fondo: oscuro arriba y transparente abajo, sin recuadros
+    // Fondo: oscuro arriba y transparente abajo, sin recuadros. Con un tema claro,
+    // más opaco a la altura de los iconos: si no, sobre el fondo de pantalla
+    // oscuro quedarían en una franja a medio tono y apenas se leerían
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0; color: Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.9) }
-            GradientStop { position: 0.6; color: Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.6) }
+            GradientStop { position: 0; color: Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, Theme.themeLight ? 0.95 : 0.9) }
+            GradientStop { position: Theme.themeLight ? 0.75 : 0.6; color: Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, Theme.themeLight ? 0.88 : 0.6) }
             GradientStop { position: 1; color: "transparent" }
         }
     }

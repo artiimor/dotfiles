@@ -2,29 +2,85 @@
 -- se pueden minimizar y Quickshell enseña un dock abajo.
 --   Super+Alt+D   activar/desactivar en el workspace actual
 --   Super+M       minimizar (va a special:minimized; se recupera desde el dock)
--- La lista de workspaces se guarda en un archivo: así sobrevive a recargas y
--- Quickshell lo lee para saber dónde poner el dock.
-local stateFile = os.getenv("HOME") .. "/.local/state/desktop-workspaces"
+--
+-- Qué workspaces flotan depende del perfil (profile.lua):
+--   mac / mac-light  todos los numerados flotan; Super+Alt+D pasa uno a tiling
+--   default          todos en tiling; Super+Alt+D pasa uno a flotante
+-- Cada perfil guarda solo sus excepciones (así sobreviven a recargas y a cambiar
+-- de perfil), y la lista final de workspaces flotantes se escribe en
+-- desktop-workspaces, que es lo que leen Quickshell (dock, números de la barra) y
+-- macshell (números en cajita).
+local STATE = os.getenv("HOME") .. "/.local/state/"
+local stateFile = STATE .. "desktop-workspaces"
+local exceptionsFile = STATE .. (PROFILE_MAC and "desktop-exceptions-mac" or "desktop-workspaces-default")
+local appliedFile = STATE .. "desktop-applied-profile"
+local MAX_WS = 99 -- workspaces numerados que se apuntan como flotantes en mac (monitor*10 + n)
 
-local desktop = {}
-local f = io.open(stateFile)
-if f then
-	for name in f:lines() do
-		desktop[name] = true
+local function readLines(path)
+	local set, fh = {}, io.open(path)
+	if fh then
+		for name in fh:lines() do
+			if name ~= "" then
+				set[name] = true
+			end
+		end
+		fh:close()
 	end
-	f:close()
+	return set, fh ~= nil
 end
 
-local function save()
-	local out = io.open(stateFile, "w")
+local function writeLines(path, lines)
+	local out = io.open(path, "w")
 	if not out then
 		return
 	end
-	for name in pairs(desktop) do
+	for _, name in ipairs(lines) do
 		out:write(name, "\n")
 	end
 	out:close()
 end
+
+-- Antes solo existía desktop-workspaces (la lista de "default"): se conserva
+if not select(2, readLines(STATE .. "desktop-workspaces-default")) then
+	local old, found = readLines(stateFile)
+	if found then
+		local names = {}
+		for name in pairs(old) do
+			names[#names + 1] = name
+		end
+		writeLines(STATE .. "desktop-workspaces-default", names)
+	end
+end
+
+local exceptions = readLines(exceptionsFile)
+
+-- ¿Flota este workspace? (los especiales y con nombre, p.ej. gaming, no flotan por defecto)
+local function isDesktop(name)
+	local base = PROFILE_MAC and tonumber(name) ~= nil
+	return base ~= (exceptions[name] == true)
+end
+
+local function save()
+	local ex, public = {}, {}
+	for name in pairs(exceptions) do
+		ex[#ex + 1] = name
+		if not tonumber(name) and isDesktop(name) then
+			public[#public + 1] = name
+		end
+	end
+	writeLines(exceptionsFile, ex)
+	if PROFILE_MAC then
+		for i = 1, MAX_WS do
+			if isDesktop(tostring(i)) then
+				public[#public + 1] = tostring(i)
+			end
+		end
+	else
+		public = ex
+	end
+	writeLines(stateFile, public)
+end
+save() -- al cargar: la lista pública siempre refleja el perfil actual
 
 -- Tamaño de las ventanas nuevas: fracción de la pantalla (en píxeles lógicos,
 -- por eso se divide por la escala)
@@ -106,7 +162,7 @@ hl.on("window.update_state", function(w, changes)
 end)
 
 hl.on("window.open", function(w)
-	if w.workspace and desktop[w.workspace.name] then
+	if w.workspace and isDesktop(w.workspace.name) then
 		makeFloat(w, true)
 	end
 end)
@@ -118,7 +174,7 @@ hl.on("window.move_to_workspace", function(w, ws)
 	if not ws or ws.special then
 		return
 	end
-	if desktop[ws.name] then
+	if isDesktop(ws.name) then
 		makeFloat(w, false)
 	else
 		makeTiled(w)
@@ -130,8 +186,8 @@ hl.bind("SUPER + ALT + D", function()
 	if not ws then
 		return
 	end
-	local on = not desktop[ws.name]
-	desktop[ws.name] = on or nil
+	local on = not isDesktop(ws.name)
+	exceptions[ws.name] = not exceptions[ws.name] or nil
 	save()
 	local windows = hl.get_workspace_windows(ws)
 	for _, w in ipairs(windows) do
@@ -143,6 +199,23 @@ hl.bind("SUPER + ALT + D", function()
 		end
 	end
 end, { description = "Modo escritorio" })
+
+-- Al cambiar entre mac y default (config-set hace hyprctl reload) las ventanas que
+-- ya están abiertas se adaptan al modo nuevo de su workspace
+local family = PROFILE_MAC and "mac" or "default"
+if not readLines(appliedFile)[family] then
+	for _, w in ipairs(hl.get_windows()) do
+		local ws = w.workspace
+		if ws and not ws.special then
+			if isDesktop(ws.name) then
+				makeFloat(w, false)
+			else
+				makeTiled(w)
+			end
+		end
+	end
+	writeLines(appliedFile, { family })
+end
 
 hl.bind("SUPER + M", hl.dsp.window.move({ workspace = "special:minimized", follow = false }), { description = "Minimizar" })
 
@@ -158,7 +231,7 @@ local snapped = {} -- tamaño previo de las ventanas en media pantalla, por addr
 -- Ventana activa si es flotante y está en un workspace en modo escritorio
 local function snapTarget(w)
 	w = w or hl.get_active_window()
-	if w and w.floating and w.workspace and desktop[w.workspace.name] then
+	if w and w.floating and w.workspace and isDesktop(w.workspace.name) then
 		return w
 	end
 end
@@ -299,9 +372,10 @@ if hl.plugin.hyprbars then
 			hyprbars = {
 				bar_height = TITLEBAR,
 				-- mac: colores, fuente y medidas de la decoración Sur-Gris de Plasma;
-				-- default: el fondo del tema de colores y JetBrains Mono
-				bar_color = PROFILE_MAC and "rgba(2d2d2dff)" or THEME_BG,
-				col = { text = PROFILE_MAC and "rgba(e1e1e1ff)" or "rgba(d9d6e6ff)" },
+				-- default: el fondo y el texto del tema de colores y JetBrains Mono
+				-- mac-light: gris claro de macOS con texto oscuro
+				bar_color = PROFILE_LIGHT and "rgba(ececedff)" or PROFILE_MAC and "rgba(2d2d2dff)" or THEME_BG,
+				col = { text = PROFILE_LIGHT and "rgba(3c3c43ff)" or PROFILE_MAC and "rgba(e1e1e1ff)" or THEME_FG or "rgba(d9d6e6ff)" },
 				bar_text_font = PROFILE_MAC and "Noto Sans" or "JetBrainsMono Nerd Font Propo",
 				bar_text_size = PROFILE_MAC and 10 or 11,
 				bar_text_align = "center",
@@ -311,7 +385,7 @@ if hl.plugin.hyprbars then
 				-- todos grises (más apagados en las ventanas sin foco)
 				bar_buttons_alignment = "left",
 				icon_on_hover = true,
-				inactive_button_color = "rgba(8e8e9355)",
+				inactive_button_color = PROFILE_LIGHT and "rgba(c7c7cc88)" or "rgba(8e8e9355)",
 				bar_part_of_window = true,
 				bar_precedence_over_border = true,
 				on_double_click = MAXIMIZE,
@@ -320,10 +394,12 @@ if hl.plugin.hyprbars then
 			},
 		},
 	})
+	local BUTTON_BG = PROFILE_LIGHT and "rgba(aeaeb2ff)" or "rgba(8e8e93ff)"
+	local BUTTON_FG = PROFILE_LIGHT and "rgba(3a3a3ccc)" or "rgba(2c2c2ecc)"
 	-- Alineados a la izquierda se añaden de izquierda a derecha: cerrar, minimizar, maximizar
-	hl.plugin.hyprbars.add_button({ bg_color = "rgba(8e8e93ff)", fg_color = "rgba(2c2c2ecc)", size = 12, icon = "·", hover_icon = "×", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
-	hl.plugin.hyprbars.add_button({ bg_color = "rgba(8e8e93ff)", fg_color = "rgba(2c2c2ecc)", size = 12, icon = "·", hover_icon = "–", action = [[hyprctl dispatch 'hl.dsp.window.move({ workspace = "special:minimized", follow = false })']] })
-	hl.plugin.hyprbars.add_button({ bg_color = "rgba(8e8e93ff)", fg_color = "rgba(2c2c2ecc)", size = 12, icon = "·", hover_icon = "+", action = MAXIMIZE })
+	hl.plugin.hyprbars.add_button({ bg_color = BUTTON_BG, fg_color = BUTTON_FG, size = 12, icon = "·", hover_icon = "×", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
+	hl.plugin.hyprbars.add_button({ bg_color = BUTTON_BG, fg_color = BUTTON_FG, size = 12, icon = "·", hover_icon = "–", action = [[hyprctl dispatch 'hl.dsp.window.move({ workspace = "special:minimized", follow = false })']] })
+	hl.plugin.hyprbars.add_button({ bg_color = BUTTON_BG, fg_color = BUTTON_FG, size = 12, icon = "·", hover_icon = "+", action = MAXIMIZE })
 	-- Barra en todas las ventanas flotantes, estén o no en modo escritorio
 	hl.window_rule({ match = { float = false }, ["hyprbars:no_bar"] = true })
 end

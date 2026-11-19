@@ -57,7 +57,7 @@ Scope {
             radius: Theme.radius
             color: Theme.bgSolid
             border.width: 1
-            border.color: Theme.accentDim
+            border.color: Theme.frame
 
             ColumnLayout {
                 id: column
@@ -174,7 +174,8 @@ Scope {
         implicitWidth: label.implicitWidth + 28
         implicitHeight: 32
         radius: 7
-        color: primary ? (mouse.containsMouse ? Theme.accent : Theme.accentDim)
+        color: primary ? (Theme.mac ? (mouse.containsMouse ? Qt.lighter(Theme.accent, 1.12) : Theme.accent)
+                                    : (mouse.containsMouse ? Theme.accent : Theme.accentDim))
             : (mouse.containsMouse ? Theme.surface : "transparent")
         border.width: primary ? 0 : 1
         border.color: Theme.border
@@ -182,7 +183,7 @@ Scope {
         Text {
             id: label
             anchors.centerIn: parent
-            color: parent.primary ? Theme.bgSolid : Theme.fg
+            color: parent.primary ? Theme.onAccent : Theme.fg
             font.family: Theme.font
             font.pixelSize: 13
             font.bold: true

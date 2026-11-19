@@ -15,13 +15,19 @@
 #   Ghostty      ghostty/themes/current (config: theme = current)    (al momento)
 #   btop         btop/themes/current.theme                           (al abrirlo)
 #   fzf          themes/current-env.sh, cargado desde ~/.bashrc      (terminales nuevas)
-#   GTK          gtk-3.0/gtk.css y gtk-4.0/gtk.css                   (al abrir la app)
+#   GTK          gtk-3.0/gtk.css y gtk-4.0/gtk.css (no en el perfil  (al abrir la app)
+#                mac-light, que usa uno claro fijo de config-set)
 #   Qt / KDE     qt6ct/colors/current.conf, esquema KDE "Theme" y   (al abrir la app)
 #                sus colores en kdeglobals (Dolphin)
 #   fastfetch    fastfetch/themed/pepe-*.txt: Pepes teñidos con el     (terminales nuevas)
 #                acento (los originales los genera fastfetch/pepe.py)
 #   Neovim       lee "nvim" de theme.json en plugins/colorscheme.lua (al abrirlo;
 #                los ya abiertos lo reciben por su socket)
+#
+# Temas claros: "light": true en theme.json (sin él, oscuro). Al cambiar de tema
+# se llama a sync_theme() de config-set: en Modo Mac pasa a Mac claro u oscuro
+# (reinicia Quickshell) y en Modo normal pone GTK e iconos claros u oscuros.
+# Desde el menú (Super+T) se lanza con setsid, para que ese reinicio no lo mate.
 #
 # Los archivos generados empiezan con "Generado por theme-set": no los edites,
 # cambia el theme.json del tema y ejecuta `theme-set --reapply`.
@@ -32,6 +38,7 @@ import re
 import os
 import subprocess
 import sys
+import time
 
 HOME = os.path.expanduser("~")
 CONF = f"{HOME}/.config"
@@ -74,13 +81,14 @@ def hypr(hexcolor):
 def gen_hyprland(name, t):
     ui, hy = t["ui"], t["hypr"]
     write(f"{CONF}/hypr/config/theme.lua", f"""-- {HEADER.format(name)}
--- Lo usan decorations.lua y misc.lua
+-- Lo usan decorations.lua, misc.lua y desktopmode.lua
 
 THEME_BORDER   = {{ {", ".join(f'"{hypr(c)}"' for c in hy["border"])} }}
 THEME_INACTIVE = "{hypr(hy["inactive"])}"
 THEME_GROUP    = "{hypr(hy["group"])}"
 THEME_ACCENT   = "{hypr(ui["accent"])}"
 THEME_BG       = "{hypr(ui["bg"])}"
+THEME_FG       = "{hypr(ui["fg"])}"
 """)
 
 
@@ -88,10 +96,16 @@ def gen_hyprlock(name, t):
     ui, term = t["ui"], t["term"]
     r, g, b = rgb(term["background"])
     c = lambda k: "rgb({}, {}, {})".format(*rgb(ui[k]))
+    # $fg/$muted van sobre el fondo de noche: en los temas claros, casi blancos.
+    # $fieldfg es el texto del campo de contraseña (sobre $bg): el del tema
+    light = t.get("light")
+    fg = "rgb(245, 245, 247)" if light else c("fg")
+    muted = "rgb(216, 216, 222)" if light else c("muted")
     write(f"{CONF}/hypr/hyprlock-colors.conf", f"""# {HEADER.format(name)}
 $bg      = rgba({r}, {g}, {b}, 0.75)
-$fg      = {c("fg")}
-$muted   = {c("muted")}
+$fg      = {fg}
+$muted   = {muted}
+$fieldfg = {c("fg")}
 $accent  = {c("accent")}
 $accent2 = {c("accent2")}
 $yellow  = {c("yellow")}
@@ -124,18 +138,29 @@ inactive_tab_background {bg}
 """)
 
 
+def selection(t):
+    # Fondo y texto de la fila elegida en btop y fzf. En los oscuros, colors[0] y
+    # colors[15]; en los claros esos dos no sirven (el negro ANSI es oscuro y el
+    # blanco claro, como en sus paletas originales): la selección del terminal
+    term, c = t["term"], t["term"]["colors"]
+    if t.get("light"):
+        return term["selection_background"], t["ui"]["fg"]
+    return c[0], c[15]
+
+
 def gen_btop(name, t):
     term, ui = t["term"], t["ui"]
     c = term["colors"]
     box = term["selection_background"]
+    sel_bg, sel_fg = selection(t)
     keys = {
         "main_bg": term["background"], "main_fg": term["foreground"],
         "title": c[4], "hi_fg": ui["accent"],
-        "selected_bg": c[0], "selected_fg": c[15],
-        "inactive_fg": c[8], "graph_text": c[8], "meter_bg": c[0],
+        "selected_bg": sel_bg, "selected_fg": sel_fg,
+        "inactive_fg": c[8], "graph_text": c[8], "meter_bg": sel_bg,
         "proc_misc": ui["accent"],
         "cpu_box": box, "mem_box": box, "net_box": box, "proc_box": box,
-        "div_line": c[0],
+        "div_line": sel_bg,
         "temp_start": c[6], "temp_mid": c[3], "temp_end": c[1],
         "cpu_start": ui["muted"], "cpu_mid": ui["accent"], "cpu_end": c[4],
         "free_start": box, "free_mid": ui["muted"], "free_end": ui["accent"],
@@ -153,7 +178,8 @@ def gen_btop(name, t):
 def gen_fzf(name, t):
     term, ui = t["term"], t["ui"]
     c = term["colors"]
-    opts = (f"--color=bg:-1,bg+:{c[0]},fg:{term['foreground']},fg+:{c[15]},"
+    sel_bg, sel_fg = selection(t)
+    opts = (f"--color=bg:-1,bg+:{sel_bg},fg:{term['foreground']},fg+:{sel_fg},"
             f"hl:{ui['accent']},hl+:{c[4]},info:{c[8]},prompt:{ui['accent']},"
             f"pointer:{ui['accent']},marker:{c[5]},spinner:{ui['accent']},"
             f"header:{c[8]},border:{term['selection_background']},gutter:-1 "
@@ -162,6 +188,12 @@ def gen_fzf(name, t):
 
 
 def gen_gtk(name, t):
+    # En el perfil "mac-light" el gtk.css claro lo pone config-set: no se pisa
+    try:
+        if open(f"{HOME}/.local/state/desktop-profile").read().strip() == "mac-light":
+            return
+    except OSError:
+        pass
     g = t["gtk"]
     pairs = [
         ("accent", g["accent"]), ("accent-bg", g["accentBg"]), ("accent-fg", g["accentFg"]),
@@ -195,13 +227,25 @@ selection-foreground = {term["selection_foreground"]}
 """)
 
 
+def mix(a, b, k):
+    # Color entre a y b (k = 0 → a, k = 1 → b)
+    return "#" + "".join(f"{round(x + (y - x) * k):02x}" for x, y in zip(rgb(a), rgb(b)))
+
+
 def gen_qt(name, t):
     g, ui, c = t["gtk"], t["ui"], t["term"]["colors"]
     fg, dim = g["fg"], c[8]
+    # Relieves de Fusion: en los temas oscuros salen de la paleta del terminal; en
+    # los claros (ahí colors[15] es el texto oscuro) se calculan desde los botones
+    if t.get("light"):
+        light, midlight = "#ffffff", mix(g["card"], "#ffffff", 0.5)
+        dark, mid, bright = mix(g["card"], fg, 0.45), mix(g["card"], fg, 0.3), "#ffffff"
+    else:
+        light, midlight, dark, mid, bright = c[15], c[7], ui["bg"], c[8], c[15]
 
     # qt6ct: los 22 roles de QPalette en su orden
     def roles(text):
-        return ", ".join([text, g["card"], c[15], c[7], ui["bg"], c[8], text, c[15], text,
+        return ", ".join([text, g["card"], light, midlight, dark, mid, text, bright, text,
                           g["window"], g["headerbar"], "#000000", g["accentBg"], g["accentFg"],
                           c[6], ui["accent"], g["card"], g["window"], g["headerbar"], fg, dim,
                           ui["accent"]])
@@ -275,23 +319,52 @@ GENERATORS = [gen_hyprland, gen_hyprlock, gen_kitty, gen_ghostty, gen_btop, gen_
 
 # ── Avisar a los programas que ya están abiertos ─────────────
 
-def reload_all():
+def sync_profile():
+    # config-set ajusta el perfil a la claridad del tema (ver su sync_theme).
+    # True si ha reiniciado Quickshell y recargado Hyprland
+    path = f"{THEMES}/config-set"
+    if not os.path.isfile(path):
+        return False
+    import importlib.util
+    from importlib.machinery import SourceFileLoader
+    sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
+    loader = SourceFileLoader("config_set", path)
+    cs = importlib.util.module_from_spec(importlib.util.spec_from_loader("config_set", loader))
+    loader.exec_module(cs)
+    return cs.sync_theme()
+
+
+def reload_terminals():
+    # Lo primero tras escribir los archivos: así las terminales cambian a la vez que
+    # el resto y no esperan al reinicio de Quickshell de sync_profile
     quiet = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-    subprocess.run(["qs", "ipc", "call", "theme", "reload"], **quiet)
-    subprocess.run(["hyprctl", "reload"], **quiet)
     subprocess.run(["pkill", "-USR1", "-x", "kitty"], **quiet)  # kitty relee su config
     subprocess.run(["pkill", "-USR2", "-x", "ghostty"], **quiet)  # ghostty también (SIGUSR2)
 
 
+def reload_all(restarted=False):
+    quiet = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    if not restarted:  # si config-set ha reiniciado qs y Hyprland, ya leen el tema nuevo
+        subprocess.run(["qs", "ipc", "call", "theme", "reload"], **quiet)
+        subprocess.run(["hyprctl", "reload"], **quiet)
+
+
 def reload_nvim(t):
     # Cada Neovim abierto escucha en $XDG_RUNTIME_DIR/nvim.<pid>.0
+    # Primero background: si no, al pasar de un tema claro a uno oscuro se quedaría
+    # en light y rose-pine, gruvbox, everforest... cargarían su variante clara
     cs = t.get("nvim", "catppuccin")
-    for sock in glob.glob(f"{os.environ.get('XDG_RUNTIME_DIR', '/tmp')}/nvim.*.0"):
+    bg = "light" if t.get("light") else "dark"
+    expr = f"execute(['set background={bg}', 'colorscheme {cs}'])"
+    # Todos a la vez (antes uno detrás de otro, y uno colgado retrasaba al resto)
+    procs = [subprocess.Popen(["nvim", "--server", sock, "--remote-expr", expr],
+                              stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+             for sock in glob.glob(f"{os.environ.get('XDG_RUNTIME_DIR', '/tmp')}/nvim.*.0")]
+    for p in procs:
         try:
-            subprocess.run(["nvim", "--server", sock, "--remote-expr", f"execute('colorscheme {cs}')"],
-                           stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, timeout=2)
+            p.wait(timeout=2)
         except subprocess.TimeoutExpired:
-            pass  # socket muerto de un nvim que se cerró mal
+            p.kill()  # socket muerto de un nvim que se cerró mal
 
 
 def apply(name):
@@ -304,8 +377,12 @@ def apply(name):
     os.replace(tmp, CURRENT)
     for gen in GENERATORS:
         gen(name, t)
-    reload_all()
+    reload_terminals()
     reload_nvim(t)
+    restarted = sync_profile()
+    reload_all(restarted)
+    if restarted:
+        time.sleep(1.5)  # que el Quickshell nuevo tenga ya el servidor de notificaciones
     subprocess.run(["notify-send", "-a", "Tema", "Tema de colores", t.get("name", name)],
                    stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
