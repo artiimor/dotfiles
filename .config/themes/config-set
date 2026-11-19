@@ -192,23 +192,23 @@ def set_key(path, key, value):
     open(path, "w").write(text)
 
 
-def gtk_css(p):
-    if p.get("fixed_css"):
-        old = "\n".join(f"@define-color {k.replace('-', '_')}_color {v};" for k, v in GTK_LIGHT.items())
-        new = "\n".join(f"    --{k}-color: {v};" for k, v in GTK_LIGHT.items())
-        head = "/* Generado por config-set (perfil mac-light): no editar */\n"
-        for d, text in (("gtk-3.0", old + "\n"),
-                        ("gtk-4.0", ":root {\n" + new + "\n}\n\n" + old + "\n")):
-            with open(f"{CONF}/{d}/gtk.css", "w") as f:
-                f.write(head + text)
-        return
-    # Los demás perfiles usan el gtk.css del tema de colores: lo regenera theme-set
+def load_theme_set():
     import importlib.util
-    sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
     from importlib.machinery import SourceFileLoader
+    sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
     loader = SourceFileLoader("theme_set", f"{CONF}/themes/theme-set")
     ts = importlib.util.module_from_spec(importlib.util.spec_from_loader("theme_set", loader))
     loader.exec_module(ts)
+    return ts
+
+
+def gtk_css(p):
+    ts = load_theme_set()
+    if p.get("fixed_css"):
+        ts.write_gtk_css("/* Generado por config-set (perfil mac-light): no editar */\n",
+                         list(GTK_LIGHT.items()))
+        return
+    # Los demás perfiles usan el gtk.css del tema de colores: lo regenera theme-set
     name = ts.current()
     try:
         with open(f"{CONF}/themes/{name}/theme.json") as f:
@@ -314,15 +314,20 @@ def restart_shell(name, notify=True):
         subprocess.run(["notify-send", "-a", "Config", "Config del escritorio", PROFILES[name]["name"]], **quiet)
 
 
+def write_files(name, css=True):
+    # GTK, Qt y KDE del perfil
+    p = settings(name)
+    set_gtk(p, css)
+    set_qt(p)
+    set_kde(p)
+
+
 def apply(name, notify=True):
     if name in MAC_PROFILES and not has_macshell():
         print(f"Aviso: no está macshell ({MACSHELL}); \"{name}\" se verá como \"default\" "
               "en la barra (instálalo desde el repo plasma-mac)", file=sys.stderr)
     write_state(name)
-    p = settings(name)
-    set_gtk(p)
-    set_qt(p)
-    set_kde(p)
+    write_files(name)
     restart_shell(name, notify)
 
 
@@ -341,10 +346,7 @@ def sync_theme():
             # hace falta reiniciar nada, solo guardar el perfil y poner GTK/Qt/iconos
             if want != cur or saved() is None:
                 write_state(want)
-            p = settings(want)
-            set_gtk(p)  # con su gtk.css: el claro fijo o el del tema
-            set_qt(p)
-            set_kde(p)
+            write_files(want)  # con su gtk.css: el claro fijo o el del tema
             return False
         if want == cur and saved() is not None:
             return False
@@ -352,10 +354,7 @@ def sync_theme():
         return True
     if saved() is None:
         write_state(cur)
-    p = settings(cur)
-    set_gtk(p, css=False)  # el gtk.css del tema ya lo ha escrito theme-set
-    set_qt(p)
-    set_kde(p)
+    write_files(cur, css=False)  # el gtk.css del tema ya lo ha escrito theme-set
     return False
 
 

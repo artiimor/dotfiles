@@ -205,9 +205,14 @@ def gen_gtk(name, t):
         ("popover-bg", g["headerbar"]), ("popover-fg", g["fg"]),
         ("dialog-bg", g["headerbar"]), ("dialog-fg", g["fg"]),
     ]
+    write_gtk_css(f"/* {HEADER.format(name)} */\n", pairs)
+
+
+def write_gtk_css(head, pairs):
+    # gtk.css de GTK 3 y 4 con los colores [(nombre, "#rrggbb")]; lo usa también
+    # config-set para el gtk.css claro fijo de mac-light
     old = "\n".join(f"@define-color {k.replace('-', '_')}_color {v};" for k, v in pairs)
     new = "\n".join(f"    --{k}-color: {v};" for k, v in pairs)
-    head = f"/* {HEADER.format(name)} */\n"
     write(f"{CONF}/gtk-3.0/gtk.css", head + old + "\n")
     write(f"{CONF}/gtk-4.0/gtk.css", head + ":root {\n" + new + "\n}\n\n"
           "/* Lo mismo con nombres antiguos, para libadwaita < 1.6 */\n" + old + "\n")
