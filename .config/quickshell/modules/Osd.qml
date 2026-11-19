@@ -1,5 +1,6 @@
-// OSD de volumen, micrófono y brillo: sustituye a swayosd. Aparece abajo en
-// el centro cada vez que cambian (con las teclas, la rueda en la barra...).
+// OSD de volumen, micrófono y brillo: sustituye a swayosd. Aparece arriba a la
+// derecha, bajo la barra, como en macOS, cada vez que cambian (con las teclas,
+// la rueda en la barra...).
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
@@ -12,12 +13,14 @@ PanelWindow {
     id: osd
 
     screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
-    visible: shown
+    visible: shown || box.opacity > 0
 
-    anchors.bottom: true
-    // Como en swayosd (top_margin = 0.88): al 88 % de la altura
-    margins.bottom: Math.max(Theme.gap, (screen?.height ?? 720) * 0.12 - implicitHeight)
-    exclusionMode: ExclusionMode.Ignore
+    anchors.top: true
+    anchors.right: true
+    margins.top: Theme.gap
+    margins.right: Theme.gap * 2
+    // 0 = no reserva espacio pero respeta el de las barras (queda debajo)
+    exclusiveZone: 0
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-osd"
     // Región vacía = los clics lo atraviesan
@@ -44,7 +47,7 @@ PanelWindow {
 
     Timer {
         id: hideTimer
-        interval: 1200
+        interval: 1500
         onTriggered: osd.shown = false
     }
 
@@ -96,9 +99,13 @@ PanelWindow {
         implicitWidth: row.implicitWidth + 40
         implicitHeight: row.implicitHeight + 28
         radius: Theme.radius
-        color: Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.92)
+        color: Theme.bg
         border.width: 1
         border.color: Theme.frame
+        opacity: osd.shown ? 1 : 0
+        scale: osd.shown ? 1 : 0.94
+        Behavior on opacity { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
+        Behavior on scale { NumberAnimation { duration: 200; easing.type: Easing.OutCubic } }
 
         Row {
             id: row
@@ -118,7 +125,7 @@ PanelWindow {
 
             Rectangle {
                 anchors.verticalCenter: parent.verticalCenter
-                width: 220
+                width: 160
                 height: 8
                 radius: 4
                 color: Theme.surface
