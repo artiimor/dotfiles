@@ -13,13 +13,15 @@ step=250
 state="${XDG_RUNTIME_DIR:-/tmp}/nightlight-off"
 conf="$HOME/.config/hypr/hyprsunset.conf"
 
+# Quickshell (services/NightLight.qml) vuelve a leer el estado tras cada acción
+
 current() {
     hyprctl hyprsunset temperature 2>/dev/null | grep -oE '^[0-9]+$'
 }
 
 # Epoch del último cambio de perfil del horario (hoy o ayer)
 last_profile_change() {
-    local now last=0 t ts
+    local now last=0 t ts day
     now=$(date +%s)
     for t in $(sed -nE 's/^\s*time\s*=\s*([0-9]{1,2}:[0-9]{2}).*/\1/p' "$conf"); do
         for day in today yesterday; do
@@ -37,9 +39,6 @@ is_on() {
     return 0
 }
 
-# Quickshell vuelve a leer el estado tras cada acción, no hace falta avisar
-refresh() { :; }
-
 t=$(current)
 
 case "$1" in
@@ -51,14 +50,12 @@ case "$1" in
         else
             hyprctl hyprsunset temperature "$warm" >/dev/null
             rm -f "$state"
-        fi
-        refresh ;;
+        fi ;;
     up|down)
         [ -n "$t" ] && is_on "$t" || exit 0
         [ "$1" = up ] && t=$((t + step)) || t=$((t - step))
         t=$(( t < 2500 ? 2500 : t > 5750 ? 5750 : t ))
-        hyprctl hyprsunset temperature "$t" >/dev/null
-        refresh ;;
+        hyprctl hyprsunset temperature "$t" >/dev/null ;;
     *)
         if [ -z "$t" ]; then
             echo '{"text": "󰖙", "class": "unavailable", "tooltip": "hyprsunset no está en marcha"}'

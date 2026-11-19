@@ -2,7 +2,6 @@
 // (components/TrayMenu.qml).
 // Se oculta si no hay ningún icono.
 import QtQuick
-import Quickshell
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
 import qs
