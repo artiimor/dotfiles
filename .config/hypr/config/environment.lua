@@ -12,3 +12,5 @@
 -- Apps Qt con qt6ct: estilo Breeze, iconos Sur-Transparente, colores mac-dark (sin Plasma).
 -- Con uwsm lo pone ~/.config/uwsm/env; esto cubre la sesión de Hyprland sin uwsm.
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+hl.env("XCURSOR_THEME", "macOS") -- cursor negro de macOS (apple_cursor)
+hl.env("XCURSOR_SIZE", "24")

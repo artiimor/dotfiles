@@ -142,9 +142,28 @@ if ask "¿Copiarlos?"; then
 	fix_home "$HOME/.config/quickshell" "$HOME/.config/networkmanager-dmenu" \
 		"$HOME/.config/ghostty" "$HOME/.local/share/applications"
 	chmod +x "$HOME/.config/themes/theme-set" "$HOME/.config/themes/config-set" "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
-	# Cursor por defecto (Adwaita) también para apps X11
+	# Cursor: la flecha negra de macOS (apple_cursor, no está en los repos de Arch).
+	# Si no se puede descargar se queda Adwaita. ~/.icons/default es para apps X11
+	cursor=Adwaita
+	if [[ -d "$HOME/.local/share/icons/macOS/cursors" ]]; then
+		cursor=macOS
+	else
+		mkdir -p "$HOME/.local/share/icons"
+		if curl -fsSL https://github.com/ful1e5/apple_cursor/releases/download/v2.0.1/macOS.tar.xz |
+			tar -xJ -C "$HOME/.local/share/icons" ./macOS 2>/dev/null; then
+			cursor=macOS
+		else
+			warn "no se pudo descargar el cursor macOS; se usa Adwaita"
+			sed -i 's/^gtk-cursor-theme-name=macOS/gtk-cursor-theme-name=Adwaita/' \
+				"$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
+			sed -i 's/^export XCURSOR_THEME="macOS".*/export XCURSOR_THEME="Adwaita"/' "$HOME/.config/uwsm/env"
+			sed -i 's/^hl.env("XCURSOR_THEME", "macOS").*/hl.env("XCURSOR_THEME", "Adwaita")/' \
+				"$HOME/.config/hypr/config/environment.lua"
+		fi
+	fi
 	mkdir -p "$HOME/.icons/default"
-	printf '[Icon Theme]\nName=Default\nInherits=Adwaita\n' >"$HOME/.icons/default/index.theme"
+	printf '[Icon Theme]\nName=Default\nInherits=%s\n' "$cursor" >"$HOME/.icons/default/index.theme"
+	gsettings set org.gnome.desktop.interface cursor-theme "$cursor" 2>/dev/null || true
 	xdg-user-dirs-update 2>/dev/null || true
 	[[ -d "$BACKUP" ]] && info "copias de lo anterior en $BACKUP"
 fi

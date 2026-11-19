@@ -29,7 +29,7 @@
 #            el color del tema; iconos Papirus-Dark (Papirus-Light con un tema
 #            claro); Qt con Fusion y los colores del tema
 #
-# Lo común a los dos (cursor Adwaita, keyd, qt6ct como tema de plataforma Qt,
+# Lo común a los dos (cursor macOS negro, keyd, qt6ct como tema de plataforma Qt,
 # temas de color, etc.) no lo toca este script.
 #
 # El perfil se guarda en ~/.local/state/desktop-profile y lo leen:
