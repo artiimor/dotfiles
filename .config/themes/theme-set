@@ -23,6 +23,7 @@
 #                acento (los originales los genera fastfetch/pepe.py)
 #   Neovim       lee "nvim" de theme.json en plugins/colorscheme.lua (al abrirlo;
 #                los ya abiertos lo reciben por su socket)
+#   Fondo        Quickshell lo pide a background-set al recargar  (al momento)
 #
 # Temas claros: "light": true en theme.json (sin él, oscuro). Al cambiar de tema
 # se llama a sync_theme() de config-set: en Modo Mac pasa a Mac claro u oscuro

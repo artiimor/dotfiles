@@ -108,6 +108,8 @@ hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd(shellCmd("power toggle", "qs ipc
 hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("qs ipc call launcher emoji"), { description = "Emojis" })
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("qs ipc call launcher themes"), { description = "Tema de colores" })
 hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("qs ipc call launcher configs"), { description = "Config (Modo Mac / Modo normal)" })
+hl.bind(mainMod .. " + CTRL + B", hl.dsp.exec_cmd("qs ipc call launcher backgrounds"), { description = "Fondo de pantalla" })
+hl.bind(mainMod .. " + CTRL + SHIFT + B", hl.dsp.exec_cmd("~/.config/themes/background-set --next"), { description = "Siguiente fondo" })
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("qs ipc call launcher keys"), { description = "Chuleta de atajos" })
 hl.bind(mainMod .. " + ALT + K", hl.dsp.exec_cmd("qs ipc call launcher keys"))
 

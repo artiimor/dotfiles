@@ -54,7 +54,10 @@ Singleton {
 
     IpcHandler {
         target: "theme"
-        function reload(): void { themeFile.reload(); }
+        function reload(): void {
+            themeFile.reload();
+            backgroundProc.running = true;
+        }
     }
 
     // mac / mac-light: los colores de macshell (Theme.qml del repo plasma-mac)
@@ -103,8 +106,17 @@ Singleton {
 
     // Fondo de pantalla (también se usa, desenfocado, en la pantalla de bloqueo)
     readonly property string wallpaper: "file:///home/morci/.config/backgrounds/wallpaper.jpg"
-    // Solo el escritorio: el prado con todos los pepes en color
-    readonly property string desktopWallpaper: "file:///home/morci/.config/backgrounds/wallpaper-desktop.jpg"
+    // Solo el escritorio: el fondo del tema (Super+Ctrl+B, themes/background-set);
+    // por defecto el prado con todos los pepes en color
+    property string desktopWallpaper: "file:///home/morci/.config/backgrounds/wallpaper-desktop.jpg"
+    Process {
+        id: backgroundProc
+        command: [Quickshell.env("HOME") + "/.config/themes/background-set", "--path"]
+        running: true
+        stdout: StdioCollector {
+            onStreamFinished: if (text.trim()) root.desktopWallpaper = "file://" + text.trim()
+        }
+    }
 
     readonly property int anim: 250   // duración de las animaciones (ms)
     readonly property int drawerAnim: 400

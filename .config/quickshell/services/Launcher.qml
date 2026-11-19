@@ -8,6 +8,7 @@
 //   emoji       selector de emojis                (Super+.)
 //   profiles    perfil de energía                 (clic en el icono de la barra)
 //   themes      tema de colores                   (Super+T)
+//   backgrounds fondo de pantalla del tema actual (Super+Ctrl+B)
 //   configs     perfil del escritorio: Modo Mac / Modo normal  (Super+Shift+T)
 //   keys        chuleta de atajos de Hyprland     (Super+?)
 //   dmenu       menú genérico para scripts: lo usa scripts/dmenu-qs
@@ -29,8 +30,8 @@ Singleton {
     property var items: []         // [{ text, icon, glyph, sub, data }]
 
     // Tamaño y sitio de la ventana según el modo (como estaba en wofi)
-    readonly property int width: ({ apps: 360, clipboard: 640, emoji: 420, power: 220, themes: 420, configs: 260, keys: 520 })[mode] ?? 320
-    readonly property bool centered: ["apps", "clipboard", "emoji", "power", "themes", "configs", "keys"].includes(mode)
+    readonly property int width: ({ apps: 360, clipboard: 640, emoji: 420, power: 220, themes: 420, backgrounds: 420, configs: 260, keys: 520 })[mode] ?? 320
+    readonly property bool centered: ["apps", "clipboard", "emoji", "power", "themes", "backgrounds", "configs", "keys"].includes(mode)
 
     // Abre un modo, o lo cierra si ya estaba abierto (como `pkill wofi || wofi`)
     function toggle(m) {
@@ -76,6 +77,10 @@ Singleton {
             prompt = "Tema";
             items = [];
             themeList.running = true;
+        } else if (m === "backgrounds") {
+            prompt = "Fondo";
+            items = [];
+            backgroundList.running = true;
         } else if (m === "configs") {
             prompt = "Config";
             items = [];
@@ -130,6 +135,11 @@ Singleton {
             // theme-set puede reiniciar Quickshell (Modo Mac al pasar de tema claro a
             // oscuro, ver config-set): setsid para que no muera con él
             Quickshell.execDetached(["setsid", "-f", root.themesDir + "/theme-set", item.data]);
+        } else if (m === "backgrounds") {
+            // "+": abre en Dolphin la carpeta de fondos del tema (current es un enlace al tema)
+            Quickshell.execDetached(item.data === "+"
+                ? ["sh", "-c", `mkdir -p "$1" && exec uwsm-app -- xdg-open "$1"`, "sh", root.themesDir + "/current/backgrounds"]
+                : [root.themesDir + "/background-set", item.data]);
         } else if (m === "configs") {
             // config-set reinicia Quickshell (este proceso incluido): setsid para que no muera con él
             Quickshell.execDetached(["setsid", "-f", root.themesDir + "/config-set", item.data]);
@@ -262,6 +272,25 @@ for t in sorted(os.listdir(d)):
         }
     }
 
+    // ── Fondos del tema actual ────────────────────────────
+    // `background-set` da "<fondo>\t<ruta>\t<1 si es el actual>"
+    Process {
+        id: backgroundList
+        command: [root.themesDir + "/background-set"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                root.items = text.split("\n").filter(l => l).map(l => {
+                    const [name, path, cur] = l.split("\t");
+                    return {
+                        text: (name === "pepes" ? "Pepes" : name.replace(/\.[^.]+$/, "")) + (cur === "1" ? "  " + String.fromCodePoint(0xF012C) : ""),
+                        image: "file://" + path,
+                        data: name
+                    };
+                }).concat({ text: "＋ Añadir fondos…", data: "+" });
+            }
+        }
+    }
+
     // ── Configs (perfiles del escritorio) ─────────────────
     // `config-set --list` da "<perfil>\t<nombre>\t<1 si es el actual>" (solo Modo Mac
     // y Modo normal: Mac claro u oscuro lo decide el tema de colores); al elegir
@@ -321,6 +350,7 @@ for t in sorted(os.listdir(d)):
         function emoji(): void { root.toggle("emoji"); }
         function profiles(): void { root.toggle("profiles"); }
         function themes(): void { root.toggle("themes"); }
+        function backgrounds(): void { root.toggle("backgrounds"); }
         function configs(): void { root.toggle("configs"); }
         function keys(): void { root.toggle("keys"); }
         function close(): void { root.close(); }

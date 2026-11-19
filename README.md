@@ -28,7 +28,8 @@ Light or dark comes from the color theme: pick a light theme and either config t
 - **Color theme switcher** (`.config/themes`): one `theme.json` per theme that colors Hyprland, Quickshell,
   hyprlock, ghostty, kitty, btop, GTK, Qt/KDE, fzf, fastfetch and running Neovims at once.
   Ships with kanagawa-dragon, everforest, miami, catppuccin, tokyo-night, rose-pine, gruvbox and vantablack,
-  plus two light themes, catppuccin-latte and rose-pine-dawn. The theme menu (Super+T) shows each theme's palette. See `.config/themes/README.md`.
+  plus two light themes, catppuccin-latte and rose-pine-dawn. The theme menu (Super+T) shows each theme's palette.
+  Each theme can ship its own wallpapers in `backgrounds/` (Super+Ctrl+B to pick one, remembered per theme; the Pepes otherwise). See `.config/themes/README.md`.
 - **ghostty** as the terminal, bash + starship prompt, Neovim with LazyVim (own miami and vantablack colorschemes),
   btop, and fastfetch with an ASCII Pepe tinted with the theme accent.
 
@@ -128,6 +129,7 @@ Without the plugin everything else still works, just without titlebars.
 | Super+. | Emoji |
 | Super+T | Switch theme |
 | Super+Shift+T | Switch desktop config (Mac mode / Normal mode) |
+| Super+Ctrl+B / Super+Ctrl+Shift+B | Pick the theme's wallpaper / next wallpaper |
 | Super+A | Notification center (macshell's in Mac mode) |
 | Super+Alt+L | Lock |
 | Super+Shift+P | Screenshot a region |

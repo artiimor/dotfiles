@@ -32,8 +32,17 @@ Cuándo se ve el cambio: Quickshell, Hyprland, kitty, Ghostty y los Neovim abier
 y las apps GTK y Qt al volver a abrirlas; fzf y fastfetch (el Pepe, teñido con el
 acento) en terminales nuevas; hyprlock en el próximo bloqueo.
 
-Fuera de los temas (se quedan con Miami night): ReGreet y Plymouth. El fondo de
-pantalla tampoco cambia.
+Fuera de los temas (se quedan con Miami night): ReGreet y Plymouth. La pantalla
+de bloqueo sigue con el Pepe de noche.
+
+## Fondos de pantalla
+
+Como en Omarchy, cada tema puede traer sus fondos en `<tema>/backgrounds/`
+(jpg, png, webp...). **Super+Ctrl+B** los muestra con miniaturas (más los Pepes
+de siempre) y **Super+Ctrl+Shift+B** pasa al siguiente. «＋ Añadir fondos…» abre
+esa carpeta en Dolphin para arrastrar imágenes. Se recuerda uno por tema;
+sin elegir, el primero (los Pepes si el tema no trae). También desde la terminal
+con `background-set` (ver el script).
 
 ## Temas claros
 

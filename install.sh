@@ -143,7 +143,7 @@ if ask "¿Copiarlos?"; then
 	done
 	fix_home "$HOME/.config/quickshell" "$HOME/.config/networkmanager-dmenu" \
 		"$HOME/.config/ghostty" "$HOME/.local/share/applications"
-	chmod +x "$HOME/.config/themes/theme-set" "$HOME/.config/themes/config-set" "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
+	chmod +x "$HOME/.config/themes/theme-set" "$HOME/.config/themes/config-set" "$HOME/.config/themes/background-set" "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
 	# Cursor: la flecha negra de macOS (apple_cursor, no está en los repos de Arch).
 	# Si no se puede descargar se queda Adwaita. ~/.icons/default es para apps X11
 	cursor=Adwaita

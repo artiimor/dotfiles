@@ -3,9 +3,9 @@
 //
 // Estilo: limpio (buscador arriba, lista plana, sin
 // efectos), todo cuadrado y sin bordes. En el menú de temas cada fila lleva
-// su paleta de colores a la derecha. En los perfiles mac (Theme.mac) va como
-// macshell: esquinas redondeadas, borde fino, fondo translúcido con desenfoque
-// y la fila elegida en azul.
+// su paleta de colores a la derecha y en el de fondos, su miniatura. En los
+// perfiles mac (Theme.mac) va como macshell: esquinas redondeadas, borde fino,
+// fondo translúcido con desenfoque y la fila elegida en azul.
 //
 // Teclas: escribir filtra · ↑/↓ o Ctrl+K/J o Tab moverse · Enter elegir · Esc cerrar
 // Clic fuera también cierra.
@@ -96,8 +96,8 @@ PanelWindow {
     // Colores propios del launcher (vienen del tema: launcherBg / launcherSel)
     readonly property color bgColor: Theme.launcherBg
     readonly property color selColor: Theme.launcherSel
-    // Menús cortos (apagar, temas, configs): sin buscador
-    readonly property bool noSearch: ["power", "themes", "configs"].includes(Launcher.mode)
+    // Menús cortos (apagar, temas, fondos, configs): sin buscador
+    readonly property bool noSearch: ["power", "themes", "backgrounds", "configs"].includes(Launcher.mode)
 
     Rectangle {
         id: box
@@ -218,6 +218,17 @@ PanelWindow {
                         anchors.leftMargin: 14
                         anchors.rightMargin: 14
                         spacing: 12
+
+                        // Fondos: miniatura del fondo
+                        Image {
+                            visible: !!row.modelData.image
+                            Layout.preferredWidth: 48
+                            Layout.preferredHeight: 27
+                            source: row.modelData.image ?? ""
+                            sourceSize.width: 96
+                            fillMode: Image.PreserveAspectCrop
+                            asynchronous: true
+                        }
 
                         // Símbolo (menús y emojis); las apps van sin icono
                         Text {
