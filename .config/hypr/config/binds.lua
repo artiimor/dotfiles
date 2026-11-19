@@ -149,6 +149,10 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("qs ipc call brightness down"),
 hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprshot -m region"), { description = "Captura de una zona" })
 -- Notifications
 hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(shellCmd("center toggle", "qs ipc call notifs toggle")), { description = "Notificaciones" })
+-- Mostrar / ocultar la barra (como en Omarchy); en el Modo Mac la barra es de macshell
+if not PROFILE_MAC then
+	hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("qs ipc call bar toggle"), { description = "Mostrar / ocultar la barra" })
+end
 
 -- Lock
 hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("loginctl lock-session"), { description = "Bloquear" })

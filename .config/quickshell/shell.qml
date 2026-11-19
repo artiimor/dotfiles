@@ -6,13 +6,14 @@
 //   Bar.qml       la barra: qué módulos van a la izquierda, centro y derecha
 //   modules/      cada isla de la barra (workspaces, reloj, audio...)
 //   components/   piezas reutilizables (isla, icono con tooltip, cajón)
-//   services/     datos compartidos (CPU, brillo, luz nocturna...)
+//   services/     datos compartidos (memoria, brillo, luz nocturna...)
 //   scripts/      scripts de shell que usan los módulos
 
 import QtQuick
 import Quickshell
 import Quickshell.Io
 import qs.modules
+import qs.services
 
 ShellRoot {
     id: root
@@ -46,9 +47,10 @@ ShellRoot {
     readonly property bool macBar: macshell.loaded && root.profile !== "default"
     readonly property bool ownBar: profileChecked && macChecked && !macBar
 
-    // Una barra por cada pantalla conectada
+    // Una barra por cada pantalla conectada. Al ocultarla (Super+B) se quitan
+    // del todo, y con ellas sus menús y su hueco reservado
     Variants {
-        model: root.ownBar ? Quickshell.screens : []
+        model: root.ownBar && TopBar.shown ? Quickshell.screens : []
 
         Bar {}
     }

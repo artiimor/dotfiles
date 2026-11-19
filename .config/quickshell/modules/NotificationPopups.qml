@@ -16,9 +16,9 @@ PanelWindow {
         right: true
     }
     // En la capa Overlay Hyprland no aparta los popups de la barra,
-    // así que se dejan debajo a mano
+    // así que se dejan debajo a mano (si está oculta, arriba del todo)
     margins {
-        top: Theme.barHeight + Theme.gap * 2
+        top: TopBar.shown ? Theme.barHeight + Theme.gap * 2 : Theme.gap
         right: Theme.gap
     }
     exclusionMode: ExclusionMode.Ignore

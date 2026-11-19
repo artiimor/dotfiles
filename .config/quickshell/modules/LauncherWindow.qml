@@ -31,7 +31,7 @@ PanelWindow {
         right: !Launcher.centered
     }
     margins {
-        top: Theme.barHeight + Theme.gap * 2
+        top: TopBar.shown ? Theme.barHeight + Theme.gap * 2 : Theme.gap
         right: Theme.gap
     }
     exclusionMode: ExclusionMode.Ignore

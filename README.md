@@ -294,6 +294,7 @@ left **Alt** key (see [keyd](#keyboard-remapping-keyd)).
 | Ctrl+Shift+Esc | System monitor (btop in a terminal) |
 | Super+Esc | Power menu (macshell's in Mac mode) |
 | Super+A | Notification center (macshell's control center in Mac mode) |
+| Super+B | Show / hide the top bar (Normal mode only) |
 | Super+Ctrl+V | Clipboard history |
 | Super+. | Emoji picker |
 | Super+T | Color theme menu |
