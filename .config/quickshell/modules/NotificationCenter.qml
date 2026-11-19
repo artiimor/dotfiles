@@ -213,62 +213,24 @@ PanelWindow {
             // ── Volumen y brillo ──────────────────────────
             PwObjectTracker { objects: [Pipewire.defaultAudioSink] }
 
-            RowLayout {
+            SliderRow {
+                readonly property var audio: Pipewire.defaultAudioSink?.audio
                 Layout.fillWidth: true
-                spacing: 10
-
-                BarIcon {
-                    readonly property var audio: Pipewire.defaultAudioSink?.audio
-                    implicitHeight: 24
-                    padding: 4
-                    pixelSize: 15
-                    icon: audio?.muted ? "󰝟" : "󰕾"
-                    color: audio?.muted ? Theme.muted : Theme.accent
-                    tooltip: "Clic: silenciar"
-                    onClicked: audio.muted = !audio.muted
-                }
-                Slider {
-                    Layout.fillWidth: true
-                    value: Pipewire.defaultAudioSink?.audio?.volume ?? 0
-                    enabled: !(Pipewire.defaultAudioSink?.audio?.muted ?? false)
-                    onMoved: v => Pipewire.defaultAudioSink.audio.volume = v
-                }
-                Text {
-                    Layout.preferredWidth: 38
-                    horizontalAlignment: Text.AlignRight
-                    text: Math.round((Pipewire.defaultAudioSink?.audio?.volume ?? 0) * 100) + "%"
-                    color: Theme.fg
-                    font.family: Theme.font
-                    font.pixelSize: 12
-                    font.bold: true
-                }
+                icon: audio?.muted ? "󰝟" : "󰕾"
+                iconColor: audio?.muted ? Theme.muted : Theme.accent
+                tooltip: "Clic: silenciar"
+                value: audio?.volume ?? 0
+                active: !(audio?.muted ?? false)
+                onIconClicked: audio.muted = !audio.muted
+                onMoved: v => audio.volume = v
             }
 
-            RowLayout {
+            SliderRow {
                 Layout.fillWidth: true
-                spacing: 10
-
-                BarIcon {
-                    implicitHeight: 24
-                    padding: 4
-                    pixelSize: 15
-                    icon: "󰃟"
-                    color: Theme.yellow
-                }
-                Slider {
-                    Layout.fillWidth: true
-                    value: Brightness.percent / 100
-                    onMoved: v => Brightness.set(Math.max(1, Math.round(v * 100)) + "%")
-                }
-                Text {
-                    Layout.preferredWidth: 38
-                    horizontalAlignment: Text.AlignRight
-                    text: Brightness.percent + "%"
-                    color: Theme.fg
-                    font.family: Theme.font
-                    font.pixelSize: 12
-                    font.bold: true
-                }
+                icon: "󰃟"
+                iconColor: Theme.yellow
+                value: Brightness.percent / 100
+                onMoved: v => Brightness.set(Math.max(1, Math.round(v * 100)) + "%")
             }
 
             Rectangle {

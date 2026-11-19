@@ -19,6 +19,7 @@ Item {
     property int pixelSize: Theme.iconSize
     property bool italic: false
     property int padding: 14
+    property bool clickable: true   // false: sin la manita (solo tooltip o rueda)
     readonly property bool hovered: mouse.containsMouse
 
     signal clicked(var mouse)
@@ -48,7 +49,7 @@ Item {
         anchors.fill: parent
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
-        cursorShape: Qt.PointingHandCursor
+        cursorShape: root.clickable ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: m => root.clicked(m)
         onWheel: w => {
             if (w.angleDelta.y > 0)

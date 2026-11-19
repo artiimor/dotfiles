@@ -1,7 +1,7 @@
-// Estado: una sola isla a la derecha con lo justo (audio, red, batería).
-// Al pasar el ratón se despliega hacia la izquierda el resto (como el reloj:
-// el cajón cuelga por fuera, así lo fijo no se mueve): CPU, memoria,
-// temperatura, bluetooth, perfil de energía y apagado.
+// Estado: una sola isla a la derecha con lo de siempre a la vista (audio,
+// brillo, red, bluetooth, batería). Al pasar el ratón se despliega hacia la
+// izquierda el resto (como el reloj: el cajón cuelga por fuera, así lo fijo
+// no se mueve): memoria, temperatura, perfil de energía y apagado.
 // La campana solo aparece si hay notificaciones (Super+A abre el panel igual).
 import QtQuick
 import Quickshell
@@ -33,20 +33,11 @@ Item {
         fromRight: true
         open: hover.hovered || drawerHover.hovered
 
-        // CPU · Clic: btop (misma clase que en Waybar, así las reglas de
-        // ventana de Hyprland lo siguen poniendo pequeño arriba a la derecha)
-        BarIcon {
-            icon: "󰻠"
-            padding: 10
-            color: Theme.muted
-            tooltip: `CPU ${SysStats.cpu}%`
-            onClicked: Quickshell.execDetached(["kitty", "--class", "waybar-popup", "-o", "window_padding_width=8", "-e", "btop"])
-        }
-
         BarIcon {
             icon: "󰍛"
             padding: 10
             color: Theme.muted
+            clickable: false
             tooltip: `${SysStats.memUsed.toFixed(1)} / ${SysStats.memTotal.toFixed(1)} GiB`
         }
 
@@ -55,22 +46,8 @@ Item {
             icon: ["󱃃", "󰔏", "󱃂"][Math.min(2, Math.floor(3 * SysStats.temp / SysStats.tempCritical))]
             padding: 10
             color: critical ? Theme.red : Theme.muted
+            clickable: false
             tooltip: `${SysStats.temp}°C`
-        }
-
-        // Bluetooth · Clic: bzmenu (con el lanzador de Quickshell como menú)
-        BarIcon {
-            readonly property bool on: root.adapter?.enabled ?? false
-
-            icon: !on ? "󰂲" : root.btConnected.length > 0 ? "󰂱" : "󰂯"
-            padding: 10
-            color: on ? Theme.fg : Theme.muted
-            tooltip: !on ? "Bluetooth apagado"
-                : root.btConnected.length > 0 ? root.btConnected.map(d => d.name).join("\n")
-                : "Bluetooth encendido"
-
-            onClicked: Quickshell.execDetached(["bzmenu", "-l", "custom", "--launcher-command",
-                `${Quickshell.shellDir}/scripts/dmenu-qs -p '{hint}'`])
         }
 
         // Perfil de energía · Clic: menú de perfiles
@@ -115,12 +92,13 @@ Item {
         padding: 6
 
         // ── Audio ─────────────────────────────────────────────
-        // Clic: pavucontrol · Clic derecho: silenciar · Rueda: volumen ±5%
+        // Clic: mezclador · Clic derecho: silenciar · Rueda: volumen ±5%
         readonly property PwNode sink: Pipewire.defaultAudioSink
         // Sin esto Pipewire no rellena sink.audio
         PwObjectTracker { objects: [root.sink] }
 
         BarIcon {
+            id: volumeIcon
             readonly property real volume: root.sink?.audio?.volume ?? 0
             readonly property bool muted: root.sink?.audio?.muted ?? false
             readonly property bool bluetooth: (root.sink?.name ?? "").startsWith("bluez")
@@ -128,16 +106,35 @@ Item {
             icon: muted ? "󰝟" : (bluetooth ? "󰂯 " : "") + ["󰕿", "󰖀", "󰕾"][Math.min(2, Math.floor(volume * 3))]
             padding: 10
             color: muted ? Theme.muted : Theme.fg
-            tooltip: root.sink ? `${root.sink.description}\nVolumen ${Math.round(volume * 100)}%` : "Sin salida de audio"
+            tooltip: mixer.visible ? ""
+                : root.sink ? `${root.sink.description}\nVolumen ${Math.round(volume * 100)}%`
+                : "Sin salida de audio"
 
             onClicked: m => {
                 if (m.button === Qt.RightButton)
                     root.sink.audio.muted = !muted;
                 else
-                    Quickshell.execDetached(["pavucontrol"]);
+                    mixer.toggle();
             }
             onScrolledUp: root.sink.audio.volume = Math.min(1, volume + 0.05)
             onScrolledDown: root.sink.audio.volume = Math.max(0, volume - 0.05)
+
+            VolumeMixer {
+                id: mixer
+                target: volumeIcon
+            }
+        }
+
+        // ── Brillo ────────────────────────────────────────────
+        // Rueda: brillo ±5%
+        BarIcon {
+            icon: ["󰃞", "󰃟", "󰃠"][Math.min(2, Math.floor(Brightness.percent / 34))]
+            padding: 10
+            color: Theme.yellow
+            clickable: false
+            tooltip: `Brillo ${Brightness.percent}%\nRueda: ajustar`
+            onScrolledUp: Brightness.raise()
+            onScrolledDown: Brightness.lower()
         }
 
         // ── Red ───────────────────────────────────────────────
@@ -158,8 +155,24 @@ Item {
             onClicked: Quickshell.execDetached(["networkmanager_dmenu"])
         }
 
+        // ── Bluetooth ─────────────────────────────────────────
+        // Clic: bzmenu (con el lanzador de Quickshell como menú)
         readonly property BluetoothAdapter adapter: Bluetooth.defaultAdapter
         readonly property var btConnected: adapter?.devices.values.filter(d => d.connected) ?? []
+
+        BarIcon {
+            readonly property bool on: root.adapter?.enabled ?? false
+
+            icon: !on ? "󰂲" : root.btConnected.length > 0 ? "󰂱" : "󰂯"
+            padding: 10
+            color: on ? Theme.fg : Theme.muted
+            tooltip: !on ? "Bluetooth apagado"
+                : root.btConnected.length > 0 ? root.btConnected.map(d => d.name).join("\n")
+                : "Bluetooth encendido"
+
+            onClicked: Quickshell.execDetached(["bzmenu", "-l", "custom", "--launcher-command",
+                `${Quickshell.shellDir}/scripts/dmenu-qs -p '{hint}'`])
+        }
 
         // ── Batería ───────────────────────────────────────────
         readonly property UPowerDevice battery: UPower.displayDevice

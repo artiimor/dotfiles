@@ -52,7 +52,7 @@ Island {
                         item.secondaryActivate();
                     else if (m.button === Qt.RightButton || item.onlyMenu) {
                         if (item.hasMenu)
-                            menu.visible ? menu.close() : menu.open();
+                            menu.toggle();
                     } else
                         item.activate();
                 }

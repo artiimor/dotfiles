@@ -1,4 +1,4 @@
-// CPU, memoria y temperatura, leídos de /proc y /sys cada 3 segundos.
+// Memoria y temperatura, leídas de /proc y /sys cada 3 segundos.
 pragma Singleton
 
 import QtQuick
@@ -8,13 +8,10 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    property int cpu: 0          // %
     property real memUsed: 0     // GiB
     property real memTotal: 0    // GiB
     property int temp: 0         // °C
     readonly property int tempCritical: 80
-
-    property var _lastCpu: null
 
     Timer {
         interval: 3000
@@ -22,27 +19,8 @@ Singleton {
         repeat: true
         triggeredOnStart: true
         onTriggered: {
-            stat.reload();
             meminfo.reload();
             thermal.reload();
-        }
-    }
-
-    FileView {
-        id: stat
-        path: "/proc/stat"
-        onLoaded: {
-            // Primera línea: "cpu  user nice system idle iowait irq softirq ..."
-            const f = text().split("\n")[0].trim().split(/\s+/).slice(1).map(Number);
-            const idle = f[3] + f[4];
-            const total = f.reduce((a, b) => a + b, 0);
-            if (root._lastCpu) {
-                const dt = total - root._lastCpu.total;
-                const di = idle - root._lastCpu.idle;
-                if (dt > 0)
-                    root.cpu = Math.round(100 * (dt - di) / dt);
-            }
-            root._lastCpu = { total, idle };
         }
     }
 

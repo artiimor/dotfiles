@@ -28,7 +28,7 @@ Column {
 
     Text {
         anchors.horizontalCenter: parent.horizontalCenter
-        text: root.month.toLocaleDateString(Qt.locale(), "MMMM yyyy")
+        text: root.month.toLocaleDateString(Qt.locale("es_ES"), "MMMM yyyy")
         color: Theme.accent
         font.family: Theme.font
         font.pixelSize: Theme.fontSize

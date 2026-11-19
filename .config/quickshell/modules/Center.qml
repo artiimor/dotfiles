@@ -1,6 +1,6 @@
-// Centro: reloj. Al pasar el ratón se despliegan brillo, luz nocturna y
+// Centro: reloj con la fecha. Al pasar el ratón se despliegan luz nocturna y
 // cafeína a su derecha (sin moverlo: el cajón cuelga por fuera del ancho del
-// reloj); encima del reloj aparece el calendario.
+// reloj); debajo del reloj aparece el calendario.
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -21,9 +21,6 @@ Item {
     HoverHandler { id: hover }
     HoverHandler { id: drawerHover; parent: drawer }
 
-    // Clic en el reloj alterna hora / fecha
-    property bool showDate: false
-
     SystemClock {
         id: clock
         precision: SystemClock.Minutes
@@ -34,11 +31,10 @@ Item {
         padding: 16
         pixelSize: Theme.fontSize
         color: Theme.accent
-        icon: root.showDate
-            ? "󰃭  " + clock.date.toLocaleDateString(Qt.locale(), "dddd, d MMMM")
-            : "󰥔  " + Qt.formatTime(clock.date, "HH:mm")
+        clickable: false
+        // p. ej. "jue 19  14:32" (en español aunque el sistema esté en inglés)
+        icon: "󰥔  " + clock.date.toLocaleString(Qt.locale("es_ES"), "ddd d  HH:mm")
 
-        onClicked: root.showDate = !root.showDate
         onScrolledUp: calendar.shift(-1)
         onScrolledDown: calendar.shift(1)
 
@@ -55,14 +51,6 @@ Item {
         id: drawer
         anchors.left: clockIcon.right
         open: hover.hovered || drawerHover.hovered
-
-        BarIcon {
-            icon: ["󰃞", "󰃟", "󰃠"][Math.min(2, Math.floor(Brightness.percent / 34))]
-            color: Theme.yellow
-            tooltip: `Brillo ${Brightness.percent}%`
-            onScrolledUp: Brightness.raise()
-            onScrolledDown: Brightness.lower()
-        }
 
         BarIcon {
             icon: NightLight.icon
