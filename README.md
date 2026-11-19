@@ -30,7 +30,7 @@ Light or dark comes from the color theme: pick a light theme and either config t
   Ships with kanagawa-dragon, everforest, miami, catppuccin, tokyo-night, rose-pine, gruvbox and vantablack,
   plus two light themes, catppuccin-latte and rose-pine-dawn. The theme menu (Super+T) shows each theme's palette. See `.config/themes/README.md`.
 - **ghostty** as the terminal, bash + starship prompt, Neovim with LazyVim (own miami and vantablack colorschemes),
-  btop, and fastfetch with a random ASCII Pepe tinted with the theme accent.
+  btop, and fastfetch with an ASCII Pepe tinted with the theme accent.
 
 ![Launcher](screenshots/launcher.png)
 
@@ -154,12 +154,12 @@ Or copy just what you want by hand:
 
 ```sh
 cp -r dotfiles/.config/* ~/.config/
-cp dotfiles/.bashrc dotfiles/.bash_profile ~/
+cp dotfiles/.bashrc dotfiles/.bash_profile dotfiles/.profile ~/
 ```
 
 Packages it uses: `hyprland` (0.57 or newer, for the Lua config), `quickshell`, `uwsm`, `ghostty`, `hypridle`,
 `hyprlock` (as a fallback), `hyprsunset`, `hyprshot`, `cliphist`, `wl-clipboard`, `brightnessctl`, `playerctl`,
-`wireplumber`, `power-profiles-daemon`, `networkmanager-dmenu`, `bzmenu`, `pavucontrol`, `dolphin`, `qt6ct`,
+`wireplumber`, `power-profiles-daemon`, `networkmanager-dmenu`, `bzmenu`, `pavucontrol`, `dolphin`, `qt6ct`, `breeze`, `libnotify`,
 `papirus-icon-theme`, `starship`, `btop`, `fastfetch`, `neovim`, `python` (for `theme-set`) and the `ttf-jetbrains-mono-nerd` font.
 Optional: `kitty` (also themed) and the `hyprbars` plugin.
 
