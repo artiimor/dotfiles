@@ -34,7 +34,7 @@ DESKTOP=(
 	cliphist wl-clipboard brightnessctl playerctl ddcutil
 	pipewire-pulse wireplumber pavucontrol power-profiles-daemon upower
 	networkmanager networkmanager-dmenu bluez bluez-utils
-	gnome-keyring seahorse libnotify xdg-user-dirs
+	gnome-keyring seahorse libnotify xdg-user-dirs unicode-emoji
 	dolphin kde-cli-tools ffmpegthumbnailer qview gnome-calculator gnome-text-editor swash
 	qt6ct breeze nwg-look adw-gtk-theme papirus-icon-theme
 )

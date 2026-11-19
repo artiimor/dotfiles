@@ -159,7 +159,7 @@ cp dotfiles/.bashrc dotfiles/.bash_profile dotfiles/.profile ~/
 
 Packages it uses: `hyprland` (0.57 or newer, for the Lua config), `quickshell`, `uwsm`, `ghostty`, `hypridle`,
 `hyprlock` (as a fallback), `hyprsunset`, `hyprshot`, `cliphist`, `wl-clipboard`, `brightnessctl`, `playerctl`,
-`wireplumber`, `power-profiles-daemon`, `networkmanager-dmenu`, `bzmenu`, `pavucontrol`, `dolphin`, `qt6ct`, `breeze`, `libnotify`,
+`wireplumber`, `power-profiles-daemon`, `networkmanager-dmenu`, `bzmenu`, `pavucontrol`, `dolphin`, `qt6ct`, `breeze`, `libnotify`, `unicode-emoji` (emoji picker),
 `papirus-icon-theme`, `starship`, `btop`, `fastfetch`, `neovim`, `python` (for `theme-set`) and the `ttf-jetbrains-mono-nerd` font.
 Optional: `kitty` (also themed) and the `hyprbars` plugin.
 
