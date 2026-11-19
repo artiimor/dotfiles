@@ -1,5 +1,7 @@
 local mainMod = "SUPER"
-local launchPrefix = "uwsm app -- " -- if you are not using UWSM, make this empty (e.g. "")
+-- Apps en su propio scope de systemd (app.slice), no dentro de Hyprland. uwsm-app es el
+-- cliente rápido de `uwsm app` (sin arrancar Python cada vez); vale también sin uwsm
+local launchPrefix = "uwsm-app -- "
 
 -- AZERTY fix: the number-row keys emit symbols (& é " ' ...) without Shift, so
 -- binding to the digit characters fails. Bind by physical keycode instead.

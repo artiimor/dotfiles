@@ -9,8 +9,15 @@
 -- hl.env("LIBVA_DRIVER_NAME", "nvidia") -- Hardware acceleration on NVIDIA GPUs
 -- hl.env("__GL_GSYNC_ALLOWED", "1") -- Controls if G-Sync capable monitors should use Variable Refresh Rate (VRR)
 
--- Apps Qt con qt6ct: estilo Breeze, iconos Sur-Transparente, colores mac-dark (sin Plasma).
--- Con uwsm lo pone ~/.config/uwsm/env; esto cubre la sesión de Hyprland sin uwsm.
+-- Lo mismo que ~/.config/uwsm/env (que solo lee la sesión con uwsm), para que la
+-- sesión "Hyprland" sin uwsm quede igual. Con uwsm no cambia nada: son los mismos valores.
+-- Apps Qt con qt6ct: estilo e iconos según el perfil (los pone themes/config-set).
 hl.env("QT_QPA_PLATFORMTHEME", "qt6ct")
+hl.env("QT_QPA_PLATFORM", "wayland;xcb")
+hl.env("ELECTRON_OZONE_PLATFORM_HINT", "auto")
+hl.env("BROWSER", "firefox")
+hl.env("HYPRCURSOR_SIZE", "24")
+hl.env("XCURSOR_THEME", "Adwaita")
+hl.env("XCURSOR_SIZE", "24")
 hl.env("XCURSOR_THEME", "macOS") -- cursor negro de macOS (apple_cursor)
 hl.env("XCURSOR_SIZE", "24")
