@@ -66,30 +66,17 @@ hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { description = "Mover 
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { description = "Redimensionar con el ratón" })
 
 -- Zoom
-local function zoomfunction(value)
-	local zoomvalue = hl.get_config("cursor:zoom_factor")
-	if (zoomvalue + value) > 3.0 then
-		hl.config({ cursor = { zoom_factor = 3.0 } })
-	elseif (zoomvalue + value) < 1.0 then
-		hl.config({ cursor = { zoom_factor = 1.0 } })
-	else
-		hl.config({ cursor = { zoom_factor = zoomvalue + value } })
+local function zoom(delta)
+	return function()
+		local z = hl.get_config("cursor:zoom_factor") + delta
+		hl.config({ cursor = { zoom_factor = math.max(1.0, math.min(3.0, z)) } })
 	end
 end
-hl.bind(mainMod .. " + Minus", function()
-	zoomfunction(-0.3)
-end, { repeating = true, description = "Alejar zoom" })
-hl.bind(mainMod .. " + Plus", function()
-	zoomfunction(0.3)
-end, { repeating = true, description = "Acercar zoom" })
-
---# Zoom with keypad
-hl.bind(mainMod .. " + code:82", function()
-	zoomfunction(-0.3)
-end, { repeating = true })
-hl.bind(mainMod .. " + code:86", function()
-	zoomfunction(0.3)
-end, { repeating = true })
+hl.bind(mainMod .. " + Minus", zoom(-0.3), { repeating = true, description = "Alejar zoom" })
+hl.bind(mainMod .. " + Plus", zoom(0.3), { repeating = true, description = "Acercar zoom" })
+-- Con el teclado numérico (KP_Subtract / KP_Add)
+hl.bind(mainMod .. " + code:82", zoom(-0.3), { repeating = true })
+hl.bind(mainMod .. " + code:86", zoom(0.3), { repeating = true })
 
 ------------------
 ---- LAUNCHER ----

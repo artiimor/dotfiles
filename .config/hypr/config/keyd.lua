@@ -1,10 +1,10 @@
--- Teclado en Hyprland: keyd está configurado al estilo Mac para Plasma
--- (/etc/keyd/*.conf: Super = Option, Alt = Cmd/Ctrl) y así Hyprland nunca recibe
--- Super. Al arrancar Hyprland se cambia en caliente al esquema de antes:
+-- Teclado en Hyprland: en este equipo /etc/keyd/*.conf sigue al estilo Mac de cuando
+-- se probó Plasma (Super = Option, Alt = Cmd/Ctrl), y así Hyprland nunca recibiría
+-- Super. Al arrancar Hyprland se cambia en caliente al esquema de siempre:
 -- solo se intercambian Alt y Super izquierdos, y se quitan los atajos Mac de la capa
--- Option. Plasma vuelve a dejarlo como en /etc/keyd con "keyd bind reset"
--- (~/.config/autostart/keyd-plasma.desktop, repo plasma-mac).
--- Necesita estar en el grupo keyd (sudo usermod -aG keyd $USER y volver a entrar).
+-- Option. Con el thinkpad.conf de este repo (system/etc/keyd, solo el intercambio)
+-- el resultado es el mismo. "keyd bind reset" sin argumentos vuelve a /etc/keyd.
+-- Necesita estar en el grupo keyd (install.sh lo hace; hay que volver a entrar).
 local binds = {
 	"main.leftalt=layer(meta)",
 	"main.leftmeta=layer(alt)",
