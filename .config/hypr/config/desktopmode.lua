@@ -26,7 +26,7 @@ local function readLines(path)
 		end
 		fh:close()
 	end
-	return set, fh ~= nil
+	return set
 end
 
 local function writeLines(path, lines)
@@ -38,18 +38,6 @@ local function writeLines(path, lines)
 		out:write(name, "\n")
 	end
 	out:close()
-end
-
--- Antes solo existía desktop-workspaces (la lista de "default"): se conserva
-if not select(2, readLines(STATE .. "desktop-workspaces-default")) then
-	local old, found = readLines(stateFile)
-	if found then
-		local names = {}
-		for name in pairs(old) do
-			names[#names + 1] = name
-		end
-		writeLines(STATE .. "desktop-workspaces-default", names)
-	end
 end
 
 local exceptions = readLines(exceptionsFile)
