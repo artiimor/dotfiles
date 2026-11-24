@@ -1,6 +1,8 @@
 -- Auto-start config
 -- if you dont use UWSM add your auto start programs here, otherwise use XDG autostart https://wiki.archlinux.org/title/XDG_Autostart
 
+local util = require("config.util")
+
 hl.on("hyprland.start", function()
 	-- Con uwsm el entorno de systemd/D-Bus ya lo prepara uwsm (y --all le metería
 	-- variables de la sesión que uwsm no quiere ahí); sin uwsm hace falta para los portales
@@ -14,7 +16,7 @@ hl.on("hyprland.start", function()
 	-- Perfil "mac": barra superior + Spotlight estilo macOS (macshell, config aparte no incluida en este repo).
 	-- En "default" la barra la pone el propio qs (shell.qml mira el mismo perfil)
 	if PROFILE_MAC then
-		hl.exec_cmd("qs -p ~/.config/quickshell/macshell")
+		hl.exec_cmd("qs -p " .. util.MACSHELL_DIR)
 	end
 	hl.exec_cmd("hyprsunset")
 	hl.exec_cmd("wl-paste --type text --watch cliphist store & wl-paste --type image --watch cliphist store")

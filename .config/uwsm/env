@@ -1,3 +1,5 @@
+# Una variable por línea, `export K=V`: hypr/config/environment.lua lee este archivo
+# para que la sesión "Hyprland" sin uwsm tenga las mismas (menos TERM).
 export BROWSER=firefox
 export TERM=xterm-kitty
 export QT_QPA_PLATFORM="wayland;xcb"

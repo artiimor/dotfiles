@@ -246,34 +246,21 @@ Singleton {
     // verla antes de elegir, y un sol o una luna según sea claro u oscuro.
     readonly property string themesDir: Quickshell.env("HOME") + "/.config/themes"
 
+    // Marca del elemento actual en temas, fondos y configs
+    function curMark(isCur) {
+        return isCur ? "  " + String.fromCodePoint(0xF012C) : "";
+    }
+
     Process {
         id: themeList
-        // Cada línea, un JSON: { dir, name, cur, light, bg, fg, colors }
-        command: ["python3", "-c", `
-import json, os
-d = os.path.expanduser("~/.config/themes")
-try: cur = os.path.basename(os.readlink(d + "/current"))
-except OSError: cur = ""
-for t in sorted(os.listdir(d)):
-    f = f"{d}/{t}/theme.json"
-    if t == "current" or not os.path.isfile(f):
-        continue
-    try:
-        j = json.load(open(f))
-        term, c = j["term"], j["term"]["colors"]
-        print(json.dumps({"dir": t, "name": j.get("name", t), "cur": t == cur,
-                          "light": bool(j.get("light")),
-                          "bg": term["background"], "fg": term["foreground"],
-                          "colors": [j["ui"]["accent"]] + c[1:7]}))
-    except (OSError, ValueError, KeyError, IndexError):
-        pass
-`]
+        // `theme-set --list`: cada línea, un JSON { dir, name, cur, light, bg, fg, colors }
+        command: [root.themesDir + "/theme-set", "--list"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.items = text.split("\n").filter(l => l).map(l => {
                     const t = JSON.parse(l);
                     return {
-                        text: t.name + (t.cur ? "  " + String.fromCodePoint(0xF012C) : ""),
+                        text: t.name + root.curMark(t.cur),
                         // Sol (claro) o luna (oscuro)
                         glyph: String.fromCodePoint(t.light ? 0xF0599 : 0xF0594),
                         palette: { bg: t.bg, fg: t.fg, colors: t.colors },
@@ -294,7 +281,7 @@ for t in sorted(os.listdir(d)):
                 root.items = text.split("\n").filter(l => l).map(l => {
                     const [name, path, cur] = l.split("\t");
                     return {
-                        text: (name === "pepes" ? "Pepes" : name.replace(/\.[^.]+$/, "")) + (cur === "1" ? "  " + String.fromCodePoint(0xF012C) : ""),
+                        text: (name === "pepes" ? "Pepes" : name.replace(/\.[^.]+$/, "")) + root.curMark(cur === "1"),
                         image: "file://" + path,
                         data: name
                     };
@@ -315,7 +302,7 @@ for t in sorted(os.listdir(d)):
                 root.items = text.split("\n").filter(l => l).map(l => {
                     const [id, name, cur] = l.split("\t");
                     return {
-                        text: name + (cur === "1" ? "  " + String.fromCodePoint(0xF012C) : ""),
+                        text: name + root.curMark(cur === "1"),
                         glyph: id === "mac" ? String.fromCodePoint(0xF0035) : String.fromCodePoint(0xF0379),
                         data: id
                     };

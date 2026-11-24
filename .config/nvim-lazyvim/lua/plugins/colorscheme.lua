@@ -1,26 +1,18 @@
--- El colorscheme sale del tema activo (~/.config/themes/current/theme.json, campo
--- "nvim"); si no hay tema, Catppuccin Mocha. Todos con fondo transparente para
--- que se vea el de kitty. Al cambiar de tema, theme-set se lo manda a los Neovim
--- abiertos por su socket (background y colorscheme); los demás, al abrirlos.
-local function read_theme()
-  local f = io.open(vim.fn.expand("~/.config/themes/current/theme.json"))
-  if not f then
-    return {}
-  end
-  local ok, t = pcall(vim.json.decode, f:read("*a"))
-  f:close()
-  return ok and t or {}
-end
+-- Colorscheme "tema" (colors/tema.lua): el mismo que el Neovim chiquito, cargado
+-- desde ~/.config/nvim/colors/tema.lua (mini.hues a partir de
+-- ~/.config/themes/current/theme.json, fondo transparente para kitty). Al cambiar
+-- de tema, theme-set llama a MiniThemeReload() por el socket y se recarga solo.
+-- Los demás colorschemes siguen instalados para usarlos a mano (:colorscheme ...);
+-- el campo "nvim" del tema solo se usa si falta ~/.config/nvim/colors/tema.lua.
 
-local theme = read_theme()
+-- theme.json con el lector compartido del Neovim chiquito (por ruta absoluta: el
+-- runtimepath de LazyVim no incluye ~/.config/nvim/lua); sin él, {} (oscuro, sin ajustes)
+local okm, theme_mod = pcall(dofile, vim.fn.expand("~/.config/nvim/lua/tema/theme.lua"))
+local theme = okm and theme_mod.read() or {}
 
 -- Claro u oscuro según el tema ("light": true en theme.json), antes de cargar el
 -- colorscheme: rose-pine, gruvbox, everforest y tokyonight eligen variante con esto
 vim.o.background = theme.light and "light" or "dark"
-
-local function theme_colorscheme()
-  return theme.nvim or "catppuccin"
-end
 
 -- Kanagawa: los fondos de flotantes, menús, gutter y statusline salen del tema
 -- activo, para que no se queden con el negro de su paleta.
@@ -55,6 +47,8 @@ local function kanagawa_theme()
 end
 
 return {
+  -- mini.hues suelto (LazyVim no trae mini.nvim entero); lo pide colors/tema.lua
+  { "nvim-mini/mini.hues", lazy = true },
   {
     "catppuccin/nvim",
     name = "catppuccin",
@@ -119,7 +113,7 @@ return {
   {
     "LazyVim/LazyVim",
     opts = {
-      colorscheme = theme_colorscheme(),
+      colorscheme = "tema",
     },
   },
 }

@@ -10,11 +10,14 @@
 -- de perfil), y la lista final de workspaces flotantes se escribe en
 -- desktop-workspaces, que es lo que leen Quickshell (dock, números de la barra) y
 -- macshell (números en cajita).
-local STATE = os.getenv("HOME") .. "/.local/state/"
+local util = require("config.util")
+local STATE = util.HOME .. "/.local/state/"
 local stateFile = STATE .. "desktop-workspaces"
 local exceptionsFile = STATE .. (PROFILE_MAC and "desktop-exceptions-mac" or "desktop-workspaces-default")
 local appliedFile = STATE .. "desktop-applied-profile"
 local MAX_WS = 99 -- workspaces numerados que se apuntan como flotantes en mac (monitor*10 + n)
+-- Minimizar = mover a este special sin seguirla (Super+M y el botón de hyprbars)
+local MINIMIZED = "special:minimized"
 
 local function readLines(path)
 	local set, fh = {}, io.open(path)
@@ -143,6 +146,15 @@ local function makeTiled(w)
 	hl.dispatch(hl.dsp.window.float({ action = "disable", window = w }))
 end
 
+-- Adapta la ventana al modo de su workspace (flotante en modo escritorio, si no tiling)
+local function applyMode(w, ws)
+	if isDesktop(ws.name) then
+		makeFloat(w, false)
+	else
+		makeTiled(w)
+	end
+end
+
 hl.on("window.update_state", function(w, changes)
 	if changes and changes.float ~= nil then
 		fitOnScreen(w)
@@ -162,11 +174,7 @@ hl.on("window.move_to_workspace", function(w, ws)
 	if not ws or ws.special then
 		return
 	end
-	if isDesktop(ws.name) then
-		makeFloat(w, false)
-	else
-		makeTiled(w)
-	end
+	applyMode(w, ws)
 end)
 
 hl.bind("SUPER + ALT + D", function()
@@ -195,17 +203,13 @@ if not readLines(appliedFile)[family] then
 	for _, w in ipairs(hl.get_windows()) do
 		local ws = w.workspace
 		if ws and not ws.special then
-			if isDesktop(ws.name) then
-				makeFloat(w, false)
-			else
-				makeTiled(w)
-			end
+			applyMode(w, ws)
 		end
 	end
 	writeLines(appliedFile, { family })
 end
 
-hl.bind("SUPER + M", hl.dsp.window.move({ workspace = "special:minimized", follow = false }), { description = "Minimizar" })
+hl.bind("SUPER + M", hl.dsp.window.move({ workspace = MINIMIZED, follow = false }), { description = "Minimizar" })
 
 -- Snap como macOS: al soltar una ventana arrastrada con el cursor pegado al borde
 --   izquierda/derecha → media pantalla   arriba → maximizar (igual que el botón □)
@@ -341,16 +345,16 @@ end, { release = true, non_consuming = true, transparent = true, ignore_mods = t
 -- Es el plugin hyprbars de hyprwm/hyprland-plugins, compilado a mano: si tras
 -- actualizar Hyprland sale "version mismatch", recompílalo con el mismo tag:
 --   git clone https://github.com/hyprwm/hyprland-plugins && cd hyprland-plugins
---   git checkout v<versión> && git apply ~/.config/hypr/hyprbars-on-drag-end.patch ~/.config/hypr/hyprbars-hover-icon.patch
+--   git checkout v<versión> && git apply ~/.config/hypr/hyprbars-on-drag-end.patch ~/.config/hypr/hyprbars-hover-icon.patch \
+--     ~/.config/hypr/hyprbars-resize-top-edge.patch
 --   make -C hyprbars all   (los parches añaden on_drag_end y on_drag_start_eval, que usa el snap,
---                           y hover_icon en add_button: el símbolo cambia al pasar el ratón)
---   cp hyprbars/hyprbars.so ~/.local/lib/hyprland/
-local HYPRBARS = os.getenv("HOME") .. "/.local/lib/hyprland/hyprbars.so"
+--                           hover_icon en add_button: el símbolo cambia al pasar el ratón,
+--                           y bar_resize_edge: el borde de arriba de la barra redimensiona)
+--   cp --remove-destination hyprbars/hyprbars.so ~/.local/lib/hyprland/   (inodo nuevo: el viejo está cargado)
+local HYPRBARS = util.HOME .. "/.local/lib/hyprland/hyprbars.so"
 local MAXIMIZE = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })']]
 
-local so = io.open(HYPRBARS)
-if so then
-	so:close() -- solo se abría para ver si existe
+if util.exists(HYPRBARS) then
 	hl.plugin.load(HYPRBARS)
 end
 
@@ -376,6 +380,9 @@ if hl.plugin.hyprbars then
 				inactive_button_color = PROFILE_LIGHT and "rgba(c7c7cc88)" or "rgba(8e8e9355)",
 				bar_part_of_window = true,
 				bar_precedence_over_border = true,
+				-- Parche local: los 6 px de arriba de la barra y lo que sobresale por encima
+				-- (border_size + extend_border_grab_area) redimensionan como los demás bordes
+				bar_resize_edge = 6,
 				on_double_click = MAXIMIZE,
 				on_drag_end = [[hyprctl eval 'DesktopSnap()']],
 				on_drag_start_eval = "DesktopUnsnap()",
@@ -386,7 +393,7 @@ if hl.plugin.hyprbars then
 	local BUTTON_FG = PROFILE_LIGHT and "rgba(3a3a3ccc)" or "rgba(2c2c2ecc)"
 	-- Alineados a la izquierda se añaden de izquierda a derecha: cerrar, minimizar, maximizar
 	hl.plugin.hyprbars.add_button({ bg_color = BUTTON_BG, fg_color = BUTTON_FG, size = 12, icon = "·", hover_icon = "×", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
-	hl.plugin.hyprbars.add_button({ bg_color = BUTTON_BG, fg_color = BUTTON_FG, size = 12, icon = "·", hover_icon = "–", action = [[hyprctl dispatch 'hl.dsp.window.move({ workspace = "special:minimized", follow = false })']] })
+	hl.plugin.hyprbars.add_button({ bg_color = BUTTON_BG, fg_color = BUTTON_FG, size = 12, icon = "·", hover_icon = "–", action = "hyprctl dispatch 'hl.dsp.window.move({ workspace = \"" .. MINIMIZED .. "\", follow = false })'" })
 	hl.plugin.hyprbars.add_button({ bg_color = BUTTON_BG, fg_color = BUTTON_FG, size = 12, icon = "·", hover_icon = "+", action = MAXIMIZE })
 	-- Barra en todas las ventanas flotantes, estén o no en modo escritorio
 	hl.window_rule({ match = { float = false }, ["hyprbars:no_bar"] = true })

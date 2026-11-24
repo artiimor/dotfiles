@@ -48,19 +48,22 @@
 #
 # Todo se aplica sin cerrar sesión. Las apps ya abiertas mantienen sus iconos y
 # estilo Qt hasta que se vuelven a abrir.
+#
+# Rutas y utilidades comunes con theme-set y background-set: themelib.py.
 
 import configparser
 import fcntl
-import json
 import os
 import re
 import subprocess
 import sys
 import time
 
-HOME = os.path.expanduser("~")
-CONF = f"{HOME}/.config"
-STATE = f"{HOME}/.local/state/desktop-profile"
+sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
+# notify como notify_send: restart_shell() y apply() tienen un parámetro notify (bool)
+from themelib import (CONF, PROFILE_STATE, current_theme, load_script, load_theme,
+                      notify as notify_send, run_quiet, saved_profile, theme_light, write_atomic)
+
 MACSHELL = f"{CONF}/quickshell/macshell"
 
 MAC_FONTS = {
@@ -113,19 +116,13 @@ GTK_LIGHT = {
     "dialog-bg": "#f6f6f6", "dialog-fg": "#1d1d1f",
 }
 
-quiet = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
-
-
 def has_macshell():
     return os.path.isfile(f"{MACSHELL}/shell.qml")
 
 
 def saved():
     # Lo que hay en el archivo de estado, o None si no hay (o no vale)
-    try:
-        p = open(STATE).read().strip()
-    except OSError:
-        return None
+    p = saved_profile()
     return p if p in PROFILES else None
 
 
@@ -137,19 +134,7 @@ def current():
 
 
 def write_state(name):
-    os.makedirs(os.path.dirname(STATE), exist_ok=True)
-    tmp = STATE + ".tmp"
-    open(tmp, "w").write(name + "\n")
-    os.replace(tmp, STATE)
-
-
-def theme_light():
-    # "light": true en el theme.json del tema activo (sin él, oscuro)
-    try:
-        with open(f"{CONF}/themes/current/theme.json") as f:
-            return bool(json.load(f).get("light"))
-    except (OSError, ValueError):
-        return False
+    write_atomic(PROFILE_STATE, name + "\n")
 
 
 def resolve(name):
@@ -192,27 +177,16 @@ def set_key(path, key, value):
     open(path, "w").write(text)
 
 
-def load_theme_set():
-    import importlib.util
-    from importlib.machinery import SourceFileLoader
-    sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
-    loader = SourceFileLoader("theme_set", f"{CONF}/themes/theme-set")
-    ts = importlib.util.module_from_spec(importlib.util.spec_from_loader("theme_set", loader))
-    loader.exec_module(ts)
-    return ts
-
-
 def gtk_css(p):
-    ts = load_theme_set()
+    ts = load_script("theme-set")
     if p.get("fixed_css"):
         ts.write_gtk_css("/* Generado por config-set (perfil mac-light): no editar */\n",
                          list(GTK_LIGHT.items()))
         return
     # Los demás perfiles usan el gtk.css del tema de colores: lo regenera theme-set
-    name = ts.current()
+    name = current_theme()
     try:
-        with open(f"{CONF}/themes/{name}/theme.json") as f:
-            ts.gen_gtk(name, json.load(f))
+        ts.gen_gtk(name, load_theme(name))
     except OSError:
         pass
 
@@ -225,9 +199,9 @@ def set_gtk(p, css=True):
         set_key(ini, "gtk-theme-name", "adw-gtk3" if light else "adw-gtk3-dark")
         set_key(ini, "gtk-application-prefer-dark-theme", "0" if light else "1")
     gs = ["gsettings", "set", "org.gnome.desktop.interface"]
-    subprocess.run(gs + ["icon-theme", p["icons"]], **quiet)
-    subprocess.run(gs + ["gtk-theme", "adw-gtk3" if light else "adw-gtk3-dark"], **quiet)
-    subprocess.run(gs + ["color-scheme", "prefer-light" if light else "prefer-dark"], **quiet)
+    run_quiet(gs + ["icon-theme", p["icons"]])
+    run_quiet(gs + ["gtk-theme", "adw-gtk3" if light else "adw-gtk3-dark"])
+    run_quiet(gs + ["color-scheme", "prefer-light" if light else "prefer-dark"])
     if css:
         gtk_css(p)
 
@@ -288,7 +262,7 @@ def qs_running(path):
 def restart_shell(name, notify=True):
     if not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
         return  # fuera de Hyprland (p.ej. install.sh): ya se verá al entrar
-    subprocess.run(["hyprctl", "reload"], **quiet)
+    run_quiet(["hyprctl", "reload"])
     # Quickshell: el de siempre (fondo, launcher, OSD, bloqueo... y en "default"
     # la barra) y macshell. shell.qml solo mira el perfil al arrancar.
     shells = [f"{CONF}/quickshell"]
@@ -301,17 +275,17 @@ def restart_shell(name, notify=True):
         if not running:
             break
         for s in running:
-            subprocess.run(["qs", "kill", "-p", s], **quiet)
+            run_quiet(["qs", "kill", "-p", s])
         time.sleep(0.1)
     # Se arrancan desde Hyprland, igual que en autostart.lua (mismo entorno)
     start = ["qs"]
     if name in MAC_PROFILES and has_macshell():
         start.append(f"qs -p {MACSHELL}")
     for cmd in start:
-        subprocess.run(["hyprctl", "dispatch", f"hl.dsp.exec_cmd('{cmd}')"], **quiet)
+        run_quiet(["hyprctl", "dispatch", f"hl.dsp.exec_cmd('{cmd}')"])
     if notify:
         time.sleep(1.5)  # que haya servidor de notificaciones para el aviso
-        subprocess.run(["notify-send", "-a", "Config", "Config del escritorio", PROFILES[name]["name"]], **quiet)
+        notify_send("Config", "Config del escritorio", PROFILES[name]["name"])
 
 
 def write_files(name, css=True):

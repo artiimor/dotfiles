@@ -1,0 +1,223 @@
+diff --git a/hyprbars/barDeco.cpp b/hyprbars/barDeco.cpp
+index 2ada119..2aa47cd 100644
+--- a/hyprbars/barDeco.cpp
++++ b/hyprbars/barDeco.cpp
+@@ -22,6 +22,9 @@
+ #include <hyprland/src/protocols/LayerShell.hpp>
+ #include <hyprland/src/event/EventBus.hpp>
+ #include <hyprland/src/layout/LayoutManager.hpp>
++#include <hyprland/src/layout/supplementary/DragController.hpp>
++#include <hyprland/src/managers/fullscreen/FullscreenController.hpp>
++#include <hyprland/src/pointer/cursor/CursorShapeOverrideController.hpp>
+ #include <hyprland/src/render/OpenGL.hpp>
+ #include <hyprland/src/state/MonitorState.hpp>
+ 
+@@ -57,6 +60,8 @@ CHyprBar::CHyprBar(PHLWINDOW pWindow) : IHyprWindowDecoration(pWindow) {
+ }
+ 
+ CHyprBar::~CHyprBar() {
++    if (m_bResizeHover)
++        Pointer::Cursor::overrideController->unsetOverride(Pointer::Cursor::CURSOR_OVERRIDE_WINDOW_EDGE);
+     std::erase(g_pGlobalState->bars, m_self);
+ }
+ 
+@@ -128,11 +133,20 @@ void CHyprBar::onMouseButton(Event::SCallbackInfo& info, IPointer::SButtonEvent
+     if (!inputIsValid())
+         return;
+ 
++    // patch local: mientras se redimensiona desde la barra, los otros botones se tragan
++    // (sin cancelar, el keybind manager de Hyprland cortaría el resize y la app recibiría
++    // la pulsación pero no la suelta, que acabaría cancelada en handleUpEvent)
++    if (m_bResizingThis && e.button != BTN_LEFT && g_layoutManager->dragController()->target()) {
++        info.cancelled = true;
++        return;
++    }
++
+     if (e.state != WL_POINTER_BUTTON_STATE_PRESSED) {
+         handleUpEvent(info);
+         return;
+     }
+ 
++    m_bLeftButton = e.button == BTN_LEFT; // patch local: solo el izquierdo redimensiona
+     handleDownEvent(info, std::nullopt);
+ }
+ 
+@@ -152,6 +166,11 @@ void CHyprBar::onTouchUp(Event::SCallbackInfo& info, ITouch::SUpEvent e) {
+ }
+ 
+ void CHyprBar::onMouseMove(Vector2D coords) {
++    // patch local: si se soltó el botón sobre una capa top/overlay no llega handleUpEvent;
++    // Hyprland ya cerró el resize (endDragTarget), así que se limpia aquí la marca
++    if (m_bResizingThis && !g_layoutManager->dragController()->target())
++        m_bResizingThis = false;
++
+     // ensure proper redraws of button icons on hover when using hardware cursors
+     if (g_pGlobalState->config.iconOnHover->value())
+         damageOnButtonHover();
+@@ -168,6 +187,22 @@ void CHyprBar::onMouseMove(Vector2D coords) {
+         }
+     }
+ 
++    // patch local: cursor de redimensionar sobre el borde de arriba de la barra
++    static auto PHOVERICON = CConfigValue<Config::INTEGER>("general:hover_icon_on_border");
++    if (!m_bResizingThis && !g_layoutManager->dragController()->target()) {
++        auto EDGE = *PHOVERICON ? resizeEdgeAt(cursorRelativeToBar()) : Layout::CORNER_NONE;
++        if (EDGE != Layout::CORNER_NONE && !inputIsValid())
++            EDGE = Layout::CORNER_NONE;
++        if (EDGE != Layout::CORNER_NONE) {
++            const char* SHAPE = EDGE == Layout::CORNER_TOPLEFT ? "top_left_corner" : EDGE == Layout::CORNER_TOPRIGHT ? "top_right_corner" : "top_side";
++            Pointer::Cursor::overrideController->setOverride(SHAPE, Pointer::Cursor::CURSOR_OVERRIDE_WINDOW_EDGE);
++            m_bResizeHover = true;
++        } else if (m_bResizeHover) {
++            Pointer::Cursor::overrideController->unsetOverride(Pointer::Cursor::CURSOR_OVERRIDE_WINDOW_EDGE);
++            m_bResizeHover = false;
++        }
++    }
++
+     if (!m_bDragPending || m_bTouchEv || !validMapped(m_pWindow) || m_touchId != 0)
+         return;
+ 
+@@ -219,6 +254,24 @@ void CHyprBar::handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch:
+ 
+     const bool BUTTONSRIGHT = ALIGNBUTTONS != "left";
+ 
++    // patch local: el borde de arriba de la barra (y lo que sobresale) redimensiona, como los demás bordes
++    if (const auto EDGE = m_bTouchEv || !m_bLeftButton ? Layout::CORNER_NONE : resizeEdgeAt(COORDS); EDGE != Layout::CORNER_NONE && !m_bDraggingThis) {
++        if (Desktop::focusState()->window() != PWINDOW)
++            Desktop::focusState()->fullWindowFocus(PWINDOW, Desktop::FOCUS_REASON_CLICK);
++        if (PWINDOW->isFloating())
++            Desktop::windowState()->raise(PWINDOW);
++
++        info.cancelled   = true;
++        m_bCancelledDown = true;
++        m_bDragPending   = false;
++
++        if (!g_layoutManager->dragController()->target()) {
++            g_layoutManager->beginDragTarget(PWINDOW->layoutTarget(), MBIND_RESIZE, sc<Layout::eRectCorner>(EDGE));
++            m_bResizingThis = true;
++        }
++        return;
++    }
++
+     if (!VECINRECT(COORDS, 0, 0, assignedBoxGlobal().w, HEIGHT - 1)) {
+ 
+         if (m_bDraggingThis) {
+@@ -269,6 +322,11 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
+ 
+     m_bCancelledDown = false;
+ 
++    if (m_bResizingThis) {
++        g_layoutManager->endDragTarget();
++        m_bResizingThis = false;
++    }
++
+     if (m_bDraggingThis) {
+         g_layoutManager->endDragTarget();
+         m_bDraggingThis = false;
+@@ -288,6 +346,51 @@ void CHyprBar::handleUpEvent(Event::SCallbackInfo& info) {
+     m_touchId      = 0;
+ }
+ 
++// patch local: borde/esquina (Layout::eRectCorner) que redimensiona bajo COORDS (relativas a la barra), o CORNER_NONE.
++// La zona es la franja de bar_resize_edge px de arriba de la barra, lo que sobresale por encima
++// (border_size + extend_border_grab_area, como los otros bordes) y los lados de la barra que
++// Hyprland no cubre (él solo mira alrededor de la superficie de la ventana, sin la barra).
++uint8_t CHyprBar::resizeEdgeAt(const Vector2D& COORDS) {
++    static auto PRESIZEONBORDER   = CConfigValue<Config::INTEGER>("general:resize_on_border");
++    static auto PBORDERSIZE       = CConfigValue<Config::INTEGER>("general:border_size");
++    static auto PBORDERGRABEXTEND = CConfigValue<Config::INTEGER>("general:extend_border_grab_area");
++    const auto  EDGE              = g_pGlobalState->config.barResizeEdge->value();
++    const auto  HEIGHT            = g_pGlobalState->config.barHeight->value();
++
++    if (EDGE <= 0 || !*PRESIZEONBORDER || m_hidden || !g_pGlobalState->config.enabled->value() || !validMapped(m_pWindow))
++        return Layout::CORNER_NONE;
++
++    const auto PWINDOW = m_pWindow.lock();
++    if (Fullscreen::controller()->isFullscreen(PWINDOW) || PWINDOW->backend().traits().overrideRedirect)
++        return Layout::CORNER_NONE;
++
++    const double GRAB   = *PBORDERSIZE + *PBORDERGRABEXTEND;
++    const double W      = assignedBoxGlobal().w;
++    const double CORNER = GRAB + 10;
++
++    if (COORDS.x < -GRAB || COORDS.x >= W + GRAB || COORDS.y < -GRAB)
++        return Layout::CORNER_NONE;
++
++    const bool TOP  = COORDS.y < EDGE;
++    const bool SIDE = (COORDS.x < 0 || COORDS.x >= W) && COORDS.y < HEIGHT - GRAB;
++    if (!TOP && !SIDE)
++        return Layout::CORNER_NONE;
++
++    // el cursor tiene que estar sobre esta ventana, no sobre otra que la tape ni sobre un popup suyo
++    const auto MOUSE = g_pInputManager->getMouseCoordsInternal();
++    if (PWINDOW->hasPopupAt(MOUSE))
++        return Layout::CORNER_NONE;
++    Desktop::CViewHitTester hitTester{*Desktop::viewState()};
++    if (hitTester.windowAt(MOUSE, Desktop::View::RESERVED_EXTENTS | Desktop::View::INPUT_EXTENTS | Desktop::View::ALLOW_FLOATING) != PWINDOW)
++        return Layout::CORNER_NONE;
++
++    if (COORDS.x < CORNER)
++        return Layout::CORNER_TOPLEFT;
++    if (COORDS.x >= W - CORNER)
++        return Layout::CORNER_TOPRIGHT;
++    return Layout::CORNER_TOP;
++}
++
+ void CHyprBar::handleMovement() {
+     // patch local: Lua síncrono antes de coger la ventana (restaurar tamaño tras un snap)
+     const auto ON_DRAG_START = g_pGlobalState->config.onDragStartEval->value();
+diff --git a/hyprbars/barDeco.hpp b/hyprbars/barDeco.hpp
+index d0d54d5..091682a 100644
+--- a/hyprbars/barDeco.hpp
++++ b/hyprbars/barDeco.hpp
+@@ -96,6 +96,7 @@ class CHyprBar : public IHyprWindowDecoration {
+     void handleDownEvent(Event::SCallbackInfo& info, std::optional<ITouch::SDownEvent> touchEvent);
+     void handleUpEvent(Event::SCallbackInfo& info);
+     void handleMovement();
++    uint8_t resizeEdgeAt(const Vector2D& COORDS);
+     bool doButtonPress(Config::INTEGER barPadding, Config::INTEGER barButtonPadding, Config::INTEGER barHeight, Vector2D COORDS, bool BUTTONSRIGHT);
+ 
+     CBox assignedBoxGlobal();
+@@ -114,6 +115,9 @@ class CHyprBar : public IHyprWindowDecoration {
+     bool                m_bTouchEv       = false;
+     bool                m_bDragPending   = false;
+     bool                m_bCancelledDown = false;
++    bool                m_bResizingThis  = false;
++    bool                m_bResizeHover   = false;
++    bool                m_bLeftButton    = false;
+     int                 m_touchId        = 0;
+ 
+     // store hover state for buttons as a bitfield
+diff --git a/hyprbars/globals.hpp b/hyprbars/globals.hpp
+index bf2d706..9c05a50 100644
+--- a/hyprbars/globals.hpp
++++ b/hyprbars/globals.hpp
+@@ -43,6 +43,7 @@ struct SGlobalState {
+         SP<Config::Values::CFontWeightValue> barTextWeight;
+         SP<Config::Values::CIntValue>        barPadding;
+         SP<Config::Values::CIntValue>        barButtonPadding;
++        SP<Config::Values::CIntValue>        barResizeEdge;
+         SP<Config::Values::CBoolValue>       barBlur, barTitleEnabled, barPartOfWindow, barPrecedenceOverBorder, enabled, iconOnHover, buttonsOnHover;
+         SP<Config::Values::CStringValue>     barTextFont, barTextAlign, barButtonsAlignment, onDoubleClick, onDragEnd, onDragStartEval;
+     } config;
+diff --git a/hyprbars/main.cpp b/hyprbars/main.cpp
+index bb7e827..07a086d 100644
+--- a/hyprbars/main.cpp
++++ b/hyprbars/main.cpp
+@@ -209,6 +209,8 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
+     g_pGlobalState->config.buttonsOnHover      = makeShared<Config::Values::CBoolValue>(
+         "plugin:hyprbars:buttons_on_hover", "Whether the buttons are only drawn while the cursor is over the bar", false);
+     g_pGlobalState->config.onDoubleClick       = makeShared<Config::Values::CStringValue>("plugin:hyprbars:on_double_click", "Action to execute on double click of the bar", "");
++    g_pGlobalState->config.barResizeEdge       = makeShared<Config::Values::CIntValue>(
++        "plugin:hyprbars:bar_resize_edge", "Thickness of the strip at the top of the bar that resizes the window (0 disables it)", 0);
+     g_pGlobalState->config.onDragEnd           = makeShared<Config::Values::CStringValue>("plugin:hyprbars:on_drag_end", "Action to execute after dragging a window by the bar", "");
+     g_pGlobalState->config.onDragStartEval     = makeShared<Config::Values::CStringValue>("plugin:hyprbars:on_drag_start_eval", "Lua run synchronously before a bar drag begins", "");
+ 
+@@ -231,6 +233,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.iconOnHover);
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.buttonsOnHover);
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.onDoubleClick);
++    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barResizeEdge);
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.onDragEnd);
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.onDragStartEval);
+ 

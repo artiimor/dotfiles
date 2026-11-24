@@ -99,7 +99,7 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
   Ghostty, kitty, btop, fzf, GTK, Qt/KDE, fastfetch and running Neovim instances at once. 13 themes, 2 of them light.
 - **Per-theme backgrounds** (**Super+Ctrl+B**, `background-set`), remembered per theme.
 - **Terminal setup**: Ghostty, bash + starship, a minimal Neovim built on mini.nvim (colors generated from the theme with
-  mini.hues; LazyVim with custom `miami` and `vantablack` colorschemes still available as `lazyvim`),
+  mini.hues; LazyVim, available as `lazyvim`, shares the same colors and keeps `miami` and `vantablack` colorschemes),
   btop, eza/bat/fzf aliases, fastfetch with an ASCII Pepe tinted with the theme accent.
 - **System extras** (optional, under `system/`): greetd + ReGreet login screen, the "sobrio" Plymouth boot theme (plain neutral gray)
   and a keyd config for a ThinkPad keyboard.
@@ -262,7 +262,7 @@ It is **not included in this repo**. If it's missing, `mac` / `mac-light` behave
 | Quickshell | reads `themes/current/theme.json` | immediately |
 | Hyprland | `hypr/config/theme.lua` | immediately |
 | kitty / Ghostty | `kitty/themes/current.conf`, `ghostty/themes/current` | immediately |
-| Neovim | `ui.bg`/`ui.fg` through mini.hues (`lazyvim`: `nvim` key of `theme.json`), sent to running instances over their socket | immediately |
+| Neovim | `ui.bg`/`ui.fg` through mini.hues (shared `tema` colorscheme, also used by `lazyvim`), sent to running instances over their socket | immediately |
 | Background | asked from `background-set` | immediately |
 | btop | `btop/themes/current.theme` | next launch |
 | GTK | `gtk-3.0/gtk.css`, `gtk-4.0/gtk.css` (not in `mac-light`) | next launch of the app |

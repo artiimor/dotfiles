@@ -129,7 +129,7 @@ Item {
             anchors.fill: parent
             anchors.margins: 2
             radius: Theme.radius - 2
-            color: Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, 0.85)
+            color: Theme.withAlpha(Theme.bgSolid, 0.85)
 
             // Puntos, uno por letra
             Row {

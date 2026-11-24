@@ -36,20 +36,31 @@ Singleton {
     // en "mac" y "mac-light" (Modo Mac con un tema oscuro o claro; con macshell
     // instalado) las ventanas de aquí que se siguen usando (lanzador y sus menús,
     // OSD, polkit, dock) copian el aspecto de macshell en vez del tema de colores
+    // Sin archivo: "mac" si está macshell. "mac" sin macshell = "default".
     FileView {
         id: profileFile
         path: Quickshell.env("HOME") + "/.local/state/desktop-profile"
         blockLoading: true
         printErrors: false
+        onLoaded: root.profileChecked = true
+        onLoadFailed: root.profileChecked = true
     }
     FileView {
         id: macshellFile
         path: Quickshell.env("HOME") + "/.config/quickshell/macshell/shell.qml"
         blockLoading: true
         printErrors: false
+        onLoaded: root.macChecked = true
+        onLoadFailed: root.macChecked = true
     }
+    // Las comprobaciones pueden acabar después de crearse este singleton: hasta que
+    // profileReady sea true no se sabe aún si manda macshell (shell.qml lo espera
+    // para no quedarse con el servidor de notificaciones en Modo Mac)
+    property bool profileChecked: false
+    property bool macChecked: false
+    readonly property bool profileReady: profileChecked && macChecked
     readonly property string profile: profileFile.loaded ? profileFile.text().trim() : ""
-    readonly property bool mac: macshellFile.loaded && profile !== "default" // igual que shell.qml
+    readonly property bool mac: macshellFile.loaded && profile !== "default"
     readonly property bool macLight: mac && profile === "mac-light"
 
     IpcHandler {
@@ -60,9 +71,14 @@ Singleton {
         }
     }
 
+    // El mismo color con otra opacidad: Theme.withAlpha(Theme.fg, 0.5)
+    function withAlpha(c: color, a: real): color {
+        return Qt.rgba(c.r, c.g, c.b, a);
+    }
+
     // mac / mac-light: los colores de macshell (su Theme.qml, config aparte)
     readonly property color bgSolid: macLight ? "#f5f5f7" : mac ? "#28282b" : ui.bg ?? "#0d0b12"
-    readonly property color bg: Qt.rgba(bgSolid.r, bgSolid.g, bgSolid.b, mac ? 0.88 : 0.85) // translúcido
+    readonly property color bg: withAlpha(bgSolid, mac ? 0.88 : 0.85) // translúcido
     readonly property color surface: macLight ? Qt.rgba(0, 0, 0, 0.07) : mac ? Qt.rgba(1, 1, 1, 0.10) : ui.surface ?? "#1c1826"
     readonly property color fg: macLight ? "#1d1d1f" : mac ? "#f5f5f7" : ui.fg ?? "#f0eff1"
     readonly property color muted: macLight ? "#86868b" : mac ? "#98989d" : ui.muted ?? "#5d6088"
@@ -94,7 +110,7 @@ Singleton {
     // Borde fino de las islas
     readonly property color borderBase: ui.border ?? "#b893ce"
     readonly property color border: macLight ? Qt.rgba(0, 0, 0, 0.12) : mac ? Qt.rgba(1, 1, 1, 0.12)
-        : Qt.rgba(borderBase.r, borderBase.g, borderBase.b, 0.25)
+        : withAlpha(borderBase, 0.25)
 
     readonly property string font: mac ? "Noto Sans" : "Inter"
     readonly property int fontSize: 13

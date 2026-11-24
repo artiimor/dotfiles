@@ -28,8 +28,8 @@ PanelWindow {
     Rectangle {
         anchors.fill: parent
         gradient: Gradient {
-            GradientStop { position: 0; color: Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, Theme.themeLight ? 0.95 : 0.9) }
-            GradientStop { position: Theme.themeLight ? 0.75 : 0.6; color: Qt.rgba(Theme.bgSolid.r, Theme.bgSolid.g, Theme.bgSolid.b, Theme.themeLight ? 0.88 : 0.6) }
+            GradientStop { position: 0; color: Theme.withAlpha(Theme.bgSolid, Theme.themeLight ? 0.95 : 0.9) }
+            GradientStop { position: Theme.themeLight ? 0.75 : 0.6; color: Theme.withAlpha(Theme.bgSolid, Theme.themeLight ? 0.88 : 0.6) }
             GradientStop { position: 1; color: "transparent" }
         }
     }

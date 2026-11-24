@@ -10,7 +10,7 @@
 #   2. Apps extra (Firefox, Brave, Spotify, Discord, Proton...)
 #   3. Dotfiles: .config, .bashrc, webapps -> ~ (lo que pisa va a ~/.dotfiles-old/<fecha>) y bash como shell
 #   4. Tema de colores (theme-set) y perfil Modo Mac / Modo normal (config-set)
-#   5. Plugin hyprbars con el parche del modo escritorio (y quita los botones propios de GTK/Brave)
+#   5. Plugin hyprbars con los parches del modo escritorio (y quita los botones propios de GTK/Brave)
 #   6. Sistema (sudo): greetd + ReGreet, Plymouth "sobrio", keyd (ThinkPad), servicios
 #
 # Ejecútalo como tu usuario, no como root: pide sudo cuando lo necesita.
@@ -102,6 +102,12 @@ backup_sys() {
 	return 0
 }
 
+# install_sys SRC DST: instala un archivo del sistema (644) guardando antes el que hubiera
+install_sys() {
+	backup_sys "$2"
+	sudo install -Dm644 "$1" "$2"
+}
+
 # Instala con pacman lo que esté en los repos; lo que no, avisa (p. ej. paquetes
 # solo de CachyOS en un Arch puro) y si hay un helper de AUR lo intenta por ahí
 pacman_install() {
@@ -187,13 +193,8 @@ if ask "¿Copiarlos?"; then
 	command -v rsync >/dev/null || sudo pacman -S --needed --noconfirm rsync
 	copy_tree "$REPO/.config" "$HOME/.config"
 	copy_tree "$REPO/.local/share/applications" "$HOME/.local/share/applications"
-	for f in .bashrc .bash_profile .profile; do
-		if [[ -f "$HOME/$f" ]] && ! cmp -s "$REPO/$f" "$HOME/$f"; then
-			mkdir -p "$BACKUP"
-			cp "$HOME/$f" "$BACKUP/$f"
-		fi
-		cp "$REPO/$f" "$HOME/$f"
-	done
+	# -c: como copy_tree, pero solo se guarda copia si el contenido cambia (no por la fecha)
+	rsync -ac --backup --backup-dir="$BACKUP" "$REPO"/{.bashrc,.bash_profile,.profile} "$HOME/"
 	fix_home
 	chmod +x "$HOME/.config/themes/theme-set" "$HOME/.config/themes/config-set" "$HOME/.config/themes/background-set" "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
 	# Cursor: la flecha negra de macOS (apple_cursor, no está en los repos de Arch).
@@ -217,9 +218,8 @@ if ask "¿Copiarlos?"; then
 			warn "no se pudo descargar el cursor macOS; se usa Adwaita"
 			sed -i 's/^gtk-cursor-theme-name=macOS/gtk-cursor-theme-name=Adwaita/' \
 				"$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
+			# hypr/config/environment.lua lee uwsm/env: basta con cambiarlo aquí
 			sed -i 's/^export XCURSOR_THEME="macOS".*/export XCURSOR_THEME="Adwaita"/' "$HOME/.config/uwsm/env"
-			sed -i 's/^hl.env("XCURSOR_THEME", "macOS").*/hl.env("XCURSOR_THEME", "Adwaita")/' \
-				"$HOME/.config/hypr/config/environment.lua"
 		fi
 		rm -f "$tmp"
 	fi
@@ -256,15 +256,17 @@ if command -v Hyprland >/dev/null && ask "¿Compilar hyprbars?"; then
 	ver="$(Hyprland --version 2>/dev/null | grep -oP 'Hyprland \K[0-9]+\.[0-9]+\.[0-9]+' | head -1)" || true
 	[[ -n "$ver" ]] || { warn "no sé qué versión de Hyprland hay; pruebo con la de pacman"; ver="$(pacman -Q hyprland 2>/dev/null | awk '{print $2}' | cut -d- -f1)" || true; }
 	dir="$(mktemp -d)"
-	# hyprland-plugins solo etiqueta algunas versiones (v0.57.0 vale para 0.57.1)
+	# hyprland-plugins solo etiqueta algunas versiones (v0.57.0 vale para 0.57.1).
+	# Los parches se aplican en orden alfabético (hover-icon, on-drag-end, resize-top-edge)
 	if git clone https://github.com/hyprwm/hyprland-plugins "$dir/hp" &&
 		{ git -C "$dir/hp" checkout -q "v$ver" 2>/dev/null ||
 			git -C "$dir/hp" checkout -q "v${ver%.*}.0"; } &&
-		git -C "$dir/hp" apply "$REPO/.config/hypr/hyprbars-on-drag-end.patch" \
-			"$REPO/.config/hypr/hyprbars-hover-icon.patch" &&
+		git -C "$dir/hp" apply "$REPO"/.config/hypr/hyprbars-*.patch &&
 		make -C "$dir/hp/hyprbars" all; then
-		mkdir -p "$HOME/.local/lib/hyprland"
-		cp "$dir/hp/hyprbars/hyprbars.so" "$HOME/.local/lib/hyprland/"
+		# a un nombre temporal y mv (inodo nuevo): Hyprland tiene el .so viejo mapeado
+		# con dlopen y sobrescribirlo en su sitio lo puede tumbar (SIGBUS)
+		install -Dm755 "$dir/hp/hyprbars/hyprbars.so" "$HOME/.local/lib/hyprland/.hyprbars.so.new"
+		mv -f "$HOME/.local/lib/hyprland/.hyprbars.so.new" "$HOME/.local/lib/hyprland/hyprbars.so"
 		info "hyprbars v$ver instalado en ~/.local/lib/hyprland"
 		info "si una actualización sube la versión de Hyprland, repite este paso"
 	else
@@ -307,8 +309,9 @@ step "6. Sistema (sudo)"
 S="$REPO/system"
 
 if ask "¿Login con greetd + ReGreet (sustituye a SDDM/el login que haya)?"; then
-	backup_sys /etc/greetd/{config.toml,regreet.toml,regreet.css,environments}
-	sudo install -Dm644 -t /etc/greetd "$S"/etc/greetd/{config.toml,regreet.toml,regreet.css,environments}
+	for f in config.toml regreet.toml regreet.css environments; do
+		install_sys "$S/etc/greetd/$f" "/etc/greetd/$f"
+	done
 	sudo install -Dm644 "$S/usr/share/backgrounds/greeter.jpg" /usr/share/backgrounds/greeter.jpg
 	sudo sed -i "s|^greeting_msg = .*|greeting_msg = \"$(cat /etc/hostname 2>/dev/null || echo cachyos)\"|" /etc/greetd/regreet.toml
 	# El login que esté activo (sea cual sea) se desactiva para que greetd ocupe display-manager.service
@@ -334,8 +337,7 @@ if ask "¿Tema de arranque Plymouth \"sobrio\" (gris neutro)?"; then
 fi
 
 if ask "¿Teclado del portátil con keyd: intercambiar Alt y Super y CapsLock como Control (hecho para ThinkPad)?"; then
-	backup_sys /etc/keyd/thinkpad.conf
-	sudo install -Dm644 "$S/etc/keyd/thinkpad.conf" /etc/keyd/thinkpad.conf
+	install_sys "$S/etc/keyd/thinkpad.conf" /etc/keyd/thinkpad.conf
 	sudo systemctl enable --now keyd
 	# hypr/config/keyd.lua cambia el mapa con "keyd bind": hace falta el grupo keyd
 	if getent group keyd >/dev/null && ! id -nG "$ME" | grep -qw keyd; then

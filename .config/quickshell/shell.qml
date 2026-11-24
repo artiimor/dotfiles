@@ -11,7 +11,6 @@
 
 import QtQuick
 import Quickshell
-import Quickshell.Io
 import qs.modules
 import qs.services
 
@@ -25,27 +24,10 @@ ShellRoot {
     //   "default"  la barra y las notificaciones de aquí
     // Sin archivo: "mac" si está macshell. "mac" sin macshell = "default".
     // config-set reinicia qs al cambiar de perfil, así que basta leerlo al arrancar.
-    FileView {
-        id: profileFile
-        printErrors: false
-        path: Quickshell.env("HOME") + "/.local/state/desktop-profile"
-        onLoaded: root.profileChecked = true
-        onLoadFailed: root.profileChecked = true
-    }
-    FileView {
-        id: macshell
-        printErrors: false
-        path: Quickshell.env("HOME") + "/.config/quickshell/macshell/shell.qml"
-        onLoaded: root.macChecked = true
-        onLoadFailed: root.macChecked = true
-    }
-    // Las comprobaciones son asíncronas: hasta que acaben no se crea la barra ni las
-    // notificaciones de aquí (si no, se quedarían con el servidor de notificaciones)
-    property bool profileChecked: false
-    property bool macChecked: false
-    readonly property string profile: profileFile.loaded ? profileFile.text().trim() : ""
-    readonly property bool macBar: macshell.loaded && root.profile !== "default"
-    readonly property bool ownBar: profileChecked && macChecked && !macBar
+    // Lo lee Theme (Theme.profile, Theme.mac). Hasta que acabe la comprobación
+    // (Theme.profileReady) no se crea la barra ni las notificaciones de aquí
+    // (si no, se quedarían con el servidor de notificaciones)
+    readonly property bool ownBar: Theme.profileReady && !Theme.mac
 
     // Una barra por cada pantalla conectada. Al ocultarla (Super+B) se quitan
     // del todo, y con ellas sus menús y su hueco reservado

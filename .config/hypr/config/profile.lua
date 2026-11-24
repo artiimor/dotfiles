@@ -15,17 +15,10 @@
 -- sin macshell instalado se comportan como "default".
 -- Lo usan autostart.lua, binds.lua, decorations.lua y desktopmode.lua
 
-local HOME = os.getenv("HOME")
+local util = require("config.util")
+local HOME = util.HOME
 local MACSHELL = HOME .. "/.config/quickshell/macshell/shell.qml"
-
-local function exists(path)
-	local f = io.open(path)
-	if f then
-		f:close()
-		return true
-	end
-	return false
-end
+local exists = util.exists
 
 local profile
 local f = io.open(HOME .. "/.local/state/desktop-profile")

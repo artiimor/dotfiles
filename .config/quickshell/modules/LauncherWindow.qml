@@ -210,7 +210,7 @@ PanelWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: Theme.mac ? 8 : 0
-                        color: row.selected ? win.selColor : mouse.containsMouse ? Qt.rgba(win.selColor.r, win.selColor.g, win.selColor.b, 0.5) : "transparent"
+                        color: row.selected ? win.selColor : mouse.containsMouse ? Theme.withAlpha(win.selColor, 0.5) : "transparent"
                     }
 
                     RowLayout {
@@ -245,7 +245,7 @@ PanelWindow {
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                             text: row.modelData.text ?? ""
-                            color: row.selected ? (Theme.mac ? Theme.onAccent : Theme.fg) : Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, Theme.mac ? 1 : 0.8)
+                            color: row.selected ? (Theme.mac ? Theme.onAccent : Theme.fg) : Theme.withAlpha(Theme.fg, Theme.mac ? 1 : 0.8)
                             font.family: Theme.font
                             font.pixelSize: 14
                             font.bold: row.selected && !Theme.mac
@@ -264,7 +264,7 @@ PanelWindow {
                             color: pal ? pal.bg : "transparent"
                             border.width: 1
                             border.color: row.selected && Theme.mac ? Qt.rgba(1, 1, 1, 0.45)
-                                : Qt.rgba(Theme.fg.r, Theme.fg.g, Theme.fg.b, Theme.mac ? 0.18 : 0.22)
+                                : Theme.withAlpha(Theme.fg, Theme.mac ? 0.18 : 0.22)
 
                             Row {
                                 id: chipRow

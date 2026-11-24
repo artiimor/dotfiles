@@ -1,3 +1,4 @@
+local util = require("config.util")
 local mainMod = "SUPER"
 -- Apps en su propio scope de systemd (app.slice), no dentro de Hyprland. uwsm-app es el
 -- cliente rápido de `uwsm app` (sin arrancar Python cada vez); vale también sin uwsm
@@ -17,6 +18,14 @@ local function wsFor(i)
 	return (m and m.id or 0) * 10 + i
 end
 
+-- Un bind por tecla numérica (1..9, 0) con los modificadores `mods` (" + SHIFT", "" ...);
+-- fn(i) devuelve la acción del workspace i y solo el primero lleva descripción (chuleta)
+local function bindDigits(mods, fn, desc)
+	for i = 1, NUM_WPM do
+		hl.bind(mainMod .. mods .. " + " .. digitCode(i % 10), fn(i), i == 1 and { description = desc } or nil)
+	end
+end
+
 ---------------------------
 ---- WINDOW MANAGEMENT ----
 ---------------------------
@@ -28,11 +37,21 @@ hl.bind(mainMod .. " + D", hl.dsp.window.float({ action = "toggle" }), { descrip
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.window.fullscreen({ mode = 1 }), { description = "Maximizar" })
 hl.bind(mainMod .. " + ALT + J", hl.dsp.layout("togglesplit"), { description = "Cambiar división" })
 
--- Change focus
-hl.bind(mainMod .. " + H", hl.dsp.focus({ direction = "left" }), { description = "Foco a la izquierda" })
-hl.bind(mainMod .. " + L", hl.dsp.focus({ direction = "right" }), { description = "Foco a la derecha" })
-hl.bind(mainMod .. " + K", hl.dsp.focus({ direction = "up" }), { description = "Foco arriba" })
-hl.bind(mainMod .. " + J", hl.dsp.focus({ direction = "down" }), { description = "Foco abajo" })
+-- Change focus. Si la ventana que recibe el foco es flotante, sale delante de las demás
+-- flotantes (bring_to_top); en tiling no cambia nada
+local function focusDir(direction)
+	return function()
+		hl.dispatch(hl.dsp.focus({ direction = direction }))
+		local w = hl.get_active_window()
+		if w and w.floating then
+			hl.dispatch(hl.dsp.window.bring_to_top())
+		end
+	end
+end
+hl.bind(mainMod .. " + H", focusDir("left"), { description = "Foco a la izquierda" })
+hl.bind(mainMod .. " + L", focusDir("right"), { description = "Foco a la derecha" })
+hl.bind(mainMod .. " + K", focusDir("up"), { description = "Foco arriba" })
+hl.bind(mainMod .. " + J", focusDir("down"), { description = "Foco abajo" })
 -- bring_to_top: en los workspaces de modo escritorio la ventana elegida sale delante
 hl.bind("ALT + Tab", function()
 	hl.dispatch(hl.dsp.window.cycle_next())
@@ -44,22 +63,16 @@ hl.bind(mainMod .. " + SHIFT + K", hl.dsp.window.move({ direction = "u" }), { de
 hl.bind(mainMod .. " + SHIFT + L", hl.dsp.window.move({ direction = "r" }), { description = "Mover ventana a la derecha" })
 hl.bind(mainMod .. " + SHIFT + H", hl.dsp.window.move({ direction = "l" }), { description = "Mover ventana a la izquierda" })
 hl.bind(mainMod .. " + SHIFT + J", hl.dsp.window.move({ direction = "d" }), { description = "Mover ventana abajo" })
-for i = 1, NUM_WPM do
-	local key = i % 10
-	hl.bind(mainMod .. " + SHIFT + " .. digitCode(key), function()
+bindDigits(" + SHIFT", function(i)
+	return function()
 		hl.dispatch(hl.dsp.window.move({ workspace = wsFor(i) }))
-	end, i == 1 and { description = "Mover ventana al workspace" } or nil)
-end
-for i = 1, NUM_WPM do
-	local key = i % 10
-	hl.bind(
-		mainMod .. " + SHIFT + ALT + " .. digitCode(key),
-		function()
-			hl.dispatch(hl.dsp.window.move({ workspace = wsFor(i), follow = false }))
-		end,
-		i == 1 and { description = "Mover ventana al workspace (sin ir)" } or nil
-	)
-end
+	end
+end, "Mover ventana al workspace")
+bindDigits(" + SHIFT + ALT", function(i)
+	return function()
+		hl.dispatch(hl.dsp.window.move({ workspace = wsFor(i), follow = false }))
+	end
+end, "Mover ventana al workspace (sin ir)")
 
 -- Move & Resize with mouse
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { description = "Mover ventana con el ratón" })
@@ -97,7 +110,7 @@ hl.bind(mainMod .. " + X", hl.dsp.send_shortcut({ mods = "CTRL", key = "X" }), {
 -- Lanzador y menús de Quickshell (pulsar otra vez cierra)
 -- Perfil "mac": Spotlight, energía y notificaciones de macshell (si fallan, los de siempre).
 -- Perfil "default": el lanzador, el menú de energía y las notificaciones de Quickshell
-local macshell = "qs -p ~/.config/quickshell/macshell ipc call "
+local macshell = "qs -p " .. util.MACSHELL_DIR .. " ipc call "
 local function shellCmd(mac, own)
 	return PROFILE_MAC and (macshell .. mac .. " || " .. own) or own
 end
@@ -162,23 +175,21 @@ hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("loginctl lock-session"), { des
 -------------------------------
 
 -- Focus on workspace number
-for i = 1, NUM_WPM do
-	local key = i % 10
-	hl.bind(mainMod .. " + " .. digitCode(key), function()
+bindDigits("", function(i)
+	return function()
 		hl.dispatch(hl.dsp.focus({ workspace = wsFor(i) }))
-	end, i == 1 and { description = "Ir al workspace" } or nil)
-end
+	end
+end, "Ir al workspace")
 
 -- Workspaces 11..20 (los del monitor externo, p.ej. huérfanos al desconectarlo): solo si existen y tienen ventanas
-for i = 1, NUM_WPM do
-	local key = i % 10
-	hl.bind(mainMod .. " + ALT + " .. digitCode(key), function()
+bindDigits(" + ALT", function(i)
+	return function()
 		local ws = hl.get_workspace(10 + i)
 		if ws and ws.windows > 0 then
 			hl.dispatch(hl.dsp.focus({ workspace = 10 + i }))
 		end
-	end, i == 1 and { description = "Ir al workspace 11-20" } or nil)
-end
+	end
+end, "Ir al workspace 11-20")
 
 -- Scroll through existing workspaces & monitors
 hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "m-1" }))

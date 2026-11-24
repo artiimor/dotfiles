@@ -12,21 +12,14 @@
 
 import json
 import os
-import subprocess
 import sys
 
-HOME = os.path.expanduser("~")
-THEMES = f"{HOME}/.config/themes"
+sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
+from themelib import HOME, THEMES, current_theme, qs_theme_reload
+
 STATE = f"{HOME}/.local/state/theme-backgrounds"
 PEPES = f"{HOME}/.config/backgrounds/wallpaper-desktop.jpg"
 EXTS = (".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif")
-
-
-def current():
-    try:
-        return os.path.basename(os.readlink(f"{THEMES}/current"))
-    except OSError:
-        return ""
 
 
 def backgrounds(theme):
@@ -53,12 +46,11 @@ def choose(theme, name):
     os.makedirs(os.path.dirname(STATE), exist_ok=True)
     with open(STATE, "w") as f:
         json.dump(state, f, indent=1)
-    subprocess.run(["qs", "ipc", "call", "theme", "reload"],
-                   stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+    qs_theme_reload()
 
 
 def main():
-    theme = current()
+    theme = current_theme() or ""  # sin tema: solo los Pepes
     bgs = backgrounds(theme)
     names = list(bgs)
     cur = load().get(theme)

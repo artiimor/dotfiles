@@ -41,51 +41,10 @@ o.pumheight = 8
 o.updatetime = 300
 o.fillchars = "eob: " -- sin las ~ al final del buffer
 
--- Colores: mini.hues a partir de theme.json -------------------------------------
--- Sale de ui.bg / ui.fg del tema activo y deja el fondo transparente para kitty.
--- Si cambias de tema con theme-set, se vuelve a leer al recuperar el foco.
-local theme_path = vim.fn.expand("~/.config/themes/current/theme.json")
-local last_theme
-
-local function apply_theme()
-  local f = io.open(theme_path)
-  local t = {}
-  if f then
-    local ok, d = pcall(vim.json.decode, f:read("*a"))
-    f:close()
-    t = ok and d or {}
-  end
-  local ui = t.ui or {}
-  local key = (ui.bg or "") .. (ui.fg or "") .. tostring(t.light)
-  if key == last_theme then
-    return
-  end
-  last_theme = key
-  vim.o.background = t.light and "light" or "dark"
-  require("mini.hues").setup({
-    background = ui.bg or "#141518",
-    foreground = ui.fg or "#c8ccd4",
-    saturation = "lowmedium", -- sobrio; prueba "medium" si lo ves muy apagado
-    accent = "bg",
-  })
-  -- transparencia: que se vea el fondo de kitty
-  for _, g in ipairs({ "Normal", "NormalNC", "SignColumn", "LineNr", "EndOfBuffer", "FoldColumn" }) do
-    vim.api.nvim_set_hl(0, g, vim.tbl_extend("force", vim.api.nvim_get_hl(0, { name = g }), { bg = "NONE" }))
-  end
-end
-apply_theme()
-vim.api.nvim_create_autocmd("FocusGained", { callback = apply_theme })
--- theme-set llama a MiniThemeReload() por el socket en vez de :colorscheme
-_G.MiniThemeReload = function()
-  apply_theme()
-  vim.cmd.redraw({ bang = true })
-end
-vim.cmd([[
-function! MiniThemeReload() abort
-  lua MiniThemeReload()
-  return ''
-endfunction
-]])
+-- Colores: colors/tema.lua (mini.hues a partir de theme.json) -----------------
+-- El mismo colorscheme lo usa LazyVim. Fondo transparente para kitty; al cambiar
+-- de tema con theme-set se recarga solo (MiniThemeReload / al recuperar el foco).
+vim.cmd.colorscheme("tema")
 
 -- mini.* ------------------------------------------------------------------------
 require("mini.icons").setup()
