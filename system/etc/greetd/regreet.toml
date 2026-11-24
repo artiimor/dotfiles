@@ -1,3 +1,5 @@
+# ReGreet estilo macOS oscuro (a juego con el Modo Mac)
+
 [background]
 path = "/usr/share/backgrounds/greeter.jpg"
 fit = "Cover"
@@ -5,7 +7,7 @@ fit = "Cover"
 [GTK]
 application_prefer_dark_theme = true
 cursor_theme_name = "Adwaita"
-font_name = "JetBrainsMono Nerd Font Propo 14"
+font_name = "Inter 13"
 icon_theme_name = "breeze-dark"
 theme_name = "Adwaita"
 
@@ -17,7 +19,7 @@ poweroff = [ "systemctl", "poweroff" ]
 greeting_msg = "cachyos-x8664"
 
 [widget.clock]
-format = "%A, %B %d  ·  %H:%M"
+format = "%A, %d de %B  ·  %H:%M"
 resolution = "500ms"
 label_width = 320
-locale = "en_US"
+locale = "es_ES"

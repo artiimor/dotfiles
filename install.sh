@@ -6,9 +6,9 @@
 #   ~/dotfiles/install.sh --yes      lo hace todo sin preguntar
 #
 # Pasos (cada uno se puede saltar):
-#   1. Paquetes del escritorio (pacman) y los de AUR (bzmenu) con makepkg
+#   1. Paquetes del escritorio (pacman) y los de AUR (bzmenu, iconos WhiteSur) con makepkg
 #   2. Apps extra (Firefox, Brave, Spotify, Discord, Proton...)
-#   3. Dotfiles: .config, .bashrc, webapps -> ~ (lo que pisa va a ~/.dotfiles-old/<fecha>) y bash como shell
+#   3. Dotfiles: .config (con macshell), .bashrc, webapps, iconos Sur -> ~ (lo que pisa va a ~/.dotfiles-old/<fecha>) y bash como shell
 #   4. Tema de colores (theme-set) y perfil Modo Mac / Modo normal (config-set)
 #   5. Plugin hyprbars con los parches del modo escritorio (y quita los botones propios de GTK/Brave)
 #   6. Sistema (sudo): greetd + ReGreet, Plymouth "sobrio", keyd (ThinkPad), servicios
@@ -29,6 +29,7 @@ YES=0
 # ---------------------------------------------------------------- paquetes
 
 # Escritorio: Hyprland + Quickshell y lo que usan los binds y la barra
+# (fd, libqalculate y python-gobject: Spotlight y portapapeles de macshell)
 DESKTOP=(
 	hyprland quickshell uwsm xdg-desktop-portal-hyprland
 	hypridle hyprlock hyprsunset hyprshot hyprpicker grim slurp
@@ -38,6 +39,7 @@ DESKTOP=(
 	gnome-keyring seahorse libnotify xdg-user-dirs unicode-emoji
 	dolphin kde-cli-tools ffmpegthumbs ffmpegthumbnailer qview gnome-calculator gnome-text-editor swash
 	qt6ct breeze nwg-look adw-gtk-theme papirus-icon-theme
+	fd libqalculate python-gobject
 )
 # Terminal, shell y Neovim
 TERMINAL=(
@@ -52,7 +54,8 @@ FONTS=(
 # Login y arranque
 SYSTEM=(greetd greetd-regreet cage plymouth keyd)
 # No están en los repos: se compilan desde AUR
-AUR=(bzmenu)
+# whitesur-icon-theme: base de los iconos Sur del Modo Mac
+AUR=(bzmenu whitesur-icon-theme)
 # Opcionales
 APPS=(firefox brave-bin spotify-launcher discord proton-pass proton-vpn-gtk-app claude-code github-cli)
 
@@ -187,12 +190,13 @@ fi
 # ---------------------------------------------------------------- 3. dotfiles
 
 step "3. Dotfiles"
-info "$REPO/.config -> ~/.config, .bashrc, .bash_profile, .profile, webapps"
+info "$REPO/.config -> ~/.config, .bashrc, .bash_profile, .profile, webapps, iconos Sur"
 info "lo que se sobrescriba se guarda en $BACKUP"
 if ask "¿Copiarlos?"; then
 	command -v rsync >/dev/null || sudo pacman -S --needed --noconfirm rsync
 	copy_tree "$REPO/.config" "$HOME/.config"
 	copy_tree "$REPO/.local/share/applications" "$HOME/.local/share/applications"
+	copy_tree "$REPO/.local/share/icons" "$HOME/.local/share/icons"
 	# -c: como copy_tree, pero solo se guarda copia si el contenido cambia (no por la fecha)
 	rsync -ac --backup --backup-dir="$BACKUP" "$REPO"/{.bashrc,.bash_profile,.profile} "$HOME/"
 	fix_home
@@ -242,7 +246,7 @@ step "4. Tema de colores"
 if [[ -x "$HOME/.config/themes/theme-set" ]] && ask "¿Aplicar el tema $THEME?"; then
 	"$HOME/.config/themes/theme-set" "$THEME" || warn "theme-set falló; repítelo dentro de Hyprland"
 fi
-# Perfil del escritorio (Super+Shift+T): "mac" si está macshell (config aparte), si no "default".
+# Perfil del escritorio (Super+Shift+T): el que ya tuvieras; en una instalación nueva, "mac".
 # Ajusta iconos GTK/Qt y qt6ct a ese perfil (el repo los trae como en "mac")
 if [[ -x "$HOME/.config/themes/config-set" ]]; then
 	"$HOME/.config/themes/config-set" --reapply || warn "config-set falló; repítelo dentro de Hyprland"

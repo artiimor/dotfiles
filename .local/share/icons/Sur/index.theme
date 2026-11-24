@@ -1,0 +1,19 @@
+[Icon Theme]
+Name=Sur
+Comment=WhiteSur sin marcas de Apple
+Inherits=WhiteSur,breeze,hicolor
+Directories=apps/scalable,places/scalable
+
+[apps/scalable]
+Size=64
+MinSize=8
+MaxSize=512
+Type=Scalable
+Context=Applications
+
+[places/scalable]
+Size=64
+MinSize=8
+MaxSize=512
+Type=Scalable
+Context=Places

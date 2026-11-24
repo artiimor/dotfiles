@@ -76,7 +76,7 @@ Singleton {
         return Qt.rgba(c.r, c.g, c.b, a);
     }
 
-    // mac / mac-light: los colores de macshell (su Theme.qml, config aparte)
+    // mac / mac-light: los colores de macshell (macshell/Theme.qml)
     readonly property color bgSolid: macLight ? "#f5f5f7" : mac ? "#28282b" : ui.bg ?? "#0d0b12"
     readonly property color bg: withAlpha(bgSolid, mac ? 0.88 : 0.85) // translúcido
     readonly property color surface: macLight ? Qt.rgba(0, 0, 0, 0.07) : mac ? Qt.rgba(1, 1, 1, 0.10) : ui.surface ?? "#1c1826"

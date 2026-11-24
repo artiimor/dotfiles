@@ -4,7 +4,7 @@
 -- guarda "mac-light" si el tema de colores es claro ("light": true en su theme.json),
 -- y theme-set cambia entre "mac" y "mac-light" al pasar a un tema claro u oscuro.
 --
---   mac        barra macshell (config aparte, no incluida) con Spotlight y PowerMenu, ventanas
+--   mac        barra macshell (quickshell/macshell) con Spotlight y PowerMenu, ventanas
 --              redondeadas con sombra, hyprbars Sur-Gris (gris, Noto Sans, 32 px);
 --              todos los workspaces flotantes salvo los que pases a tiling (Super+Alt+D)
 --   mac-light  lo mismo en claro (macshell, hyprbars, GTK y Qt claros), con un tema claro

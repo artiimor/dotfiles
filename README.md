@@ -110,10 +110,7 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 - **CachyOS or Arch Linux** (the installer needs `pacman`; it refuses to run without it).
 - **Hyprland 0.57 or newer** (the config is Lua, which older versions don't support).
 - A normal user with `sudo`. Don't run the installer as root (it refuses).
-- Internet access: packages, the AUR package `bzmenu`, the macOS cursor download and the `hyprland-plugins` clone for `hyprbars`.
-- Optional, for Mac mode only: **macshell** and the **Sur** icon themes (`Sur-Transparente`, `Sur`). Neither is part of
-  this repo nor installed by `install.sh`; without macshell, Mac mode falls back to Normal mode
-  (see [below](#desktop-profiles-mac-mode--normal-mode)).
+- Internet access: packages, the AUR packages `bzmenu` and `whitesur-icon-theme`, the macOS cursor download and the `hyprland-plugins` clone for `hyprbars`.
 
 ## Installation
 
@@ -134,11 +131,11 @@ When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 
 | Step | What happens |
 |---|---|
-| **1. Desktop packages** | `pacman -Syu`, then installs the desktop, terminal, font and login/boot package groups (see the list below). Packages missing from your repos (e.g. CachyOS-only ones on plain Arch) are reported and tried from the AUR; if a batch conflicts, it retries one by one. `bzmenu` comes from the AUR via `paru`/`yay` if present, otherwise `makepkg`. |
+| **1. Desktop packages** | `pacman -Syu`, then installs the desktop, terminal, font and login/boot package groups (see the list below). Packages missing from your repos (e.g. CachyOS-only ones on plain Arch) are reported and tried from the AUR; if a batch conflicts, it retries one by one. `bzmenu` and `whitesur-icon-theme` come from the AUR via `paru`/`yay` if present, otherwise `makepkg`. |
 | **2. Extra apps** (optional) | `firefox brave-bin spotify-launcher discord proton-pass proton-vpn-gtk-app claude-code github-cli`, installed the same way as step 1. |
-| **3. Dotfiles** | Copies `.config/` → `~/.config/`, `.local/share/applications/` (web apps) → `~/.local/share/applications/`, and `.bashrc`, `.bash_profile`, `.profile` → `~`. Details below. |
+| **3. Dotfiles** | Copies `.config/` → `~/.config/`, `.local/share/applications/` (web apps) → `~/.local/share/applications/`, `.local/share/icons/` (Sur icons) → `~/.local/share/icons/`, and `.bashrc`, `.bash_profile`, `.profile` → `~`. Details below. |
 | **3b. Shell** | If your login shell isn't bash (CachyOS defaults to fish), offers `chsh -s /bin/bash`. |
-| **4. Theme and profile** | Runs `theme-set <theme>` (your current theme if you already had one, otherwise **grafito**) and `config-set --reapply` (Mac mode if macshell is installed, otherwise Normal mode). |
+| **4. Theme and profile** | Runs `theme-set <theme>` (your current theme if you already had one, otherwise **grafito**) and `config-set --reapply` (keeps your profile; Mac mode on a fresh install). |
 | **5. hyprbars** | Clones `hyprwm/hyprland-plugins` at the tag matching your installed Hyprland (falls back to `vX.Y.0`), applies the two patches in `.config/hypr/`, builds it and copies `hyprbars.so` to `~/.local/lib/hyprland/`. Then offers to remove the apps' own window buttons (GTK `button-layout`, and Brave's "use system title bar", only if Brave is closed). |
 | **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname, disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
 
@@ -159,11 +156,11 @@ Details of step 3:
 
 | Group | Packages |
 |---|---|
-| Desktop | `hyprland quickshell uwsm xdg-desktop-portal-hyprland hypridle hyprlock hyprsunset hyprshot hyprpicker grim slurp cliphist wl-clipboard brightnessctl playerctl ddcutil pipewire-pulse wireplumber pavucontrol power-profiles-daemon upower networkmanager networkmanager-dmenu bluez bluez-utils gnome-keyring seahorse libnotify xdg-user-dirs unicode-emoji dolphin kde-cli-tools ffmpegthumbs ffmpegthumbnailer qview gnome-calculator gnome-text-editor swash qt6ct breeze nwg-look adw-gtk-theme papirus-icon-theme` |
+| Desktop | `hyprland quickshell uwsm xdg-desktop-portal-hyprland hypridle hyprlock hyprsunset hyprshot hyprpicker grim slurp cliphist wl-clipboard brightnessctl playerctl ddcutil pipewire-pulse wireplumber pavucontrol power-profiles-daemon upower networkmanager networkmanager-dmenu bluez bluez-utils gnome-keyring seahorse libnotify xdg-user-dirs unicode-emoji dolphin kde-cli-tools ffmpegthumbs ffmpegthumbnailer qview gnome-calculator gnome-text-editor swash qt6ct breeze nwg-look adw-gtk-theme papirus-icon-theme fd libqalculate python-gobject` |
 | Terminal | `ghostty kitty starship btop fastfetch bash-completion fzf eza bat neovim lazygit ripgrep tree-sitter-cli nodejs npm micro python python-defusedxml git base-devel rsync` |
 | Fonts | `ttf-jetbrains-mono-nerd otf-geist-mono-nerd inter-font cantarell-fonts noto-fonts noto-fonts-emoji noto-fonts-cjk` |
 | Login / boot | `greetd greetd-regreet cage plymouth keyd` |
-| AUR | `bzmenu` |
+| AUR | `bzmenu whitesur-icon-theme` |
 
 ### Manual install
 
@@ -173,7 +170,7 @@ If you'd rather copy only some pieces:
 cp -r ~/dotfiles/.config/* ~/.config/
 cp ~/dotfiles/.bashrc ~/dotfiles/.bash_profile ~/dotfiles/.profile ~/
 ~/.config/themes/theme-set grafito          # or any other theme: generates the color files
-~/.config/themes/config-set default         # or "mac" if you have macshell
+~/.config/themes/config-set default         # or "mac"
 ```
 
 Then replace the `@HOME@` placeholder yourself:
@@ -224,10 +221,11 @@ Light or dark is decided by the **color theme** (`"light": true` in its `theme.j
 ### Where it's stored, and macshell
 
 The active profile is saved in `~/.local/state/desktop-profile` and read by `hypr/config/profile.lua` and
-`quickshell/shell.qml`. Without that file the default is `mac` if macshell is installed, otherwise `default`.
+`quickshell/shell.qml`. Without that file the default is `mac`.
 
-**Mac mode needs macshell**, a separate Quickshell config expected at `~/.config/quickshell/macshell/shell.qml`.
-It is **not included in this repo**. If it's missing, `mac` / `mac-light` behave exactly like `default`.
+**macshell** is a standalone Quickshell config in `.config/quickshell/macshell/` (started with `qs -p`). Its icons are
+`Sur` and `Sur-Transparente` (in `.local/share/icons`), built on top of WhiteSur (AUR `whitesur-icon-theme`).
+If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` behave exactly like `default`.
 
 ## Color themes
 
@@ -272,7 +270,7 @@ It is **not included in this repo**. If it's missing, `mac` / `mac-light` behave
 | hyprlock | `hypr/hyprlock-colors.conf` | next lock (fallback only) |
 
 Generated files start with `Generado por theme-set`: don't edit them, edit the theme's `theme.json` and run `--reapply`.
-The login screen (ReGreet) and Plymouth are outside the theme system and stay "Miami night".
+The login screen (ReGreet, macOS-style dark gray) and Plymouth ("sobrio") are outside the theme system.
 
 **Creating a theme**: copy a folder (`cp -r ~/.config/themes/miami ~/.config/themes/my-theme`), change `name` and the
 colors in its `theme.json` (add `"light": true` for a light theme) and pick it with Super+T.
@@ -530,8 +528,8 @@ There's no uninstall script. To go back:
 |---|---|
 | No titlebars / `hyprbars` version mismatch after updating Hyprland | Rebuild it with the same tag as your Hyprland (installer step 5). Without it, everything else works. |
 | `hyprbars` build fails: no tag `vX.Y.Z` | `hyprland-plugins` only tags some releases; the installer already falls back to `vX.Y.0`. For a brand-new Hyprland, wait for the tag. |
-| Mac mode looks exactly like Normal mode | macshell isn't installed at `~/.config/quickshell/macshell/`. That's expected: it isn't part of this repo. |
-| Missing icons in Mac mode | The Sur / Sur-Transparente icon themes aren't installed by `install.sh`; install them or use Normal mode. |
+| Mac mode looks exactly like Normal mode | macshell isn't at `~/.config/quickshell/macshell/`: re-run installer step 3. |
+| Missing icons in Mac mode | Sur inherits from WhiteSur: check that `whitesur-icon-theme` (AUR) is installed. |
 | Super shortcuts do nothing, or Alt and Super are swapped on a non-ThinkPad keyboard | `hypr/config/keyd.lua` rebinds keyd at startup. If you run keyd with your own configs, remove `require("config.keyd")` from `hyprland.lua` and run `keyd bind reset`. If you're not in the `keyd` group, log out and back in after the installer adds you. |
 | Bar, launcher or wallpaper missing | Start Quickshell by hand to see errors: `qs` (and `qs -p ~/.config/quickshell/macshell` in Mac mode). |
 | Colors look wrong or half-applied | `~/.config/themes/theme-set --reapply`, then reopen GTK/Qt apps and btop. |

@@ -13,7 +13,7 @@ hl.on("hyprland.start", function()
 	-- lanzador, pantalla de bloqueo y polkit. Sustituye a waybar, hyprpaper,
 	-- swaync, swayosd-server, wofi, hyprlock y hyprpolkitagent
 	hl.exec_cmd("qs & hypridle")
-	-- Perfil "mac": barra superior + Spotlight estilo macOS (macshell, config aparte no incluida en este repo).
+	-- Perfil "mac": barra superior + Spotlight estilo macOS (macshell, en quickshell/macshell).
 	-- En "default" la barra la pone el propio qs (shell.qml mira el mismo perfil)
 	if PROFILE_MAC then
 		hl.exec_cmd("qs -p " .. util.MACSHELL_DIR)

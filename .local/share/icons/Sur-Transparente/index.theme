@@ -1,0 +1,12 @@
+[Icon Theme]
+Name=Sur-Transparente
+Comment=Sur con iconos de apps en gris claro
+Inherits=Sur,WhiteSur,breeze,hicolor
+Directories=apps/scalable
+
+[apps/scalable]
+Size=64
+MinSize=8
+MaxSize=512
+Type=Scalable
+Context=Applications

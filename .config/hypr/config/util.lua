@@ -4,7 +4,7 @@
 local M = {}
 
 M.HOME = os.getenv("HOME")
--- Config de macshell (barra del perfil "mac", aparte, no incluida en este repo)
+-- Config de macshell (barra del perfil "mac", en quickshell/macshell)
 M.MACSHELL_DIR = "~/.config/quickshell/macshell"
 
 -- true si el fichero existe (se puede abrir)

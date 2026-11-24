@@ -1,112 +1,105 @@
-/* Colores Miami night (los mismos que Quickshell, hyprlock y kitty) */
-@define-color bg        rgba(26, 16, 51, 0.80);
-@define-color surface   #262335;
-@define-color fg        #f0eff1;
-@define-color muted     #5d6088;
-@define-color accent    #848bbd;
-@define-color accentHi  #a3a9d6;
-@define-color accentDim #5f6394;
-@define-color red       #fe4450;
+/* ReGreet estilo macOS oscuro: grises neutros + azul de sistema */
+@define-color bg        rgba(36, 36, 38, 0.82);
+@define-color surface   rgba(255, 255, 255, 0.07);
+@define-color surfaceHi rgba(255, 255, 255, 0.12);
+@define-color fg        #f5f5f7;
+@define-color muted     #98989d;
+@define-color line      rgba(255, 255, 255, 0.10);
+@define-color accent    #0a84ff;
+@define-color accentHi  #409cff;
+@define-color red       #ff453a;
 
 * {
     color: @fg;
+    font-family: "Inter", "Cantarell", sans-serif;
 }
 
 window {
-    background: #1a1033;
+    background: radial-gradient(ellipse at 50% 35%, #3a3a3d 0%, #232325 45%, #111112 100%);
 }
 
-/* Las "islas": tarjeta de login y barra de arriba */
+/* Tarjeta de login y barra de arriba */
 frame {
     background: @bg;
-    border: 1px solid alpha(@accent, 0.35);
-    border-radius: 14px;
-    padding: 18px;
-    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.6);
+    border: 1px solid @line;
+    border-radius: 16px;
+    padding: 20px;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.55);
 }
 
-label {
-    color: @fg;
-}
+label { color: @fg; }
 
 entry,
 dropdown > button,
 combobox > box > button {
     background: @surface;
     color: @fg;
-    border: 1px solid alpha(@muted, 0.3);
+    border: 1px solid @line;
     border-radius: 8px;
-    min-height: 38px;
+    min-height: 36px;
     padding: 0 12px;
     box-shadow: none;
     outline: none;
 }
 entry:focus-within {
     border-color: @accent;
+    box-shadow: 0 0 0 3px alpha(@accent, 0.35);
 }
 
 button {
     background: @surface;
     color: @fg;
-    border: none;
+    border: 1px solid @line;
     border-radius: 8px;
     padding: 6px 14px;
     box-shadow: none;
-    transition: all 0.2s ease;
+    transition: all 0.15s ease;
 }
-button:hover {
-    background: alpha(@accent, 0.15);
-    color: @accent;
-}
+button:hover { background: @surfaceHi; }
 
-/* Botón de entrar: el degradado de los workspaces */
+/* Entrar: azul de macOS */
 button.suggested-action {
-    background: linear-gradient(45deg, @accent, @accentDim);
-    color: #1a1033;
-    font-weight: bold;
+    background: @accent;
+    border-color: transparent;
+    font-weight: 600;
 }
-button.suggested-action:hover {
-    background: linear-gradient(45deg, @accentHi, @accent);
-}
+button.suggested-action:hover { background: @accentHi; }
+button.suggested-action label { color: #ffffff; }
 
-/* Reiniciar / apagar */
 button.destructive-action {
     background: transparent;
     color: @red;
 }
 button.destructive-action:hover {
-    background: @red;
-    color: #1a1033;
+    background: alpha(@red, 0.2);
 }
 
-/* Errores (contraseña mala) */
-infobar, .error {
-    color: @red;
-}
+infobar, .error { color: @red; }
 
-button.suggested-action label {
-    color: #1a1033;
-}
-
-/* Reiniciar / apagar: botones fantasma abajo */
+/* Reiniciar / apagar: discretos */
 box.horizontal > button:not(.suggested-action) {
     background: transparent;
     color: @muted;
-    border: 1px solid alpha(@muted, 0.3);
+    border: 1px solid @line;
 }
+box.horizontal > button:not(.suggested-action) label { color: @muted; }
 box.horizontal > button:not(.suggested-action):hover {
-    background: alpha(@red, 0.2);
-    border-color: @red;
-    color: @red;
+    background: @surfaceHi;
 }
+box.horizontal > button:not(.suggested-action):hover label { color: @fg; }
 
 /* ...pero los desplegables de usuario y sesión vuelven a su estilo */
 combobox box.horizontal > button:not(.suggested-action) {
     background: @surface;
     color: @fg;
-    border: 1px solid alpha(@muted, 0.3);
+    border: 1px solid @line;
 }
+combobox box.horizontal > button:not(.suggested-action) label { color: @fg; }
 combobox box.horizontal > button:not(.suggested-action):hover {
-    border-color: @accent;
-    color: @fg;
+    background: @surfaceHi;
+}
+
+popover contents, popover > arrow {
+    background: #2c2c2e;
+    border: 1px solid @line;
 }

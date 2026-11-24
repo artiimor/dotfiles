@@ -32,7 +32,7 @@ Cuándo se ve el cambio: Quickshell, Hyprland, kitty, Ghostty y los Neovim abier
 y las apps GTK y Qt al volver a abrirlas; fzf y fastfetch (el Pepe, teñido con el
 acento) en terminales nuevas; hyprlock en el próximo bloqueo.
 
-Fuera de los temas (se quedan con Miami night): ReGreet y Plymouth. La pantalla
+Fuera de los temas: ReGreet (gris oscuro estilo macOS) y Plymouth ("sobrio"). La pantalla
 de bloqueo sigue con el Pepe de noche.
 
 ## Fondos de pantalla
@@ -66,7 +66,7 @@ perfiles). Se aplica al momento, sin cerrar sesión.
 
 | | Modo Mac | Modo normal (`default`) |
 |---|---|---|
-| Barra, notificaciones | macshell (config aparte, no incluida) | la de Quickshell de aquí |
+| Barra, notificaciones | macshell (`quickshell/macshell`) | la de Quickshell de aquí |
 | Super+Espacio / Super+Esc / Super+A | Spotlight / PowerMenu / centro de macshell | lanzador / menú de energía / notificaciones de aquí |
 | Ventanas | esquinas de 10 px y sombra | rectas, sombra por defecto |
 | hyprbars | gris Sur-Gris, Noto Sans, 32 px | color del tema, JetBrains Mono, 28 px |
