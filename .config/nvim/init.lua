@@ -17,7 +17,7 @@ vim.pack.add({
 -- Opciones: pensadas para ventanas pequeñas -------------------------------------
 local o = vim.o
 o.number = true
-o.relativenumber = true
+o.relativenumber = false
 o.numberwidth = 2 -- margen de números lo más estrecho posible
 o.signcolumn = "yes:1" -- una sola columna para diagnósticos/git, fija para que no baile
 o.laststatus = 3 -- una única statusline global
@@ -249,7 +249,7 @@ local function compact()
   for _, win in ipairs(vim.api.nvim_list_wins()) do
     if vim.api.nvim_win_get_config(win).relative == "" then
       vim.wo[win].number = not narrow
-      vim.wo[win].relativenumber = not narrow
+      vim.wo[win].relativenumber = false
       vim.wo[win].signcolumn = narrow and "no" or "yes:1"
     end
   end
