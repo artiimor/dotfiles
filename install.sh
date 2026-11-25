@@ -148,6 +148,47 @@ fix_home() {
 	return 0
 }
 
+# gen_monitors ARCHIVO: escribe un monitors.lua con una regla por pantalla conectada.
+# Las salidas salen de hyprctl si Hyprland está en marcha y si no de /sys/class/drm.
+# Escala a ojo por resolución (panel interno eDP/LVDS/DSI = portátil); si no divide
+# exacto la resolución, "auto". Si no detecta nada no toca el archivo (queda la regla general)
+gen_monitors() {
+	local out="$1" f name mode w h s rules=""
+	local -A seen=()
+	while read -r name mode; do
+		[[ -n "$name" && -z "${seen[$name]:-}" && "$mode" =~ ^([0-9]+)x([0-9]+) ]] || continue
+		seen[$name]=1 w=${BASH_REMATCH[1]} h=${BASH_REMATCH[2]} s=1
+		if [[ "$name" =~ ^(eDP|LVDS|DSI) ]]; then
+			if ((w >= 3200)); then s=2; elif ((w >= 2560)); then s=1.6; fi
+		elif ((w >= 3840)); then
+			s=1.5
+		fi
+		awk -v w="$w" -v h="$h" -v s="$s" 'BEGIN { x = w / s; y = h / s; exit !(x == int(x) && y == int(y)) }' || s=auto
+		rules+=$'\n'"hl.monitor({ output = \"$name\", mode = \"preferred\", position = \"auto\", scale = \"$s\" })"
+	done < <(
+		if [[ -n "${HYPRLAND_INSTANCE_SIGNATURE:-}" ]] && command -v jq >/dev/null; then
+			hyprctl monitors all -j 2>/dev/null | jq -r '.[] | "\(.name) \(.width)x\(.height)"'
+		else
+			for f in /sys/class/drm/card*-*/status; do
+				[[ "$(cat "$f" 2>/dev/null)" == connected ]] || continue
+				f="${f%/status}" name="${f##*/card}"
+				echo "${name#*-} $(head -1 "$f/modes" 2>/dev/null)"
+			done
+		fi
+	)
+	[[ -n "$rules" ]] || return 0
+	cat >"$out" <<-EOF
+		-- Monitor wiki https://wiki.hypr.land/Configuring/Basics/Monitors/
+		-- Creado por install.sh con las pantallas que había en la primera instalación;
+		-- a partir de aquí es tuyo (nombres: hyprctl monitors all). Escala calculada a ojo.
+
+		-- Regla general (output "" = cualquier pantalla, p. ej. una que se enchufe luego)
+		hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
+		$rules
+	EOF
+	info "monitors.lua generado con: ${!seen[*]}"
+}
+
 aur_install() {
 	local pkg dir
 	for pkg in "$@"; do
@@ -194,7 +235,11 @@ info "$REPO/.config -> ~/.config, .bashrc, .bash_profile, .profile, webapps, ico
 info "lo que se sobrescriba se guarda en $BACKUP"
 if ask "¿Copiarlos?"; then
 	command -v rsync >/dev/null || sudo pacman -S --needed --noconfirm rsync
+	# monitors.lua: si aún no existe (primera instalación) se genera con las pantallas detectadas
+	mon="$HOME/.config/hypr/config/monitors.lua"
+	[[ -e "$mon" ]] && mon=""
 	copy_tree "$REPO/.config" "$HOME/.config"
+	[[ -z "$mon" ]] || gen_monitors "$mon"
 	copy_tree "$REPO/.local/share/applications" "$HOME/.local/share/applications"
 	copy_tree "$REPO/.local/share/icons" "$HOME/.local/share/icons"
 	# -c: como copy_tree, pero solo se guarda copia si el contenido cambia (no por la fecha)

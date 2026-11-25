@@ -147,6 +147,11 @@ Details of step 3:
   relative path (e.g. `~/.dotfiles-old/20261119-120000/.config/hypr/hyprland.lua`). Copying is done with
   `rsync -a --backup`, so nothing in your `~/.config` is deleted, only overwritten. `hypr/config/monitors.lua`,
   `variables.lua`, `inputs.lua` and `themes/current` are only copied if you don't have them yet.
+- **Monitors**: on a first install (no `monitors.lua` yet) it writes one with a rule per connected output, read
+  from `hyprctl monitors` if Hyprland is running or from `/sys/class/drm` otherwise. Scale is a guess from the
+  resolution (internal panel ≥ 2560 wide → 1.6, ≥ 3200 → 2; external 4K → 1.5; `auto` if it wouldn't divide evenly),
+  plus a catch-all rule (`preferred`, `auto`, scale `auto`) for anything plugged in later. If nothing is detected
+  the repo's catch-all-only file stays, which works on any machine.
 - **Home path**: the few files that need an absolute path (`networkmanager-dmenu/config.ini` and the web app
   `.desktop` files) contain an `@HOME@` placeholder. The installer replaces it with your `$HOME` in those files only.
 - **Cursor**: downloads the black macOS cursor ([apple_cursor](https://github.com/ful1e5/apple_cursor) v2.0.1) into
@@ -476,7 +481,7 @@ Things you'll probably want to change after installing:
 | File | What |
 |---|---|
 | `~/.config/hypr/config/variables.lua` | Default terminal, file manager, editor, calculator; monitor name (`MONITOR1`); workspaces per monitor |
-| `~/.config/hypr/config/monitors.lua` | Resolution, position and scale (defaults to `preferred`, `auto`, scale 1) |
+| `~/.config/hypr/config/monitors.lua` | Resolution, position and scale (catch-all `preferred`, `auto`, scale `auto`; the installer adds one rule per detected output) |
 | `~/.config/hypr/config/inputs.lua` | Keyboard layout, mouse acceleration, gestures |
 | `~/.config/hypr/config/environment.lua` and `~/.config/uwsm/env` | Environment variables (NVIDIA lines are there, commented out) |
 | `~/.config/hypr/hyprsunset.conf` | Night light schedule and temperature |
