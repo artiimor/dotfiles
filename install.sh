@@ -7,6 +7,7 @@
 #
 # Pasos (cada uno se puede saltar):
 #   1. Paquetes del escritorio (pacman) y los de AUR (bzmenu, iconos WhiteSur) con makepkg
+#   1b. Gráfica: drivers que falten y variables de NVIDIA si es la principal (no en híbridos)
 #   2. Apps extra (Firefox, Brave, Spotify, Discord, Proton...)
 #   3. Dotfiles: .config (con macshell), .bashrc, webapps, iconos Sur -> ~ (lo que pisa va a ~/.dotfiles-old/<fecha>) y bash como shell
 #   4. Tema de colores (theme-set) y perfil Modo Mac / Modo normal (config-set)
@@ -210,6 +211,54 @@ aur_install() {
 	return 0
 }
 
+# Gráfica: detecta las GPU por PCI (clase 0x03xx) y ofrece los drivers que faltan.
+# NVIDIA solo recibe variables de entorno si es la principal (única, o la que usó el
+# firmware al arrancar: boot_vga). En un híbrido (iGPU + NVIDIA) forzarlas rompe la sesión.
+# Las variables van a ~/.config/uwsm/env.d/gpu, que se regenera en cada ejecución.
+gpu_setup() {
+	local d nvidia=0 intel=0 amd=0 primary=0 pkgs=() k
+	local env="$HOME/.config/uwsm/env.d/gpu" mark="# Generado por install.sh: NVIDIA es la gráfica principal"
+	for d in /sys/bus/pci/devices/*; do
+		[[ -r "$d/class" && "$(<"$d/class")" == 0x03* ]] || continue
+		case "$(<"$d/vendor")" in
+		0x10de) nvidia=1; [[ "$(cat "$d/boot_vga" 2>/dev/null)" == 1 ]] && primary=1 ;;
+		0x8086) intel=1 ;;
+		0x1002) amd=1 ;;
+		esac
+	done
+	((nvidia && !intel && !amd)) && primary=1
+	info "detectado:$( ((nvidia)) && printf ' NVIDIA')$( ((intel)) && printf ' Intel')$( ((amd)) && printf ' AMD')"
+	((intel)) && pkgs+=(intel-media-driver) # VA-API de Intel (AMD ya lo trae mesa)
+	if ((nvidia)); then
+		if pacman -Qq nvidia-utils &>/dev/null; then
+			info "drivers de NVIDIA ya instalados ($(pacman -Q nvidia-utils))"
+		elif command -v chwd >/dev/null; then
+			# CachyOS: chwd elige el driver adecuado para la tarjeta
+			ask "¿Instalar los drivers de NVIDIA con chwd?" && { sudo chwd -a || warn "chwd falló"; }
+		else
+			# Arch: módulo abierto (Turing/RTX 20 o posterior; las anteriores necesitan
+			# el driver propietario de su rama) con las cabeceras de cada kernel instalado
+			pkgs+=(nvidia-open-dkms nvidia-utils egl-wayland libva-nvidia-driver)
+			for k in /usr/lib/modules/*/pkgbase; do
+				[[ -r "$k" ]] && pkgs+=("$(<"$k")-headers")
+			done
+		fi
+	fi
+	((${#pkgs[@]})) && ask "¿Instalar ${pkgs[*]}?" && pacman_install "${pkgs[@]}"
+
+	if ((primary)); then
+		mkdir -p "${env%/*}"
+		printf '%s\n' "$mark" "export LIBVA_DRIVER_NAME=nvidia" \
+			"export __GLX_VENDOR_LIBRARY_NAME=nvidia" "export NVD_BACKEND=direct" >"$env"
+		info "variables de NVIDIA en ~/.config/uwsm/env.d/gpu"
+	else
+		((nvidia)) && info "NVIDIA en un híbrido: sin variables globales (la iGPU dibuja el escritorio)"
+		# solo se borra si lo generó este script
+		[[ -f "$env" ]] && head -1 "$env" | grep -qxF "$mark" && rm -f "$env"
+	fi
+	return 0
+}
+
 # ---------------------------------------------------------------- 1. paquetes
 
 step "1. Paquetes del escritorio"
@@ -219,6 +268,9 @@ if ask "¿Instalarlos?"; then
 	pacman_install "${DESKTOP[@]}" "${TERMINAL[@]}" "${FONTS[@]}" "${SYSTEM[@]}"
 	aur_install "${AUR[@]}"
 fi
+
+step "1b. Gráfica (GPU)"
+gpu_setup
 
 # ---------------------------------------------------------------- 2. apps
 
