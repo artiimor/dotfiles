@@ -11,7 +11,8 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    // Primer dispositivo de /sys/class/backlight ("" si no hay ninguno)
+    // Panel de /sys/class/backlight, por tipo raw > platform > firmware (así no se coge
+    // un acpi_video0 muerto si hay intel_backlight); "" si no hay ninguno
     property string device: ""
     readonly property bool available: device !== ""
     property int percent: 0
@@ -37,7 +38,7 @@ Singleton {
     // Busca el panel una vez al arrancar
     Process {
         running: true
-        command: ["sh", "-c", "for d in /sys/class/backlight/*; do [ -r \"$d/brightness\" ] && { echo \"$d\"; exit; }; done"]
+        command: ["sh", "-c", "for t in raw platform firmware; do for d in /sys/class/backlight/*; do [ -r \"$d/brightness\" ] && [ \"$(cat \"$d/type\" 2>/dev/null)\" = $t ] && { echo \"$d\"; exit; }; done; done"]
         stdout: StdioCollector {
             onStreamFinished: root.device = text.trim()
         }

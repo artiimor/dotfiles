@@ -216,7 +216,7 @@ aur_install() {
 # firmware al arrancar: boot_vga). En un híbrido (iGPU + NVIDIA) forzarlas rompe la sesión.
 # Las variables van a ~/.config/uwsm/env.d/gpu, que se regenera en cada ejecución.
 gpu_setup() {
-	local d nvidia=0 intel=0 amd=0 primary=0 pkgs=() k
+	local d nvidia=0 intel=0 amd=0 primary=0 pkgs=() nv=() k r=""
 	local env="$HOME/.config/uwsm/env.d/gpu" mark="# Generado por install.sh: NVIDIA es la gráfica principal"
 	for d in /sys/bus/pci/devices/*; do
 		[[ -r "$d/class" && "$(<"$d/class")" == 0x03* ]] || continue
@@ -238,16 +238,27 @@ gpu_setup() {
 		else
 			# Arch: módulo abierto (Turing/RTX 20 o posterior; las anteriores necesitan
 			# el driver propietario de su rama) con las cabeceras de cada kernel instalado
-			pkgs+=(nvidia-open-dkms nvidia-utils egl-wayland libva-nvidia-driver)
+			nv=(nvidia-open-dkms nvidia-utils egl-wayland libva-nvidia-driver)
+			# solo cabeceras que estén en los repos: nada derivado del sistema va a AUR
 			for k in /usr/lib/modules/*/pkgbase; do
-				[[ -r "$k" ]] && pkgs+=("$(<"$k")-headers")
+				[[ -r "$k" ]] && pacman -Si "$(<"$k")-headers" &>/dev/null && nv+=("$(<"$k")-headers")
 			done
+			# Se pregunta aunque haya --yes: en una tarjeta anterior a Turing el módulo
+			# abierto no funciona y nvidia-utils bloquea nouveau (sin gráficos al reiniciar)
+			read -rp "    ¿Instalar ${nv[*]}? (solo RTX 20/GTX 16 o posterior) [s/N] " r || r=""
+			[[ "$r" =~ ^[sSyY] ]] && { sudo pacman -S --needed --noconfirm "${nv[@]}" || warn "no se pudieron instalar los drivers de NVIDIA"; }
 		fi
 	fi
 	((${#pkgs[@]})) && ask "¿Instalar ${pkgs[*]}?" && pacman_install "${pkgs[@]}"
+	# Sin el driver propietario instalado, las variables romperían GLX y VA-API (nouveau)
+	if ((primary)) && ! pacman -Qq nvidia-utils &>/dev/null; then
+		warn "NVIDIA sin el driver propietario: no se ponen sus variables de entorno"
+		primary=0
+	fi
 
 	if ((primary)); then
 		mkdir -p "${env%/*}"
+		[[ -L "$env" ]] && rm -f "$env" # no escribir a través de un enlace (stow...)
 		printf '%s\n' "$mark" "export LIBVA_DRIVER_NAME=nvidia" \
 			"export __GLX_VENDOR_LIBRARY_NAME=nvidia" "export NVD_BACKEND=direct" >"$env"
 		info "variables de NVIDIA en ~/.config/uwsm/env.d/gpu"
@@ -446,7 +457,7 @@ if grep -qsi thinkpad /sys/class/dmi/id/product_version /sys/class/dmi/id/produc
 	info "ThinkPad detectado"
 	ask "$KEYD_Q" && KEYD=1
 elif ((!YES)); then
-	read -rp "    $KEYD_Q (no parece un ThinkPad) [s/N] " r
+	read -rp "    $KEYD_Q (no parece un ThinkPad) [s/N] " r || r=""
 	[[ "$r" =~ ^[sSyY] ]] && KEYD=1
 else
 	info "no parece un ThinkPad: se salta keyd"
