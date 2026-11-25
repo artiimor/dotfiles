@@ -214,8 +214,8 @@ def set_qt(p):
     if not cp.has_section("Appearance"):
         cp.add_section("Appearance")
     a = cp["Appearance"]
-    # $USER lo expande qt6ct (así venía en el repo)
-    a["color_scheme_path"] = f"/home/$USER/.config/qt6ct/colors/{p['qt_colors']}"
+    # Ruta absoluta del usuario actual (no se supone /home/$USER)
+    a["color_scheme_path"] = f"{CONF}/qt6ct/colors/{p['qt_colors']}"
     a["custom_palette"] = "true"
     a["icon_theme"] = p["icons"]
     a["style"] = p["qt_style"]

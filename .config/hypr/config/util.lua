@@ -5,7 +5,7 @@ local M = {}
 
 M.HOME = os.getenv("HOME")
 -- Config de macshell (barra del perfil "mac", en quickshell/macshell)
-M.MACSHELL_DIR = "~/.config/quickshell/macshell"
+M.MACSHELL_DIR = M.HOME .. "/.config/quickshell/macshell"
 
 -- true si el fichero existe (se puede abrir)
 function M.exists(path)

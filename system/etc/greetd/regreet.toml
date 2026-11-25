@@ -16,7 +16,8 @@ reboot = [ "systemctl", "reboot" ]
 poweroff = [ "systemctl", "poweroff" ]
 
 [appearance]
-greeting_msg = "cachyos-x8664"
+# install.sh lo cambia por el hostname de la máquina
+greeting_msg = "cachyos"
 
 [widget.clock]
 format = "%A, %d de %B  ·  %H:%M"
