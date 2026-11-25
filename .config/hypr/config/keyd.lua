@@ -5,6 +5,8 @@
 -- Option. Con el thinkpad.conf de este repo (system/etc/keyd, solo el intercambio)
 -- el resultado es el mismo. "keyd bind reset" sin argumentos vuelve a /etc/keyd.
 -- Necesita estar en el grupo keyd (install.sh lo hace; hay que volver a entrar).
+-- Solo se aplica si keyd está instalado y existe /etc/keyd/thinkpad.conf (lo pone
+-- install.sh si se elige keyd): en otros equipos no se toca el teclado.
 local binds = {
 	"main.leftalt=layer(meta)",
 	"main.leftmeta=layer(alt)",
@@ -25,5 +27,6 @@ table.insert(binds, "main.hhdiamond=layer(meta)")
 table.insert(binds, "main.hhalt=layer(alt)")
 
 hl.on("hyprland.start", function()
-	hl.exec_cmd("keyd bind reset '" .. table.concat(binds, "' '") .. "'")
+	hl.exec_cmd("[ -e /etc/keyd/thinkpad.conf ] && command -v keyd >/dev/null && keyd bind reset '"
+		.. table.concat(binds, "' '") .. "'")
 end)

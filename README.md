@@ -137,7 +137,7 @@ When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 | **3b. Shell** | If your login shell isn't bash (CachyOS defaults to fish), offers `chsh -s /bin/bash`. |
 | **4. Theme and profile** | Runs `theme-set <theme>` (your current theme if you already had one, otherwise **grafito**) and `config-set --reapply` (keeps your profile; Mac mode on a fresh install). |
 | **5. hyprbars** | Clones `hyprwm/hyprland-plugins` at the tag matching your installed Hyprland (falls back to `vX.Y.0`), applies the two patches in `.config/hypr/`, builds it and copies `hyprbars.so` to `~/.local/lib/hyprland/`. Then offers to remove the apps' own window buttons (GTK `button-layout`, and Brave's "use system title bar", only if Brave is closed). |
-| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname, disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
+| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname, disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group. The default answer depends on the hardware: yes if a ThinkPad is detected via DMI, no otherwise, and `--yes` follows that default); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
 
 Details of step 3:
 
@@ -414,7 +414,8 @@ The screen locks after 5 minutes idle (`hypr/hypridle.conf`).
 - swaps **left Alt** and **left Super**, so the key next to the space bar acts as Super;
 - turns **Caps Lock** into **Control**.
 
-In addition, `.config/hypr/config/keyd.lua` runs `keyd bind reset …` when Hyprland starts. It re-applies the same
+In addition, when Hyprland starts `.config/hypr/config/keyd.lua` runs `keyd bind reset …`, but only if `keyd` is
+installed and `/etc/keyd/thinkpad.conf` exists (i.e. you chose keyd in the installer). It re-applies the same
 Alt/Super swap at runtime, resets some Alt-layer keys to their plain behavior (left over from a Mac-style keyd layout),
 and leaves an HHKB keyboard unswapped (that part uses aliases from a `hhkb.conf` that isn't in this repo).
 `keyd bind` needs your user to be in the `keyd` group (the installer adds it; log out and back in).
@@ -422,8 +423,10 @@ and leaves an HHKB keyboard unswapped (that part uses aliases from a `hhkb.conf`
 xkb itself uses `us` with the `altgr-intl` variant (AltGr+vowel = accented vowel, AltGr+n = ñ) and `caps:none`
 (`.config/hypr/config/inputs.lua`).
 
-If you don't have a ThinkPad, skip the keyd step of the installer and consider removing the `require("config.keyd")`
-line from `hyprland.lua` (see [Troubleshooting](#troubleshooting)).
+The installer detects a ThinkPad (`/sys/class/dmi/id/product_version` / `product_family`) and only defaults to yes
+there; on other machines it defaults to no (and `--yes` skips it). Without `/etc/keyd/thinkpad.conf`, `keyd.lua` does
+nothing, so other keyboards keep their normal layout. To opt in on another laptop with an AT keyboard, answer yes in
+the installer (or copy `system/etc/keyd/thinkpad.conf` to `/etc/keyd/` and enable keyd).
 
 ## Repository structure
 
@@ -530,7 +533,7 @@ There's no uninstall script. To go back:
 | `hyprbars` build fails: no tag `vX.Y.Z` | `hyprland-plugins` only tags some releases; the installer already falls back to `vX.Y.0`. For a brand-new Hyprland, wait for the tag. |
 | Mac mode looks exactly like Normal mode | macshell isn't at `~/.config/quickshell/macshell/`: re-run installer step 3. |
 | Missing icons in Mac mode | Sur inherits from WhiteSur: check that `whitesur-icon-theme` (AUR) is installed. |
-| Super shortcuts do nothing, or Alt and Super are swapped on a non-ThinkPad keyboard | `hypr/config/keyd.lua` rebinds keyd at startup. If you run keyd with your own configs, remove `require("config.keyd")` from `hyprland.lua` and run `keyd bind reset`. If you're not in the `keyd` group, log out and back in after the installer adds you. |
+| Super shortcuts do nothing, or Alt and Super are swapped on a non-ThinkPad keyboard | `hypr/config/keyd.lua` rebinds keyd at startup, only when `/etc/keyd/thinkpad.conf` exists. If you don't want the swap, remove that file and run `keyd bind reset`; if you run keyd with your own configs that include `thinkpad.conf`, remove `require("config.keyd")` from `hyprland.lua`. If you're not in the `keyd` group, log out and back in after the installer adds you. |
 | Bar, launcher or wallpaper missing | Start Quickshell by hand to see errors: `qs` (and `qs -p ~/.config/quickshell/macshell` in Mac mode). |
 | Colors look wrong or half-applied | `~/.config/themes/theme-set --reapply`, then reopen GTK/Qt apps and btop. |
 | Qt apps ignore the theme | They need `QT_QPA_PLATFORMTHEME=qt6ct` (set in `uwsm/env` and `environment.lua`); log in through the uwsm session. |

@@ -340,7 +340,21 @@ if ask "¿Tema de arranque Plymouth \"sobrio\" (gris neutro)?"; then
 	fi
 fi
 
-if ask "¿Teclado del portátil con keyd: intercambiar Alt y Super y CapsLock como Control (hecho para ThinkPad)?"; then
+# keyd: thinkpad.conf es para el teclado interno del ThinkPad. Se detecta por DMI: en un
+# ThinkPad la respuesta por defecto es sí; en otro equipo es no (también con --yes).
+# hypr/config/keyd.lua solo cambia keyd si existe /etc/keyd/thinkpad.conf.
+KEYD_Q="¿Teclado del portátil con keyd: intercambiar Alt y Super y CapsLock como Control (hecho para ThinkPad)?"
+KEYD=0
+if grep -qsi thinkpad /sys/class/dmi/id/product_version /sys/class/dmi/id/product_family; then
+	info "ThinkPad detectado"
+	ask "$KEYD_Q" && KEYD=1
+elif ((!YES)); then
+	read -rp "    $KEYD_Q (no parece un ThinkPad) [s/N] " r
+	[[ "$r" =~ ^[sSyY] ]] && KEYD=1
+else
+	info "no parece un ThinkPad: se salta keyd"
+fi
+if ((KEYD)); then
 	install_sys "$S/etc/keyd/thinkpad.conf" /etc/keyd/thinkpad.conf
 	sudo systemctl enable --now keyd
 	# hypr/config/keyd.lua cambia el mapa con "keyd bind": hace falta el grupo keyd
