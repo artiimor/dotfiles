@@ -91,7 +91,9 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 - **Quickshell** (`.config/quickshell`) replaces waybar, wofi, swaync, swayosd, hyprpaper, hyprlock and the polkit agent:
   bar, app launcher and menus (power, power profiles, clipboard, emoji, themes, backgrounds, profiles, keybinding cheatsheet,
   file search, Wi-Fi via `networkmanager_dmenu` and Bluetooth via `bzmenu`), notifications, volume/brightness OSD, night light
-  (hyprsunset), wallpaper, lock screen and polkit dialog. `hyprlock` stays as a fallback.
+  (hyprsunset), wallpaper, lock screen and polkit dialog. `hyprlock` stays as a fallback. Laptop or desktop is detected at runtime:
+  the battery indicator only shows when UPower reports a laptop battery, and brightness (bar, sliders, OSD, keys) only when
+  there is a panel in `/sys/class/backlight`, in both profiles.
 - **Two desktop profiles**, *Modo Mac* and *Modo normal*, switchable live with **Super+Shift+T** (`config-set`).
 - **Per-workspace desktop mode** (**Super+Alt+D**): floating windows, minimize, a dock and macOS-style edge snapping.
 - **macOS-style titlebars** (close / minimize / maximize) on floating windows, using a patched `hyprbars` plugin.
@@ -396,7 +398,7 @@ keycode, so they also work on AZERTY layouts.
 |---|---|
 | Volume up / down / mute, mic mute | `wpctl` (volume capped at 100%, OSD shown by Quickshell) |
 | Play / pause / next / previous | `playerctl` |
-| Brightness up / down | Quickshell brightness service (with OSD) |
+| Brightness up / down | Quickshell brightness service (with OSD; first device in `/sys/class/backlight`, does nothing on desktops without one) |
 | 4-finger horizontal swipe | Switch workspace |
 | 3-finger swipe down | Close window |
 | 3-finger swipe up | Fullscreen |

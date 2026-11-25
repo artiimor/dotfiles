@@ -87,6 +87,7 @@ PanelWindow {
 
     Connections {
         target: Brightness
+        enabled: Brightness.available
         function onPercentChanged() {
             const p = Brightness.percent;
             osd.show(["󰃞", "󰃟", "󰃠"][Math.min(2, Math.floor(p / 34))], p / 100, false);

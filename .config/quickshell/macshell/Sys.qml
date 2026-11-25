@@ -61,27 +61,33 @@ Singleton {
                                                 || battery.state === UPowerDeviceState.PendingCharge)
 
     // ── brightness (brightnessctl, goes through logind) ──
+    // Solo con panel retroiluminado (portátil); en un sobremesa no hay
+    // /sys/class/backlight y el Control Center esconde el slider.
+    // -c backlight: sin él brightnessctl podría coger un LED del teclado.
+    property bool hasBacklight: false
     property real brightness: 1
     property real _pending: -1
     function setBrightness(v) {
+        if (!hasBacklight) return;
         brightness = Math.max(0.02, v);
         _pending = brightness;
         if (!setProc.running) _flush();
     }
     function _flush() {
         if (_pending < 0) return;
-        setProc.command = ["brightnessctl", "-q", "set", Math.round(_pending * 100) + "%"];
+        setProc.command = ["brightnessctl", "-q", "-c", "backlight", "set", Math.round(_pending * 100) + "%"];
         _pending = -1;
         setProc.running = true;
     }
     Process { id: setProc; onExited: sys._flush() }
     Process {
         id: getProc
-        command: ["brightnessctl", "-m"]
+        command: ["brightnessctl", "-m", "-c", "backlight"]
         stdout: StdioCollector {
             onStreamFinished: {
                 const f = text.trim().split(",");
-                if (f.length >= 4) sys.brightness = parseInt(f[3]) / 100;
+                sys.hasBacklight = f.length >= 4 && f[1] === "backlight";
+                if (sys.hasBacklight) sys.brightness = parseInt(f[3]) / 100;
             }
         }
     }

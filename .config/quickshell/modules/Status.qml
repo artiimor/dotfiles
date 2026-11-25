@@ -1,5 +1,6 @@
 // Estado: una sola isla a la derecha con lo de siempre a la vista (audio,
-// brillo, red, bluetooth, batería). Al pasar el ratón se despliega hacia la
+// brillo, red, bluetooth, batería; brillo y batería solo si el equipo los
+// tiene, así en un sobremesa no salen). Al pasar el ratón se despliega hacia la
 // izquierda el resto (como el reloj: el cajón cuelga por fuera, así lo fijo
 // no se mueve): memoria, temperatura, perfil de energía y apagado.
 // La campana solo aparece si hay notificaciones (Super+A abre el panel igual).
@@ -126,8 +127,9 @@ Item {
         }
 
         // ── Brillo ────────────────────────────────────────────
-        // Rueda: brillo ±5%
+        // Rueda: brillo ±5% · Solo con panel retroiluminado (portátil)
         BarIcon {
+            visible: Brightness.available
             icon: ["󰃞", "󰃟", "󰃠"][Math.min(2, Math.floor(Brightness.percent / 34))]
             padding: 10
             color: Theme.yellow
@@ -175,7 +177,9 @@ Item {
         }
 
         // ── Batería ───────────────────────────────────────────
+        // Solo si UPower ve una batería de portátil (en un sobremesa no hay)
         readonly property UPowerDevice battery: UPower.displayDevice
+        readonly property bool hasBattery: battery?.isLaptopBattery ?? false
         readonly property int percent: {
             const p = battery?.percentage ?? 0;
             return Math.round(p > 1 ? p : p * 100);
@@ -193,6 +197,7 @@ Item {
 
         BarIcon {
             id: batteryIcon
+            visible: root.hasBattery
             readonly property bool warning: !root.charging && root.percent <= 30
             readonly property bool critical: !root.charging && !root.plugged && root.percent <= 15
 

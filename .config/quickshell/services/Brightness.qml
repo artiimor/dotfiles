@@ -1,4 +1,7 @@
-// Brillo de la pantalla del portátil (lee /sys, cambia con brightnessctl).
+// Brillo de la pantalla (lee /sys, cambia con brightnessctl). Solo hay algo
+// que controlar si existe un panel con retroiluminación (/sys/class/backlight):
+// en un sobremesa no lo hay y `available` queda en false, así la barra, el
+// panel de notificaciones y el OSD esconden el brillo.
 pragma Singleton
 
 import QtQuick
@@ -8,14 +11,19 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    readonly property string device: "/sys/class/backlight/amdgpu_bl1"
+    // Primer dispositivo de /sys/class/backlight ("" si no hay ninguno)
+    property string device: ""
+    readonly property bool available: device !== ""
     property int percent: 0
 
     function raise() { set("5%+"); }
     function lower() { set("5%-"); }
 
     function set(value) {
-        setter.command = ["brightnessctl", "--min-value=1", "set", value];
+        if (!available)
+            return;
+        // -d: siempre el panel detectado (sin él brightnessctl podría coger un LED)
+        setter.command = ["brightnessctl", "-d", device.split("/").pop(), "--min-value=1", "set", value];
         setter.running = true;
     }
 
@@ -24,6 +32,15 @@ Singleton {
         target: "brightness"
         function up(): void { root.raise(); }
         function down(): void { root.lower(); }
+    }
+
+    // Busca el panel una vez al arrancar
+    Process {
+        running: true
+        command: ["sh", "-c", "for d in /sys/class/backlight/*; do [ -r \"$d/brightness\" ] && { echo \"$d\"; exit; }; done"]
+        stdout: StdioCollector {
+            onStreamFinished: root.device = text.trim()
+        }
     }
 
     Process {
@@ -35,18 +52,18 @@ Singleton {
     // (por si cambias el brillo con las teclas)
     Timer {
         interval: 2000
-        running: true
+        running: root.available
         repeat: true
         onTriggered: current.reload()
     }
 
     FileView {
         id: max
-        path: root.device + "/max_brightness"
+        path: root.available ? root.device + "/max_brightness" : ""
     }
     FileView {
         id: current
-        path: root.device + "/brightness"
+        path: root.available ? root.device + "/brightness" : ""
         onLoaded: {
             const m = Number(max.text());
             if (m > 0)

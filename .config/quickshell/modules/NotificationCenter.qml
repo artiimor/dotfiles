@@ -225,7 +225,9 @@ PanelWindow {
                 onMoved: v => audio.volume = v
             }
 
+            // Brillo: solo si hay panel retroiluminado (portátil)
             SliderRow {
+                visible: Brightness.available
                 Layout.fillWidth: true
                 icon: "󰃟"
                 iconColor: Theme.yellow

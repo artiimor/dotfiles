@@ -67,7 +67,9 @@ ColumnLayout {
         }
     }
 
+    // Brillo: solo si hay panel retroiluminado (portátil)
     Tile {
+        visible: Sys.hasBacklight
         Layout.fillWidth: true
         implicitHeight: dispCol.implicitHeight + 20
         ColumnLayout {
