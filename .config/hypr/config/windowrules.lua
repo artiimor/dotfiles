@@ -119,3 +119,8 @@ hl.window_rule({
     no_focus = true,
 })
 
+-- Menús de macshell (popups de la barra, centro de notificaciones/calendario,
+-- Spotlight y PowerMenu) sin animación de fundido: mientras la capa se desvanece,
+-- Hyprland no dibuja la parte de las ventanas que tenía debajo y la barra de título
+-- de hyprbars parpadea justo donde se solapaban
+hl.layer_rule({ match = { namespace = "^macshell-(popup|center|spotlight|power)$" }, no_anim = true })
