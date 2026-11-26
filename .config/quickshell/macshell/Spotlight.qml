@@ -28,6 +28,7 @@ OverlayWindow {
     property int sel: 0
     property var fileHits: []
     property string calc: ""
+    property string calcQuery: ""   // la cuenta de `calc` (puede ir por detrás de query hasta que responde qalc)
 
     readonly property var apps: DesktopEntries.applications.values.filter(e => !e.noDisplay)
 
@@ -65,7 +66,7 @@ OverlayWindow {
                 sub: (e.genericName && e.genericName !== e.name) ? e.genericName : "", icon: e.icon }))],
             ["Documents", fileHits.map(f => ({ kind: "item", type: "file", path: f.path, title: f.name, sub: f.dir, icon: f.icon }))]
         ];
-        let top = calc !== "" ? { type: "calc", title: calc, sub: q + " =", icon: "accessories-calculator" } : null;
+        let top = calc !== "" ? { type: "calc", title: calc, sub: calcQuery + " =", icon: "accessories-calculator" } : null;
         const out = [];
         for (const [title, items] of sections) {
             if (!top && items.length) {
@@ -116,8 +117,10 @@ OverlayWindow {
             onStreamFinished: {
                 // salida vacía: proceso cortado por una consulta más nueva
                 const t = text.trim();
-                if (calcProc.q === win.query && t)
+                if (calcProc.q === win.query && t) {
                     win.calc = !/error|warning/i.test(t) && t !== calcProc.q ? t : "";
+                    win.calcQuery = calcProc.q;
+                }
             }
         }
     }
