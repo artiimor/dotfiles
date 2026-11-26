@@ -12,7 +12,7 @@ OverlayWindow {
     id: win
 
     function setQuery(q) { field.text = q; }
-    onShown: { field.text = ""; sel = 0; field.forceActiveFocus(); }
+    onShown: { field.text = ""; sel = 0; launching = null; field.forceActiveFocus(); }
 
     WlrLayershell.namespace: "macshell-spotlight"
 
@@ -97,9 +97,19 @@ OverlayWindow {
         list.positionViewAtIndex(selectable[sel], ListView.Contain);
     }
 
+    // Se lanza al terminar de desvanecerse: si la capa se quitara después, Hyprland
+    // daría el teclado a la ventana de debajo y se lo quitaría a lo recién abierto
+    // con teclado exclusivo (las preguntas de webapp en el lanzador de la raíz)
+    property var launching: null
     function activate(r) {
         if (!r) return;
+        launching = r;
         close();
+    }
+    onVisibleChanged: {
+        const r = launching;
+        if (visible || !r) return;
+        launching = null;
         switch (r.type) {
         case "app": r.entry.execute(); break;
         case "file": Quickshell.execDetached(["xdg-open", r.path]); break;

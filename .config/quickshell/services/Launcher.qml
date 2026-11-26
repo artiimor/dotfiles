@@ -12,7 +12,7 @@
 //   configs     perfil del escritorio: Modo Mac / Modo normal  (Super+Shift+T)
 //   keys        chuleta de atajos de Hyprland     (Super+?)
 //   dmenu       menú genérico para scripts: lo usa scripts/dmenu-qs
-//               (wifi con networkmanager_dmenu, bluetooth con bzmenu)
+//               (wifi con networkmanager_dmenu, bluetooth con bzmenu, webapp)
 pragma Singleton
 
 import QtQuick
@@ -28,14 +28,15 @@ Singleton {
     property string prompt: ""
     property bool password: false  // dmenu: ocultar lo que escribes
     property var items: []         // [{ text, icon, glyph, sub, data }]
+    signal shown()                 // cada vez que se abre un modo o llega una pregunta de dmenu
 
     // Cada modo: ancho de la ventana (como estaba en wofi), título, de dónde salen
     // las filas (`items`, una función que se queda enlazada, o `proc`, un proceso
     // que las rellena al terminar), si va sin buscador (menús cortos), si
     // enseña la descripción corta (`sub`) a la derecha y sus pestañas (`tabs`:
     // cada fila dice en cuál va con `tab`, su índice). Los que no tienen ancho
-    // propio (profiles, y dmenu, que no está) salen arriba a la derecha, junto a
-    // la barra, con 320 px; los demás, centrados.
+    // propio (profiles, y dmenu sin -c) salen arriba a la derecha, junto a la
+    // barra, con 320 px; los demás, centrados.
     readonly property var modes: ({
         // Sin título: la lupa ya dice que es un buscador
         apps: { width: 360, prompt: "", items: () => root.apps, showSub: true },
@@ -61,7 +62,7 @@ Singleton {
             ];
         } }
     })
-    readonly property var modeInfo: modes[mode] ?? {}
+    readonly property var modeInfo: (mode === "dmenu" ? dmenuInfo : modes[mode]) ?? {}
     readonly property int width: modeInfo.width ?? 320
     readonly property bool centered: !!modeInfo.width
     readonly property bool noSearch: !!modeInfo.noSearch
@@ -95,6 +96,7 @@ Singleton {
             items = Qt.binding(d.items);
         }
         open = true;
+        shown();
     }
 
     function close() {
@@ -341,17 +343,21 @@ Singleton {
     // ── dmenu (para scripts) ──────────────────────────────
     // scripts/dmenu-qs deja las opciones en <dir>/items y espera la respuesta
     // en el fifo <dir>/out. Cadena vacía = cancelado.
+    // Con `center` (dmenu-qs -c, lo usa webapp) sale centrado y más ancho.
     property string dmenuDir: ""
+    property var dmenuInfo: ({})
 
-    function showDmenu(dir, p, pass) {
+    function showDmenu(dir, p, pass, center) {
         cancelDmenu();
         dmenuDir = dir;
+        dmenuInfo = center ? { width: 420 } : {};
         mode = "dmenu";
         prompt = p || "Elegir";
         password = pass;
         items = [];
         dmenuItems.path = dir + "/items";
         open = true;
+        shown();
     }
 
     function answerDmenu(text) {
@@ -380,6 +386,6 @@ Singleton {
         function configs(): void { root.toggle("configs"); }
         function keys(): void { root.toggle("keys"); }
         function close(): void { root.close(); }
-        function dmenu(dir: string, prompt: string, password: bool): void { root.showDmenu(dir, prompt, password); }
+        function dmenu(dir: string, prompt: string, password: bool, center: bool): void { root.showDmenu(dir, prompt, password, center); }
     }
 }

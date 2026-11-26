@@ -10,7 +10,7 @@
 
 APPS="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
 ICONS="$APPS/icons"
-menu() { "$(dirname "$0")/dmenu-qs" -p "$1"; }
+menu() { "$(dirname "$0")/dmenu-qs" -c -p "$1"; }
 say() { notify-send -a Webapps "$@"; }
 fail() { say -u critical "No se pudo" "$1"; exit 1; }
 

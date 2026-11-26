@@ -52,11 +52,15 @@ PanelWindow {
         onCleared: Launcher.close()
     }
 
-    // Al abrir: buscador vacío y foco en él
-    onVisibleChanged: if (visible) {
-        search.text = "";
-        list.currentIndex = 0;
-        search.forceActiveFocus();
+    // Cada vez que se abre un modo o llega una pregunta de dmenu (aunque la
+    // ventana ya estuviera abierta): buscador vacío, primera fila y foco en él
+    Connections {
+        target: Launcher
+        function onShown() {
+            search.text = "";
+            list.currentIndex = 0;
+            search.forceActiveFocus();
+        }
     }
 
     // ── Filtrado ──────────────────────────────────────────

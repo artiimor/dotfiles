@@ -4,6 +4,7 @@
 #
 #   printf 'uno\ndos\n' | dmenu-qs -p "Elige"
 #   dmenu-qs -P -p "Contraseña" < /dev/null      (oculta lo que escribes)
+#   dmenu-qs -c -p "URL" < /dev/null             (en el centro, no bajo la barra)
 #
 # networkmanager_dmenu solo pasa el prompt y la opción de contraseña a los
 # lanzadores que conoce, así que se le llama a través del enlace "wmenu" de
@@ -11,10 +12,12 @@
 
 prompt=""
 password=false
+center=false
 while [ $# -gt 0 ]; do
     case "$1" in
         -p | --prompt) prompt="$2"; shift ;;
         -P | --password) password=true ;;
+        -c | --center) center=true ;;
     esac
     shift
 done
@@ -25,7 +28,7 @@ trap 'rm -rf "$dir"' EXIT
 cat > "$dir/items"
 mkfifo "$dir/out"
 
-qs ipc call launcher dmenu "$dir" "$prompt" "$password" >/dev/null || exit 1
+qs ipc call launcher dmenu "$dir" "$prompt" "$password" "$center" >/dev/null || exit 1
 
 # Si Quickshell se recarga o se reinicia mientras esperas, el lanzador nuevo no
 # sabe de esta petición y nadie escribiría en el fifo: a los 10 min se da por
