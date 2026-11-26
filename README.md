@@ -353,7 +353,7 @@ Without the plugin everything else still works, just without titlebars.
 
 ## Keybindings
 
-**Super+/** (or Super+Alt+K) shows the cheatsheet on screen. All of these come from `.config/hypr/config/binds.lua` and
+**Super+/** shows the cheatsheet on screen. All of these come from `.config/hypr/config/binds.lua` and
 `desktopmode.lua`. "Super" is whatever key Hyprland receives as Super; on the ThinkPad keyd config it's the physical
 left **Alt** key (see [keyd](#keyboard-remapping-keyd)).
 
@@ -378,9 +378,9 @@ left **Alt** key (see [keyd](#keyboard-remapping-keyd)).
 | Super+Shift+T | Profile menu (Modo Mac / Modo normal) |
 | Super+Ctrl+B | Background picker |
 | Super+Ctrl+Shift+B | Next background |
-| Super+/ or Super+Alt+K | Keybinding cheatsheet |
+| Super+/ | Keybinding cheatsheet |
 | Super+Shift+P | Screenshot of a region (hyprshot) |
-| Super+Alt+L | Lock screen |
+| Super+Ctrl+L | Lock screen |
 
 ### Windows
 
@@ -392,7 +392,7 @@ left **Alt** key (see [keyd](#keyboard-remapping-keyd)).
 | Super+Shift+H / J / K / L | Move window left / down / up / right |
 | Super+D | Toggle floating / tiling |
 | Super+Shift+M | Maximize (toggle) |
-| Super+Alt+J | Toggle split direction |
+| Super+Ctrl+J | Toggle split direction |
 | Super+Alt+D | Toggle desktop mode on this workspace |
 | Super+M | Minimize |
 | Alt+Tab | Next window (brings it to the front) |

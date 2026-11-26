@@ -2,7 +2,7 @@
 // comprobar la contraseña con PAM); el aspecto está en modules/LockSurface.qml.
 //
 // Se bloquea con `qs ipc call lock lock` (lo hace hypridle al ejecutar
-// `loginctl lock-session`, que es lo que usan Super+Alt+L y el menú de energía).
+// `loginctl lock-session`, que es lo que usan Super+Ctrl+L y el menú de energía).
 // A propósito NO hay forma de desbloquear desde fuera: solo con la contraseña.
 pragma Singleton
 

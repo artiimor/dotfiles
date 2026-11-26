@@ -35,7 +35,7 @@ hl.bind(mainMod .. " + SHIFT + Escape", hl.dsp.exec_cmd("hyprctl kill"), { descr
 hl.bind(mainMod .. " + W", hl.dsp.window.close(), { description = "Cerrar ventana" })
 hl.bind(mainMod .. " + D", hl.dsp.window.float({ action = "toggle" }), { description = "Flotante / tiling" })
 hl.bind(mainMod .. " + SHIFT + M", hl.dsp.window.fullscreen({ mode = 1 }), { description = "Maximizar" })
-hl.bind(mainMod .. " + ALT + J", hl.dsp.layout("togglesplit"), { description = "Cambiar división" })
+hl.bind(mainMod .. " + CTRL + J", hl.dsp.layout("togglesplit"), { description = "Cambiar división" })
 
 -- Change focus. Si la ventana que recibe el foco es flotante, sale delante de las demás
 -- flotantes (bring_to_top); en tiling no cambia nada
@@ -125,7 +125,6 @@ hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("qs ipc call launcher configs
 hl.bind(mainMod .. " + CTRL + B", hl.dsp.exec_cmd("qs ipc call launcher backgrounds"), { description = "Fondo de pantalla" })
 hl.bind(mainMod .. " + CTRL + SHIFT + B", hl.dsp.exec_cmd("~/.config/themes/background-set --next"), { description = "Siguiente fondo" })
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("qs ipc call launcher keys"), { description = "Chuleta de atajos" })
-hl.bind(mainMod .. " + ALT + K", hl.dsp.exec_cmd("qs ipc call launcher keys"))
 
 ---------------------------
 ---- HARDWARE CONTROLS ----
@@ -169,7 +168,7 @@ if not PROFILE_MAC then
 end
 
 -- Lock
-hl.bind(mainMod .. " + ALT + L", hl.dsp.exec_cmd("loginctl lock-session"), { description = "Bloquear" })
+hl.bind(mainMod .. " + CTRL + L", hl.dsp.exec_cmd("loginctl lock-session"), { description = "Bloquear" })
 -------------------------------
 ---- WORKSPACES & MONITORS ----
 -------------------------------
