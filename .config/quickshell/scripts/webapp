@@ -69,8 +69,9 @@ create() {
 	name=$(printf '%s' "$name" | tr -d '[:cntrl:]' | sed 's/^ *//; s/ *$//')
 	[ -n "$name" ] || fail "El nombre está vacío"
 
-	url=$(menu "URL (https://…)" </dev/null) || exit 0
-	[[ $url =~ ^https?://[^/[:space:]]+[^[:space:][:cntrl:]]*$ ]] || fail "URL no válida: debe empezar por https:// o http://"
+	url=$(menu "URL (p. ej. youtube.com)" </dev/null) || exit 0
+	[[ $url =~ ^[[:alpha:]]+:// ]] || url="https://$url"  # sin esquema: https:// por defecto
+	[[ $url =~ ^https?://[^/[:space:]]+[^[:space:][:cntrl:]]*$ ]] || fail "URL no válida"
 	host=${url#*://}
 	host=${host%%[/?#]*}
 	host=${host##*@}
