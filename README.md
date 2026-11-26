@@ -108,6 +108,7 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 - **System extras** (optional, under `system/`): greetd + ReGreet login screen, the "sobrio" Plymouth boot theme (plain neutral gray)
   and a keyd config for a ThinkPad keyboard.
 - **Web apps** (`.local/share/applications`): Proton Mail, Proton Calendar, Proton Drive, WhatsApp and YouTube as Brave app windows.
+  "Crear webapp" and "Quitar webapp" in the launcher (and Spotlight) add or remove your own (`quickshell/scripts/webapp`).
 
 ## Requirements
 

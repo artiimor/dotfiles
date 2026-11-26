@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # dmenu hecho con Quickshell: lee opciones por stdin y escribe la elegida por
-# stdout (sale con 1 si cancelas). Lo usan networkmanager_dmenu y bzmenu.
+# stdout (sale con 1 si cancelas). Lo usan networkmanager_dmenu, bzmenu y webapp.
 #
 #   printf 'uno\ndos\n' | dmenu-qs -p "Elige"
 #   dmenu-qs -P -p "Contraseña" < /dev/null      (oculta lo que escribes)

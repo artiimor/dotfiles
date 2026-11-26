@@ -1,0 +1,127 @@
+#!/usr/bin/env bash
+# Crea o quita webapps: un .desktop en ~/.local/share/applications que abre la
+# web en una ventana propia del navegador (--app=URL), con su icono en icons/.
+# Las preguntas van por el lanzador de Quickshell (dmenu-qs, de esta carpeta),
+# que funciona igual en Modo normal y en Modo Mac. Lo llaman las entradas
+# "Crear webapp" y "Quitar webapp" del lanzador.
+#
+#   webapp            pide nombre, URL e icono (URL de una imagen o el de la web)
+#   webapp --remove   elige una webapp y la borra, con su icono
+
+APPS="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
+ICONS="$APPS/icons"
+menu() { "$(dirname "$0")/dmenu-qs" -p "$1"; }
+say() { notify-send -a Webapps "$@"; }
+fail() { say -u critical "No se pudo" "$1"; exit 1; }
+
+# Pide que se elija "Sí, $1" frente a "No"
+confirm() { [ "$(printf 'No\nSí, %s\n' "$1" | menu "¿Seguro?")" = "Sí, $1" ]; }
+
+# Valor de una clave en un .desktop
+field() { sed -n "s/^$2=//p" "$1" | head -n 1; }
+
+# Descarga una imagen ($1) a $ICONS/$2.<ext> y escribe la ruta; falla si no lo es
+fetch_icon() {
+	local tmp ext
+	tmp=$(mktemp) || return 1
+	if curl -fsL --max-time 10 --max-filesize 5000000 -o "$tmp" -- "$1"; then
+		case $(file -b --mime-type "$tmp") in
+			image/png) ext=png ;;
+			image/svg+xml) ext=svg ;;
+			image/jpeg) ext=jpg ;;
+			image/x-icon | image/vnd.microsoft.icon) ext=ico ;;
+		esac
+	fi
+	if [ -z "$ext" ]; then
+		rm -f "$tmp"
+		return 1
+	fi
+	mkdir -p "$ICONS"
+	chmod 644 "$tmp"
+	mv "$tmp" "$ICONS/$2.$ext" && printf '%s\n' "$ICONS/$2.$ext"
+}
+
+remove() {
+	local files=() names=() f choice i
+	for f in "$APPS"/*.desktop; do
+		grep -q -- '--app=' "$f" 2>/dev/null || continue
+		files+=("$f")
+		names+=("$(field "$f" Name)")
+	done
+	[ ${#files[@]} -gt 0 ] || fail "No hay ninguna webapp"
+	choice=$(printf '%s\n' "${names[@]}" | menu "Quitar webapp") || exit 0
+	for i in "${!names[@]}"; do
+		[ "${names[$i]}" = "$choice" ] || continue
+		confirm "borrar $choice" || exit 0
+		f=$(field "${files[$i]}" Icon)
+		# El icono solo se borra si es uno de los nuestros
+		case $f in "$ICONS"/*) rm -f -- "$f" ;; esac
+		rm -f -- "${files[$i]}"
+		say "Webapp borrada" "$choice"
+		exit 0
+	done
+	fail "No existe la webapp «$choice»"
+}
+
+create() {
+	local name url icon slug host browser file arg dirs d
+	name=$(menu "Nombre de la webapp" </dev/null) || exit 0
+	name=$(printf '%s' "$name" | tr -d '[:cntrl:]' | sed 's/^ *//; s/ *$//')
+	[ -n "$name" ] || fail "El nombre está vacío"
+
+	url=$(menu "URL (https://…)" </dev/null) || exit 0
+	[[ $url =~ ^https?://[^/[:space:]]+[^[:space:][:cntrl:]]*$ ]] || fail "URL no válida: debe empezar por https:// o http://"
+	host=${url#*://}
+	host=${host%%[/?#]*}
+	host=${host##*@}
+
+	# Nombre del archivo: solo [a-z0-9-], así no puede llevar / ni ..
+	slug=$(printf '%s' "$name" | iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null | tr '[:upper:]' '[:lower:]' |
+		sed 's/[^a-z0-9]\+/-/g; s/^-//; s/-$//')
+	[ -n "$slug" ] || fail "El nombre necesita alguna letra o número"
+	file="$APPS/$slug.desktop"
+	if [ -e "$file" ]; then
+		grep -q -- '--app=' "$file" || fail "Ya hay una aplicación llamada $slug.desktop"
+		confirm "sustituir «$(field "$file" Name)»" || exit 0
+	fi
+	# Uno con el mismo nombre en el sistema quedaría tapado por este
+	IFS=: read -ra dirs <<<"${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
+	for d in "${dirs[@]}"; do
+		[ -e "$d/applications/$slug.desktop" ] && fail "Ya hay una aplicación del sistema llamada $slug.desktop"
+	done
+
+	# Navegador: el que usan las webapps de siempre o, si no, otro Chromium
+	for browser in brave chromium google-chrome-stable ""; do
+		[ -n "$browser" ] && command -v "$browser" >/dev/null && break
+	done
+	[ -n "$browser" ] || fail "Hace falta Brave o Chromium"
+
+	icon=$(printf 'Automático (favicon de la web)\n' | menu "URL del icono (png, svg…)") || exit 0
+	[[ $icon =~ ^https?:// ]] || icon=""
+	rm -f -- "$ICONS/$slug".{png,svg,jpg,ico}
+	icon=$({ [ -n "$icon" ] && fetch_icon "$icon" "$slug"; } ||
+		fetch_icon "${url%%://*}://$host/apple-touch-icon.png" "$slug" ||
+		fetch_icon "${url%%://*}://$host/favicon.ico" "$slug" || echo web-browser)
+
+	# Exec según la especificación desktop-entry: dentro de comillas se escapan
+	# \ " ` $ con \, y luego, por ser un valor de tipo string, cada \ se dobla; % va como %%
+	arg=$(printf '%s' "$url" | sed 's/[\\"`$]/\\&/g; s/\\/\\\\/g; s/%/%%/g')
+	mkdir -p "$APPS"
+	cat >"$file" <<-EOF
+		[Desktop Entry]
+		Name=${name//\\/\\\\}
+		Comment=${name//\\/\\\\}
+		Exec=$browser --new-window --ozone-platform=wayland --app="$arg"
+		Icon=$icon
+		Terminal=false
+		Type=Application
+		StartupNotify=true
+	EOF
+	say -i "$icon" "Webapp creada" "$name ya está en el lanzador"
+}
+
+case $1 in
+	--remove) remove ;;
+	"") create ;;
+	*) echo "Uso: webapp [--remove]" >&2; exit 2 ;;
+esac

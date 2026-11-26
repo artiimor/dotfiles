@@ -1,0 +1,7 @@
+[Desktop Entry]
+Name=Crear webapp
+Comment=Abre una web como aplicación propia
+Exec=@HOME@/.config/quickshell/scripts/webapp
+Icon=web-browser
+Terminal=false
+Type=Application
