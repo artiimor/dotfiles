@@ -32,6 +32,8 @@ ShellRoot {
     // Crea ya el singleton Idle (cafeína): sin barra propia (Modo Mac) nadie más lo
     // usaría y su IPC (`qs ipc call idle toggle`, el botón de macshell) no existiría
     readonly property bool idleInhibited: Idle.inhibited
+    // Lo mismo con Battery, que es quien avisa de batería baja
+    readonly property bool batteryPresent: Battery.present
 
     // Una barra por cada pantalla conectada. Al ocultarla (Super+B) se quitan
     // del todo, y con ellas sus menús y su hueco reservado

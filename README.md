@@ -93,7 +93,8 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
   file search, Wi-Fi via `networkmanager_dmenu` and Bluetooth via `bzmenu`), notifications, volume/brightness OSD, night light
   (hyprsunset), wallpaper, lock screen and polkit dialog. `hyprlock` stays as a fallback. Laptop or desktop is detected at runtime:
   the battery indicator only shows when UPower reports a laptop battery, and brightness (bar, sliders, OSD, keys) only when
-  there is a panel in `/sys/class/backlight`, in both profiles.
+  there is a panel in `/sys/class/backlight`, in both profiles. On a laptop, a notification warns at 15% battery and a
+  critical one at 5% (both profiles).
 - **Two desktop profiles**, *Modo Mac* and *Modo normal*, switchable live with **Super+Shift+T** (`config-set`).
 - **Per-workspace desktop mode** (**Super+Alt+D**): floating windows, minimize, a dock and macOS-style edge snapping.
 - **macOS-style titlebars** (close / minimize / maximize) on floating windows, using a patched `hyprbars` plugin.
