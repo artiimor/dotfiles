@@ -1,7 +1,7 @@
--- Vantablack: casi monocromo, a juego con ~/.config/themes/vantablack.
+-- Basalt: casi monocromo, a juego con ~/.config/themes/basalt.
 -- Grises para casi todo; solo strings, constantes y diagnósticos llevan un tono apagado.
 -- Los grupos están en lua/scheme.lua.
-require("scheme").apply("vantablack", {
+require("scheme").apply("basalt", {
   fg = "#d4d4d4", bright = "#f0f0f0", light = "#e6e6e6",
   grey = "#a0a0a0", dim = "#8a8a8a", muted = "#5c5c5c", faint = "#3a3a3a",
   line = "#121212", surface = "#0d0d0d", sel = "#262626", ink = "#000000",

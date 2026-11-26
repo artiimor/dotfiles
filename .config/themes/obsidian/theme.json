@@ -1,0 +1,87 @@
+{
+  "name": "Obsidian",
+  "ui": {
+    "bg": "#0f0f0f",
+    "surface": "#171717",
+    "fg": "#e8e8e8",
+    "muted": "#707070",
+    "accent": "#d8d8d8",
+    "accent2": "#a8a8a8",
+    "accentDim": "#3c3c3c",
+    "ok": "#a0a0a0",
+    "red": "#ffffff",
+    "yellow": "#d0d0d0",
+    "pink": "#b8b8b8",
+    "cyan": "#a8a8a8",
+    "peach": "#909090",
+    "butter": "#d0d0d0",
+    "mint": "#b0b0b0",
+    "border": "#e0e0e0",
+    "launcherBg": "#141414",
+    "launcherSel": "#2a2a2a"
+  },
+  "hypr": {
+    "border": [
+      "#d8d8d8"
+    ],
+    "inactive": "#30303088",
+    "group": "#a0a0a0"
+  },
+  "term": {
+    "background": "#141414",
+    "foreground": "#d8d8d8",
+    "cursor": "#f0f0f0",
+    "selection_background": "#333333",
+    "selection_foreground": "#ffffff",
+    "colors": [
+      "#262626",
+      "#b0b0b0",
+      "#9c9c9c",
+      "#c4c4c4",
+      "#8c8c8c",
+      "#a8a8a8",
+      "#b8b8b8",
+      "#d0d0d0",
+      "#5c5c5c",
+      "#c8c8c8",
+      "#b4b4b4",
+      "#dadada",
+      "#a4a4a4",
+      "#bcbcbc",
+      "#cccccc",
+      "#f4f4f4"
+    ]
+  },
+  "gtk": {
+    "accent": "#d8d8d8",
+    "accentBg": "#4a4a4a",
+    "accentFg": "#f4f4f4",
+    "window": "#171717",
+    "fg": "#e4e4e4",
+    "view": "#121212",
+    "headerbar": "#141414",
+    "card": "#242424"
+  },
+  "nvim": "basalt",
+  "nvimColors": {
+    "syn": {
+      "string": "#b8b8b8",
+      "number": "#d4d4d4",
+      "constant": "#d4d4d4",
+      "identifier": "#c8c8c8",
+      "parameter": "#a8a8a8",
+      "fun": "#f0f0f0",
+      "statement": "#9a9a9a",
+      "keyword": "#9a9a9a",
+      "operator": "#808080",
+      "preproc": "#8c8c8c",
+      "type": "#dcdcdc",
+      "regex": "#c0c0c0",
+      "punct": "#7a7a7a",
+      "comment": "#5e5e5e",
+      "special1": "#c0c0c0",
+      "special2": "#e0e0e0",
+      "special3": "#808080"
+    }
+  }
+}

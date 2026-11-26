@@ -1,4 +1,4 @@
--- Grupos de resaltado comunes a los colorschemes propios (colors/vantablack.lua,
+-- Grupos de resaltado comunes a los colorschemes propios (colors/basalt.lua,
 -- colors/miami.lua). Cada uno solo define su paleta y llama a apply(nombre, paleta).
 -- Fondo transparente como el resto de temas (se ve el de la terminal).
 --

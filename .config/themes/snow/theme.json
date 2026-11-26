@@ -1,0 +1,88 @@
+{
+  "name": "Snow",
+  "light": true,
+  "ui": {
+    "bg": "#e4e4e4",
+    "surface": "#f5f5f5",
+    "fg": "#1e1e1e",
+    "muted": "#7a7a7a",
+    "accent": "#2a2a2a",
+    "accent2": "#555555",
+    "accentDim": "#b0b0b0",
+    "ok": "#4a4a4a",
+    "red": "#111111",
+    "yellow": "#3a3a3a",
+    "pink": "#5a5a5a",
+    "cyan": "#505050",
+    "peach": "#606060",
+    "butter": "#3a3a3a",
+    "mint": "#555555",
+    "border": "#5a5a5a",
+    "launcherBg": "#ececec",
+    "launcherSel": "#d4d4d4"
+  },
+  "hypr": {
+    "border": [
+      "#3a3a3a"
+    ],
+    "inactive": "#b8b8b888",
+    "group": "#6a6a6a"
+  },
+  "term": {
+    "background": "#f5f5f5",
+    "foreground": "#222222",
+    "cursor": "#111111",
+    "selection_background": "#cccccc",
+    "selection_foreground": "#111111",
+    "colors": [
+      "#3a3a3a",
+      "#2e2e2e",
+      "#555555",
+      "#444444",
+      "#4a4a4a",
+      "#5e5e5e",
+      "#666666",
+      "#b4b4b4",
+      "#6e6e6e",
+      "#1a1a1a",
+      "#4a4a4a",
+      "#3a3a3a",
+      "#404040",
+      "#545454",
+      "#5c5c5c",
+      "#c8c8c8"
+    ]
+  },
+  "gtk": {
+    "accent": "#2a2a2a",
+    "accentBg": "#2a2a2a",
+    "accentFg": "#ffffff",
+    "window": "#f5f5f5",
+    "fg": "#1e1e1e",
+    "view": "#ececec",
+    "headerbar": "#e8e8e8",
+    "card": "#dadada"
+  },
+  "nvim": "default",
+  "nvimColors": {
+    "syn": {
+      "string": "#4a4a4a",
+      "number": "#2a2a2a",
+      "constant": "#2a2a2a",
+      "identifier": "#383838",
+      "parameter": "#555555",
+      "fun": "#111111",
+      "statement": "#6a6a6a",
+      "keyword": "#6a6a6a",
+      "operator": "#7a7a7a",
+      "preproc": "#6a6a6a",
+      "type": "#262626",
+      "regex": "#4a4a4a",
+      "punct": "#8a8a8a",
+      "comment": "#a0a0a0",
+      "special1": "#4a4a4a",
+      "special2": "#2a2a2a",
+      "special3": "#7a7a7a"
+    }
+  }
+}

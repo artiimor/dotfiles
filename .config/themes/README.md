@@ -47,8 +47,8 @@ con `background-set` (ver el script).
 
 ## Temas claros
 
-`catppuccin-latte` y `rose-pine-dawn` son claros (`"light": true`), con los 16
-colores ANSI de sus paletas originales. En los temas claros theme-set no usa
+`catppuccin-latte`, `rose-pine-dawn` y `snow` son claros (`"light": true`), con los 16
+colores ANSI de sus paletas originales (`snow`, todo en grises). En los temas claros theme-set no usa
 `colors[0]`/`colors[15]` para la fila elegida de fzf y btop (usa
 `term.selection_background` y `ui.fg`) ni para los relieves de Qt (los calcula
 desde los botones); en los oscuros todo sigue igual. Los Neovim abiertos reciben

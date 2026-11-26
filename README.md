@@ -101,7 +101,7 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
   Ghostty, kitty, btop, fzf, GTK, Qt/KDE, fastfetch and running Neovim instances at once. 13 themes, 2 of them light.
 - **Per-theme backgrounds** (**Super+Ctrl+B**, `background-set`), remembered per theme.
 - **Terminal setup**: Ghostty, bash + starship, a minimal Neovim built on mini.nvim (colors generated from the theme with
-  mini.hues; LazyVim, available as `lazyvim`, shares the same colors and keeps `miami` and `vantablack` colorschemes),
+  mini.hues; LazyVim, available as `lazyvim`, shares the same colors and keeps `miami` and `basalt` colorschemes),
   btop, eza/bat/fzf aliases, fastfetch with an ASCII Pepe tinted with the theme accent.
 - **System extras** (optional, under `system/`): greetd + ReGreet login screen, the "sobrio" Plymouth boot theme (plain neutral gray)
   and a keyd config for a ThinkPad keyboard.
@@ -247,10 +247,11 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 
 | Folder | Name | Type | Neovim colorscheme |
 |---|---|---|---|
+| `basalt` | Basalt | dark | basalt |
 | `catppuccin-frappe` | Catppuccin Frappé | dark | catppuccin-frappe |
+| `catppuccin-latte` | Catppuccin Latte | **light** | catppuccin-latte |
 | `catppuccin-macchiato` | Catppuccin Macchiato | dark | catppuccin-macchiato |
 | `catppuccin-mocha` | Catppuccin Mocha | dark | catppuccin-mocha |
-| `catppuccin-latte` | Catppuccin Latte | **light** | catppuccin-latte |
 | `dracula` | Dracula | dark | dracula |
 | `everforest` | Everforest | dark | everforest |
 | `grafito` | Grafito (installer default) | dark | dracula |
@@ -258,10 +259,11 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 | `kanagawa-dragon` | Kanagawa Dragon | dark | kanagawa-dragon |
 | `kanagawa-gris` | Kanagawa Gris | dark | kanagawa-dragon |
 | `miami` | Miami night | dark | miami |
+| `obsidian` | Obsidian (greyscale) | dark | basalt |
 | `rose-pine` | Rosé Pine | dark | rose-pine |
 | `rose-pine-dawn` | Rosé Pine Dawn | **light** | rose-pine-dawn |
+| `snow` | Snow (greyscale) | **light** | default |
 | `tokyo-night` | Tokyo Night | dark | tokyonight |
-| `vantablack` | Vantablack | dark | vantablack |
 
 `~/.config/themes/current` is a symlink to the active theme. What `theme-set` writes and when each app picks it up:
 

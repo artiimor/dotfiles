@@ -283,7 +283,7 @@ def gen_qt(name, t):
 
 def gen_fastfetch(name, t):
     # Mezcla cada color del Pepe con el acento a su misma luminosidad. Cuanto menos
-    # saturado es el acento, más se tiñe (con el gris de vantablack queda casi en grises).
+    # saturado es el acento, más se tiñe (con el gris de basalt queda casi en grises).
     acc = rgb(t["ui"]["accent"])
     lum = lambda c: 0.2126 * c[0] + 0.7152 * c[1] + 0.0722 * c[2]
     sat = (max(acc) - min(acc)) / max(max(acc), 1)
