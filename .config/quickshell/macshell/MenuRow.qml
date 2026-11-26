@@ -38,6 +38,7 @@ Rectangle {
         Text {
             Layout.fillWidth: true
             text: r.text
+            textFormat: Text.PlainText   // nombres de redes, dispositivos, portapapeles...
             color: r.fg
             opacity: r.enabledItem ? 1 : 0.4
             font.pointSize: 9.5

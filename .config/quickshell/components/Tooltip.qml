@@ -48,6 +48,7 @@ PopupWindow {
             Text {
                 visible: root.text !== ""
                 text: root.text
+                textFormat: Text.PlainText   // títulos, redes, dispositivos: vienen de fuera
                 color: Theme.fg
                 font.family: Theme.font
                 font.pixelSize: Theme.fontSize

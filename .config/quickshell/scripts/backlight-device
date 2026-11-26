@@ -1,0 +1,10 @@
+#!/bin/sh
+# Panel retroiluminado que controlan la barra normal (services/Brightness.qml) y
+# macshell (macshell/Sys.qml): escribe su ruta en /sys/class/backlight, o nada si
+# no hay (sobremesa). Por tipo raw > platform > firmware, así no se coge un
+# acpi_video0 muerto si hay intel_backlight.
+for t in raw platform firmware; do
+    for d in /sys/class/backlight/*; do
+        [ -r "$d/brightness" ] && [ "$(cat "$d/type" 2>/dev/null)" = "$t" ] && { echo "$d"; exit; }
+    done
+done

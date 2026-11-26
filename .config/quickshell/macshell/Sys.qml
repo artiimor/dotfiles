@@ -74,62 +74,77 @@ Singleton {
 
     // ── brillo (brightnessctl, pasa por logind) ──
     // Solo con panel retroiluminado (portátil); en un sobremesa no hay
-    // /sys/class/backlight y el Control Center esconde el slider.
-    // -c backlight: sin él brightnessctl podría coger un LED del teclado.
-    property bool hasBacklight: false
+    // /sys/class/backlight y el Control Center esconde el slider. El panel lo elige
+    // el mismo script que usa la barra normal (scripts/backlight-device de la config
+    // raíz) y se le pasa a brightnessctl con -d (sin él podría coger un LED).
+    property string backlightDevice: ""          // p. ej. "intel_backlight"
+    readonly property bool hasBacklight: backlightDevice !== ""
     property real brightness: 1
     property real _pending: -1
     function setBrightness(v) {
         if (!hasBacklight) return;
-        brightness = Math.max(0.02, v);
+        brightness = Math.max(0.02, Math.min(1, v));
         _pending = brightness;
         if (!setProc.running) _flush();
     }
     function _flush() {
         if (_pending < 0) return;
-        setProc.command = ["brightnessctl", "-q", "-c", "backlight", "set", Math.round(_pending * 100) + "%"];
+        setProc.command = ["brightnessctl", "-q", "-d", backlightDevice, "set", Math.round(_pending * 100) + "%"];
         _pending = -1;
         setProc.running = true;
     }
     Process { id: setProc; onExited: sys._flush() }
     Process {
-        id: getProc
-        command: ["brightnessctl", "-m", "-c", "backlight"]
+        running: true
+        command: [Quickshell.shellDir + "/../scripts/backlight-device"]
         stdout: StdioCollector {
             onStreamFinished: {
-                const f = text.trim().split(",");
-                sys.hasBacklight = f.length >= 4 && f[1] === "backlight";
-                if (sys.hasBacklight) sys.brightness = parseInt(f[3]) / 100;
+                sys.backlightDevice = text.trim().split("/").pop();
+                sys.refreshBrightness();
             }
         }
     }
-    function refreshBrightness() { getProc.running = true; }
-    Component.onCompleted: refreshBrightness()
-
-    // Rueda de la barra: ±5 % a través del Brightness de la config raíz (`qs ipc call
-    // brightness up|down`, lo mismo que las teclas de brillo), así sale su OSD y los dos
-    // quedan de acuerdo. Si la config raíz no responde, se cambia aquí directamente.
-    // Los pasos se acumulan mientras corre una llamada y se aplican de uno en uno.
-    property int _brightSteps: 0
-    function stepBrightness(dir) {
-        if (!hasBacklight) return;
-        _brightSteps += dir > 0 ? 1 : -1;
-        if (!brightIpc.running) _nextBrightStep();
+    Process {
+        id: getProc
+        command: ["brightnessctl", "-m", "-d", sys.backlightDevice]
+        stdout: StdioCollector {
+            // "<panel>,backlight,<valor>,<porcentaje>%,<máximo>"
+            onStreamFinished: {
+                const f = text.trim().split(",");
+                if (f.length >= 4) sys.brightness = parseInt(f[3]) / 100;
+            }
+        }
     }
-    function _nextBrightStep() {
+    function refreshBrightness() { if (hasBacklight && !getProc.running) getProc.running = true; }
+
+    // Rueda de la barra: pasos de 5 % a través del Brightness de la config raíz
+    // (`qs ipc call brightness step <subir> <n>`), así sale su OSD y los dos quedan de
+    // acuerdo. Los pasos que llegan mientras corre una llamada se juntan en la
+    // siguiente. Si la config raíz no responde "true" (no está, o no ve panel), se
+    // cambia aquí directamente.
+    property int _brightSteps: 0
+    function stepBrightness(n) {
+        if (!hasBacklight) return;
+        _brightSteps += n;
+        if (!brightIpc.running) _sendBrightSteps();
+    }
+    function _sendBrightSteps() {
         if (_brightSteps === 0) { brightRefresh.restart(); return; }
-        const up = _brightSteps > 0;
-        _brightSteps += up ? -1 : 1;
-        brightIpc.up = up;
-        brightIpc.command = ["qs", "ipc", "call", "brightness", up ? "up" : "down"];
+        brightIpc.steps = _brightSteps;
+        _brightSteps = 0;
+        // sube/baja y cuántos pasos por separado: un número negativo lo tomaría por opción
+        brightIpc.command = ["qs", "ipc", "call", "brightness", "step",
+            String(brightIpc.steps > 0), String(Math.abs(brightIpc.steps))];
         brightIpc.running = true;
     }
     Process {
         id: brightIpc
-        property bool up: true
-        onExited: code => {
-            if (code !== 0) sys.setBrightness(sys.brightness + (up ? 0.05 : -0.05));
-            sys._nextBrightStep();
+        property int steps: 0
+        stdout: StdioCollector {
+            onStreamFinished: {
+                if (text.trim() !== "true") sys.setBrightness(sys.brightness + 0.05 * brightIpc.steps);
+                sys._sendBrightSteps();
+            }
         }
     }
     // brightnessctl de la config raíz tarda un poco en aplicar el valor
@@ -141,48 +156,70 @@ Singleton {
     // hyprsunset, así que no hay nada que sincronizar.
     readonly property string nightScript: Quickshell.shellDir + "/../scripts/nightlight.sh"
     property string nightState: "unavailable"    // "on" | "off" | "unavailable"
-    property string nightTooltip: ""
     readonly property bool nightOn: nightState === "on"
+    // Cada acción sube _nightGen: una lectura empezada antes se descarta (traería el
+    // estado viejo) y, si se pidió otra mientras corría, se repite al terminar
+    property int _nightGen: 0
+    property bool _nightAgain: false
     function toggleNight() {
         if (nightAct.running || nightState === "unavailable") return;
+        _nightGen++;
         nightState = nightOn ? "off" : "on";   // optimista; se confirma al releer
         nightAct.exec([nightScript, "toggle"]);
     }
-    function refreshNight() { if (!nightGet.running) nightGet.running = true; }
+    function refreshNight() {
+        if (nightGet.running) { _nightAgain = true; return; }
+        nightGet.gen = _nightGen;
+        nightGet.running = true;
+    }
     Process { id: nightAct; onExited: sys.refreshNight() }
     Process {
         id: nightGet
+        property int gen: 0
         command: [sys.nightScript]
         stdout: StdioCollector {
             onStreamFinished: {
-                try {
-                    const j = JSON.parse(text);
-                    sys.nightState = j["class"];
-                    sys.nightTooltip = j.tooltip;
-                } catch (e) {}
+                if (nightGet.gen !== sys._nightGen) return;
+                try { sys.nightState = JSON.parse(text)["class"]; } catch (e) {}
             }
         }
+        onExited: if (sys._nightAgain) { sys._nightAgain = false; sys.refreshNight(); }
     }
     Timer { interval: 30000; running: true; repeat: true; triggeredOnStart: true; onTriggered: sys.refreshNight() }
 
     // ── cafeína (sin suspensión automática) ──
     // El inhibidor lo tiene la config raíz (services/Idle.qml, que sigue en marcha en el
     // Modo Mac): aquí no se crea otro. Se cambia con `qs ipc call idle toggle` y el estado
-    // se lee del archivo que Idle escribe en cada cambio. Si la config raíz no está, la
-    // llamada falla, el archivo no cambia y el botón sigue diciendo la verdad.
+    // se pregunta siempre con `qs ipc call idle get`: al arrancar, tras cada cambio desde
+    // aquí y cuando cambia el archivo que Idle reescribe en cada cambio (solo sirve de
+    // aviso). Si la config raíz no está, get no contesta "true" y el botón sale apagado.
     property bool caffeine: false
-    function toggleCaffeine() { Quickshell.execDetached(["qs", "ipc", "call", "idle", "toggle"]); }
-    property bool _idleOk: false
-    property FileView _idleFile: FileView {
-        path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/qs-idle-inhibited"
-        watchChanges: true
-        printErrors: false
-        onFileChanged: reload()
-        onLoaded: { sys._idleOk = true; sys.caffeine = text().trim() === "1"; }
-        onLoadFailed: { sys._idleOk = false; sys.caffeine = false; }
+    property bool _caffeineAgain: false
+    function toggleCaffeine() { if (!idleToggle.running) idleToggle.running = true; }
+    function syncCaffeine() {
+        if (idleGet.running) { _caffeineAgain = true; return; }
+        idleGet.running = true;
     }
-    // hasta que la config raíz crea el archivo no hay nada que vigilar: se reintenta
-    Timer { interval: 5000; repeat: true; running: !sys._idleOk; onTriggered: sys._idleFile.reload() }
+    Process {
+        id: idleToggle
+        command: ["qs", "ipc", "call", "idle", "toggle"]
+        onExited: sys.syncCaffeine()
+    }
+    Process {
+        id: idleGet
+        command: ["qs", "ipc", "call", "idle", "get"]
+        stdout: StdioCollector { onStreamFinished: sys.caffeine = text.trim() === "true" }
+        onExited: if (sys._caffeineAgain) { sys._caffeineAgain = false; sys.syncCaffeine(); }
+    }
+    property FileView _idleFile: FileView {
+        // sin XDG_RUNTIME_DIR no hay archivo (Idle tampoco lo escribe)
+        path: Quickshell.env("XDG_RUNTIME_DIR") ? Quickshell.env("XDG_RUNTIME_DIR") + "/qs-idle-inhibited" : ""
+        watchChanges: path !== ""
+        preload: false
+        printErrors: false
+        onFileChanged: sys.syncCaffeine()
+    }
+    Component.onCompleted: syncCaffeine()
 
     // ── memoria y temperatura (como services/SysStats.qml de la config raíz) ──
     property real memUsed: 0     // GiB

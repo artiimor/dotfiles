@@ -15,7 +15,7 @@ ShellRoot {
     property var popups: []          // notificaciones que se ven ahora como banners
     property bool centerOpen: false
     property bool dnd: false
-    property string popupKind: ""    // "", "cc", "wifi", "battery", "clip", "sound", "system", "tray"
+    property string popupKind: ""    // "", "cc", "wifi", "battery", "clip", "sound", "display", "system", "tray"
     property var popupItem: null     // SystemTrayItem para "tray"
     property real popupRight: 6      // distancia de popWin al borde derecho de la pantalla
     readonly property int popupMargin: 8   // margen transparente de popWin alrededor de la tarjeta
@@ -73,10 +73,10 @@ ShellRoot {
 
     IpcHandler {
         target: "bar"
-        // qs -p ~/.config/quickshell/macshell ipc call bar open cc|wifi|battery|clip|sound|system
+        // qs -p ~/.config/quickshell/macshell ipc call bar open cc|wifi|battery|clip|sound|display|system
         // ("tray" necesita un SystemTrayItem, así que no se acepta)
         function open(kind: string): void {
-            if (["cc", "wifi", "battery", "clip", "sound", "system"].includes(kind)) root.openPopup(kind);
+            if (["cc", "wifi", "battery", "clip", "sound", "display", "system"].includes(kind)) root.openPopup(kind);
         }
         function close(): void { root.closeAll(); }
     }
@@ -183,12 +183,17 @@ ShellRoot {
                         anchors.verticalCenter: parent.verticalCenter
                         width: Math.min(implicitWidth, 180)
                         elide: Text.ElideRight
+                        textFormat: Text.PlainText
                         text: Sys.player ? [Sys.player.trackTitle, Sys.player.trackArtist].filter(t => t).join(" – ") || Sys.player.identity : ""
                         color: Sys.player && Sys.player.isPlaying ? Theme.text : Theme.dim
                         font.pointSize: 9.5
                     }
                 }
-                onClicked: { root.closeAll(); Sys.player.togglePlaying(); }
+                onClicked: m => {
+                    if (m.button !== Qt.LeftButton) return;
+                    root.closeAll();
+                    Sys.player.togglePlaying();
+                }
                 onScrolled: steps => steps > 0 ? Sys.player.previous() : Sys.player.next()
             }
 
@@ -249,13 +254,15 @@ ShellRoot {
                 onClicked: root.togglePopup("wifi", wifiBtn)
             }
 
-            // Brillo: solo con panel retroiluminado · Rueda: ±5 % · Clic: Control Center
+            // Brillo: solo con panel retroiluminado · Rueda: ±5 % · Clic: menú de
+            // Pantalla (brillo y Night Shift)
             BarButton {
                 id: brightBtn
                 visible: Sys.hasBacklight
+                active: root.popupKind === "display"
                 scrollable: true
                 Glyph { width: 16; height: 16; name: "sun" }
-                onClicked: { Sys.refreshBrightness(); root.togglePopup("cc", brightBtn); }
+                onClicked: { Sys.refreshBrightness(); Sys.refreshNight(); root.togglePopup("display", brightBtn); }
                 onScrolled: steps => Sys.stepBrightness(steps)
             }
 
@@ -299,7 +306,7 @@ ShellRoot {
                 id: ccBtn
                 active: root.popupKind === "cc"
                 CCIcon {}
-                onClicked: { Sys.refreshBrightness(); Sys.refreshNight(); root.togglePopup("cc", ccBtn); }
+                onClicked: { Sys.refreshBrightness(); Sys.refreshNight(); Sys.syncCaffeine(); root.togglePopup("cc", ccBtn); }
             }
 
             BarButton {
@@ -361,7 +368,7 @@ ShellRoot {
             Loader {
                 id: popLoader
                 x: 10; y: 10
-                readonly property var widths: ({ cc: 330, wifi: 300, battery: 290, clip: 300, sound: 270, system: 250, tray: 260 })
+                readonly property var widths: ({ cc: 330, wifi: 300, battery: 290, clip: 300, sound: 270, display: 250, system: 250, tray: 260 })
                 width: widths[root.popupKind] ?? 280
                 height: item ? item.implicitHeight : 0
                 sourceComponent: {
@@ -372,6 +379,7 @@ ShellRoot {
                     case "tray": return trayComp;
                     case "clip": return clipComp;
                     case "sound": return soundComp;
+                    case "display": return displayComp;
                     case "system": return systemComp;
                     default: return null;
                     }
@@ -391,6 +399,7 @@ ShellRoot {
         Component { id: batComp; BatteryPanel {} }
         Component { id: clipComp; ClipboardPanel { onDone: root.closeAll() } }
         Component { id: soundComp; SoundPanel {} }
+        Component { id: displayComp; DisplayPanel {} }
         Component {
             id: systemComp
             SystemPanel {

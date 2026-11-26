@@ -25,7 +25,9 @@ Item {
             width: 15; height: 15
             name: t.icon
             level: t.iconLevel
-            color: "white"
+            // encendido, blanco sobre el azul; apagado, el color del texto (en mac-light
+            // el blanco casi no se ve sobre el gris claro)
+            color: t.on ? "white" : Theme.text
         }
         MouseArea { anchors.fill: parent; onClicked: t.toggled() }
     }
@@ -34,6 +36,7 @@ Item {
         Text {
             width: parent.width
             text: t.title
+            textFormat: Text.PlainText
             color: Theme.text
             font.pointSize: 9.5
             font.weight: Font.DemiBold
@@ -43,6 +46,7 @@ Item {
             width: parent.width
             visible: text.length > 0
             text: t.subtitle
+            textFormat: Text.PlainText   // nombres de redes y dispositivos
             color: Theme.dim
             font.pointSize: 8.5
             elide: Text.ElideRight

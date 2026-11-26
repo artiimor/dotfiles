@@ -8,8 +8,8 @@
 // de ahí vive hasta que se reinicia Quickshell.
 //
 // Modo Mac: macshell no crea su propio inhibidor. Lo cambia con
-// `qs ipc call idle toggle` y lee el estado de $XDG_RUNTIME_DIR/qs-idle-inhibited,
-// que se reescribe aquí en cada cambio ("1" o "0").
+// `qs ipc call idle toggle`, lo pregunta con `qs ipc call idle get` y vigila
+// $XDG_RUNTIME_DIR/qs-idle-inhibited, que se reescribe aquí en cada cambio ("1" o "0").
 pragma Singleton
 
 import QtQuick
@@ -22,14 +22,20 @@ Singleton {
 
     property bool inhibited: false
 
-    onInhibitedChanged: stateFile.setText(inhibited ? "1" : "0")
-    Component.onCompleted: stateFile.setText(inhibited ? "1" : "0")
+    // FileView escribe aunque no haya leído nada (preload: false) y el path ya está
+    // puesto en onCompleted; la escritura es atómica (archivo temporal + rename) y
+    // FileView vigila también la carpeta, así que el de macshell sigue enterándose.
+    // Sin XDG_RUNTIME_DIR no se escribe (nada de /tmp, que es de todos).
+    function save() {
+        if (stateFile.path !== "")
+            stateFile.setText(inhibited ? "1" : "0");
+    }
+    onInhibitedChanged: save()
+    Component.onCompleted: save()
 
     FileView {
         id: stateFile
-        path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/qs-idle-inhibited"
-        // sin renombrar: así el FileView de macshell que lo vigila no lo pierde
-        atomicWrites: false
+        path: Quickshell.env("XDG_RUNTIME_DIR") ? Quickshell.env("XDG_RUNTIME_DIR") + "/qs-idle-inhibited" : ""
         preload: false   // solo se escribe
         printErrors: false
     }

@@ -42,17 +42,23 @@ Singleton {
         setter.running = true;
     }
 
-    // Para las teclas de brillo de Hyprland: qs ipc call brightness up/down
+    // Para las teclas de brillo de Hyprland: qs ipc call brightness up/down.
+    // step: n pasos de 5 % de una vez, hacia arriba o abajo (la rueda de macshell);
+    // devuelve si hay panel, así macshell sabe si tiene que cambiarlo por su cuenta
     IpcHandler {
         target: "brightness"
         function up(): void { root.raise(); }
         function down(): void { root.lower(); }
+        function step(up: bool, n: int): bool {
+            root.set(root.percent + (up ? 5 : -5) * n);
+            return root.available;
+        }
     }
 
-    // Busca el panel una vez al arrancar
+    // Busca el panel una vez al arrancar (el mismo script que usa macshell)
     Process {
         running: true
-        command: ["sh", "-c", "for t in raw platform firmware; do for d in /sys/class/backlight/*; do [ -r \"$d/brightness\" ] && [ \"$(cat \"$d/type\" 2>/dev/null)\" = $t ] && { echo \"$d\"; exit; }; done; done"]
+        command: [Quickshell.shellDir + "/scripts/backlight-device"]
         stdout: StdioCollector {
             onStreamFinished: root.device = text.trim()
         }

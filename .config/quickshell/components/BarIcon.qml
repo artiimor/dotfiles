@@ -36,6 +36,7 @@ Item {
         id: label
         anchors.centerIn: parent
         text: root.icon
+        textFormat: Text.PlainText   // p. ej. el título de la canción (Media) viene de fuera
         color: root.hovered ? root.hoverColor : root.color
         font.family: Theme.font
         font.pixelSize: root.pixelSize
