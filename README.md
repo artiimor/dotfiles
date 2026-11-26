@@ -237,7 +237,8 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 
 ## Color themes
 
-**Super+T** opens the theme menu. From a terminal:
+**Super+T** opens the theme menu, split into two tabs, **Oscuros** (dark) and **Claros** (light); it opens on the
+active theme's tab with that theme selected. Switch tabs by clicking, with Tab / Shift+Tab or with ←/→. From a terminal:
 
 ```sh
 ~/.config/themes/theme-set              # list themes (* = active)
@@ -272,7 +273,7 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 | Quickshell | reads `themes/current/theme.json` | immediately |
 | Hyprland | `hypr/config/theme.lua` | immediately |
 | kitty / Ghostty | `kitty/themes/current.conf`, `ghostty/themes/current` | immediately |
-| Neovim | `ui.bg`/`ui.fg` through mini.hues (shared `tema` colorscheme, also used by `lazyvim`), sent to running instances over their socket | immediately |
+| Neovim | shared `tema` colorscheme (also used by `lazyvim`): mini.hues from `ui.bg`/`ui.fg`, syntax from `nvimColors.syn`, and the whole UI (line numbers, cursorline, selection, menus, floats, statusline, search, diagnostics, diff) from the theme's `ui`/`term` palette, optionally overridden by `nvimColors.ui`; sent to running instances over their socket | immediately |
 | Background | asked from `background-set` | immediately |
 | btop | `btop/themes/current.theme` | next launch |
 | GTK | `gtk-3.0/gtk.css`, `gtk-4.0/gtk.css` (not in `mac-light`) | next launch of the app |

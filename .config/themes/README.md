@@ -26,6 +26,7 @@ Cada carpeta con un `theme.json` es un tema. `current` es un enlace al tema acti
 | `gtk` | Ventanas, cabeceras, tarjetas y acento | apps GTK3/GTK4 |
 | `nvim` | Nombre del colorscheme: `catppuccin-mocha`, `catppuccin-macchiato`, `catppuccin-frappe`, `catppuccin-latte`, `tokyonight`, `rose-pine`, `rose-pine-dawn`, `gruvbox`, `kanagawa-dragon`, `everforest`, `dracula` | Neovim |
 | `nvimColors.syn` | Colores de sintaxis (string, fun, keyword, comment...) del colorscheme "tema"; sin ellos mini.hues queda casi gris. Todos los temas los traen, sacados de su paleta original | Neovim |
+| `nvimColors.ui` | Opcional: pisa colores de la interfaz de "tema" (ver abajo) | Neovim |
 | `light` | `true` en los temas claros (sin él, oscuro): decide Mac claro u oscuro y GTK claro u oscuro (ver abajo) | config-set |
 
 Cuándo se ve el cambio: Quickshell, Hyprland, kitty, Ghostty y los Neovim abiertos
@@ -56,7 +57,27 @@ desde los botones); en los oscuros todo sigue igual. Los Neovim abiertos reciben
 (Quickshell y hyprlock) pone el texto casi blanco sobre el fondo de noche.
 
 En el menú de temas (Super+T) cada fila lleva su paleta (fondo y texto del
-terminal, acento y 6 colores) y un sol o una luna según sea claro u oscuro.
+terminal, acento y 6 colores) y un sol o una luna según sea claro u oscuro. Los
+temas van en dos pestañas, **Oscuros** y **Claros**; se abre en la del tema activo,
+con él elegido. Se cambia de pestaña con clic, Tab / Shift+Tab o ←/→.
+
+## Neovim
+
+El colorscheme "tema" (`nvim/colors/tema.lua`, el mismo en LazyVim) saca toda la
+interfaz de la paleta del tema, no solo la sintaxis: números de línea, línea del
+cursor, selección (`term.selection_background`), menús y flotantes
+(`ui.launcherBg`, fila elegida `ui.launcherSel`, borde `ui.border` al 25 %),
+statusline, pestañas, separadores, búsqueda (`ui.accent`), diagnósticos
+(`ui.red`, `ui.yellow`, `ui.cyan`, `ui.accent2`, `ui.ok`) y diff. El fondo sigue
+transparente. Si un color de fondo coincide con el del terminal (`term.background`),
+se usa el siguiente que se distinga.
+
+`nvimColors.ui` (opcional) pisa cualquiera de estas claves: `panel` (menús,
+flotantes, statusline), `sel`, `cursorline`, `visual`, `linenr` (por defecto =
+`nontext`), `nontext` y `special` (por defecto `ui.muted`), `whitespace` (por defecto
+`ui.accentDim`), `border`, `dim`, `accent`, `accent2`, `muted`, `red`, `yellow`, `ok`,
+`info`, `hint`. Para probar un tema sin cambiar el activo:
+`TEMA_THEME_JSON=~/.config/themes/snow/theme.json nvim`.
 
 ## Configs: Modo Mac / Modo normal
 

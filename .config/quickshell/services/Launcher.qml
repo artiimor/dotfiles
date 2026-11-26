@@ -31,8 +31,9 @@ Singleton {
 
     // Cada modo: ancho de la ventana (como estaba en wofi), título, de dónde salen
     // las filas (`items`, una función que se queda enlazada, o `proc`, un proceso
-    // que las rellena al terminar), si va sin buscador (menús cortos) y si
-    // enseña la descripción corta (`sub`) a la derecha. Los que no tienen ancho
+    // que las rellena al terminar), si va sin buscador (menús cortos), si
+    // enseña la descripción corta (`sub`) a la derecha y sus pestañas (`tabs`:
+    // cada fila dice en cuál va con `tab`, su índice). Los que no tienen ancho
     // propio (profiles, y dmenu, que no está) salen arriba a la derecha, junto a
     // la barra, con 320 px; los demás, centrados.
     readonly property var modes: ({
@@ -47,7 +48,7 @@ Singleton {
             { text: "Reiniciar", glyph: "󰜉", data: "reboot" },
             { text: "Apagar", glyph: "󰐥", data: "poweroff" }
         ] },
-        themes: { width: 420, prompt: "Tema", noSearch: true, proc: themeList },
+        themes: { width: 420, prompt: "Tema", noSearch: true, proc: themeList, tabs: ["Oscuros", "Claros"] },
         backgrounds: { width: 420, prompt: "Fondo", noSearch: true, proc: backgroundList },
         configs: { width: 260, prompt: "Config", noSearch: true, proc: configList },
         keys: { width: 520, prompt: "Atajos", proc: binds, showSub: true },
@@ -65,6 +66,8 @@ Singleton {
     readonly property bool centered: !!modeInfo.width
     readonly property bool noSearch: !!modeInfo.noSearch
     readonly property bool showSub: !!modeInfo.showSub
+    readonly property var tabs: modeInfo.tabs ?? []
+    property int tab: 0  // pestaña visible (índice en `tabs`)
 
     // Abre un modo, o lo cierra si ya estaba abierto (como `pkill wofi || wofi`)
     function toggle(m, float) {
@@ -82,6 +85,7 @@ Singleton {
         mode = m;
         floatLaunch = !!float;
         password = false;
+        tab = 0;
         const d = modes[m];
         prompt = d.prompt;
         if (d.proc) {
@@ -249,7 +253,8 @@ Singleton {
     // Cada carpeta de ~/.config/themes con un theme.json es un tema; al elegir
     // uno se ejecuta theme-set, que recolorea todo (ver ese script). Cada fila
     // lleva su paleta (fondo y texto del terminal, acento y 6 colores ANSI) para
-    // verla antes de elegir, y un sol o una luna según sea claro u oscuro.
+    // verla antes de elegir, y un sol o una luna según sea claro u oscuro. Van en
+    // dos pestañas, oscuros y claros; se abre en la del tema activo.
     readonly property string themesDir: Quickshell.env("HOME") + "/.config/themes"
 
     // Marca del elemento actual en temas, fondos y configs
@@ -263,16 +268,20 @@ Singleton {
         command: [root.themesDir + "/theme-set", "--list"]
         stdout: StdioCollector {
             onStreamFinished: {
-                root.loaded("themes", root.lines(text).map(l => {
+                const list = root.lines(text).map(l => {
                     const t = JSON.parse(l);
                     return {
                         text: t.name + root.curMark(t.cur),
                         // Sol (claro) o luna (oscuro)
                         glyph: String.fromCodePoint(t.light ? 0xF0599 : 0xF0594),
                         palette: { bg: t.bg, fg: t.fg, colors: t.colors },
+                        tab: t.light ? 1 : 0,
+                        cur: t.cur, // la ventana la deja elegida al abrir
                         data: t.dir
                     };
-                }));
+                });
+                root.tab = list.find(i => i.cur)?.tab ?? 0;
+                root.loaded("themes", list);
             }
         }
     }

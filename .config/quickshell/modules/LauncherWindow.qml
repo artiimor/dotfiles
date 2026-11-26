@@ -8,7 +8,8 @@
 // fondo translúcido con desenfoque y la fila elegida en azul.
 //
 // Teclas: escribir filtra · ↑/↓ o Ctrl+K/J o Tab moverse · Enter elegir · Esc cerrar
-// Clic fuera también cierra.
+// Clic fuera también cierra. Con pestañas (temas: Oscuros / Claros), Tab, Shift+Tab
+// y ←/→ cambian de pestaña (ese menú no tiene buscador) y ↑/↓ se mueven.
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -62,7 +63,7 @@ PanelWindow {
     // principio), después lo que tiene las letras en orden ("ffx" → Firefox)
     readonly property var filtered: {
         const q = search.text.toLowerCase().trim();
-        const all = Launcher.items;
+        const all = Launcher.tabs.length ? Launcher.items.filter(it => it.tab === Launcher.tab) : Launcher.items;
         if (!q || Launcher.password)
             return Launcher.password ? [] : all;
         const scored = [];
@@ -83,7 +84,8 @@ PanelWindow {
         }
         return scored.sort((a, b) => b.score - a.score).map(s => s.it);
     }
-    onFilteredChanged: list.currentIndex = 0
+    // Elegida la primera fila, o la actual (`cur`, el tema activo) si está en la lista
+    onFilteredChanged: list.currentIndex = Math.max(0, filtered.findIndex(it => it.cur))
 
     function accept() {
         Launcher.choose(filtered[list.currentIndex] ?? null, search.text);
@@ -160,7 +162,12 @@ PanelWindow {
 
                     Keys.onPressed: e => {
                         const ctrl = e.modifiers & Qt.ControlModifier;
-                        if (e.key === Qt.Key_Escape)
+                        const n = Launcher.tabs.length;
+                        if (n && (e.key === Qt.Key_Tab || e.key === Qt.Key_Right))
+                            Launcher.tab = (Launcher.tab + 1) % n;
+                        else if (n && (e.key === Qt.Key_Backtab || e.key === Qt.Key_Left))
+                            Launcher.tab = (Launcher.tab + n - 1) % n;
+                        else if (e.key === Qt.Key_Escape)
                             Launcher.close();
                         else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter)
                             win.accept();
@@ -175,6 +182,59 @@ PanelWindow {
                         else
                             return;
                         e.accepted = true;
+                    }
+                }
+            }
+
+            // ── Pestañas (solo en los modos que las tienen) ─────
+            // La elegida, en negrita con una raya del acento debajo; en mac, una
+            // píldora gris como los controles segmentados de macOS
+            RowLayout {
+                visible: Launcher.tabs.length > 0
+                Layout.fillWidth: true
+                Layout.bottomMargin: 8
+                spacing: 4
+
+                Repeater {
+                    model: Launcher.tabs
+
+                    Rectangle {
+                        id: tabItem
+                        required property string modelData
+                        required property int index
+                        readonly property bool selected: Launcher.tab === index
+
+                        Layout.fillWidth: true
+                        implicitHeight: 30
+                        radius: Theme.mac ? 8 : 0
+                        color: selected && Theme.mac ? Theme.surface
+                            : tabMouse.containsMouse ? Theme.withAlpha(Theme.launcherSel, 0.5) : "transparent"
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: tabItem.modelData
+                            color: tabItem.selected ? Theme.fg : Theme.muted
+                            font.family: Theme.font
+                            font.pixelSize: 13
+                            font.bold: tabItem.selected
+                        }
+
+                        Rectangle {
+                            visible: tabItem.selected && !Theme.mac
+                            anchors.left: parent.left
+                            anchors.right: parent.right
+                            anchors.bottom: parent.bottom
+                            height: 2
+                            color: Theme.accent
+                        }
+
+                        MouseArea {
+                            id: tabMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Launcher.tab = tabItem.index
+                        }
                     }
                 }
             }
