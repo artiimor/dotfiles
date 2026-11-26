@@ -12,7 +12,8 @@
 #   3. Dotfiles: .config (con macshell), .bashrc, webapps, iconos Sur -> ~ (lo que pisa va a ~/.dotfiles-old/<fecha>) y bash como shell
 #   4. Tema de colores (theme-set) y perfil Modo Mac / Modo normal (config-set)
 #   5. Plugin hyprbars con los parches del modo escritorio (y quita los botones propios de GTK/Brave)
-#   6. Sistema (sudo): greetd + ReGreet, Plymouth "sobrio", keyd (ThinkPad), servicios
+#   6. Sistema (sudo): greetd + ReGreet, Plymouth "sobrio", keyd (ThinkPad), zona horaria
+#      automática, servicios
 #
 # Ejecútalo como tu usuario, no como root: pide sudo cuando lo necesita.
 # Se puede repetir sin miedo: pacman usa --needed, lo que se sobrescribe va a ~/.dotfiles-old
@@ -471,6 +472,16 @@ if ((KEYD)); then
 		sudo usermod -aG keyd "$ME"
 		info "añadido al grupo keyd: se nota al volver a iniciar sesión"
 	fi
+fi
+
+# Al conectarse a una red, NetworkManager pone la zona horaria de la ubicación (ver la cabecera del script)
+info "zona horaria automática: manda tu IP pública a ipinfo.io al conectarte (no con VPN)"
+if ask "¿Zona horaria automática según la red?"; then
+	backup_sys /etc/NetworkManager/dispatcher.d/90-timezone
+	# NetworkManager solo ejecuta scripts de root que nadie más pueda escribir
+	sudo install -Dm755 "$S/etc/NetworkManager/dispatcher.d/90-timezone" /etc/NetworkManager/dispatcher.d/90-timezone
+	# En Arch el servicio que ejecuta esos scripts no viene activado
+	sudo systemctl enable NetworkManager-dispatcher.service
 fi
 
 if ask "¿Activar servicios (NetworkManager, bluetooth, power-profiles-daemon)?"; then

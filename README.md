@@ -105,8 +105,8 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 - **Terminal setup**: Ghostty, bash + starship, a minimal Neovim built on mini.nvim (colors generated from the theme with
   mini.hues; LazyVim, available as `lazyvim`, shares the same colors and keeps `miami` and `basalt` colorschemes),
   btop, eza/bat/fzf aliases, fastfetch with an ASCII Pepe tinted with the theme accent.
-- **System extras** (optional, under `system/`): greetd + ReGreet login screen, the "sobrio" Plymouth boot theme (plain neutral gray)
-  and a keyd config for a ThinkPad keyboard.
+- **System extras** (optional, under `system/`): greetd + ReGreet login screen, the "sobrio" Plymouth boot theme (plain neutral gray),
+  a keyd config for a ThinkPad keyboard and automatic time zone from the network.
 - **Web apps** (`.local/share/applications`): Proton Mail, Proton Calendar, Proton Drive, WhatsApp and YouTube as Brave app windows.
   "Crear webapp" and "Quitar webapp" in the launcher (and Spotlight) add or remove your own (`quickshell/scripts/webapp`).
 
@@ -143,7 +143,7 @@ When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 | **3b. Shell** | If your login shell isn't bash (CachyOS defaults to fish), offers `chsh -s /bin/bash`. |
 | **4. Theme and profile** | Runs `theme-set <theme>` (your current theme if you already had one, otherwise **grafito**) and `config-set --reapply` (keeps your profile; Mac mode on a fresh install). |
 | **5. hyprbars** | Clones `hyprwm/hyprland-plugins` at the tag matching your installed Hyprland (falls back to `vX.Y.0`), applies the two patches in `.config/hypr/`, builds it and copies `hyprbars.so` to `~/.local/lib/hyprland/`. Then offers to remove the apps' own window buttons (GTK `button-layout`, and Brave's "use system title bar", only if Brave is closed). |
-| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname, disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group. The default answer depends on the hardware: yes if a ThinkPad is detected via DMI, no otherwise, and `--yes` follows that default); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
+| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname, disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group. The default answer depends on the hardware: yes if a ThinkPad is detected via DMI, no otherwise, and `--yes` follows that default); **automatic time zone** (installs the NetworkManager dispatcher script `system/etc/NetworkManager/dispatcher.d/90-timezone` and enables `NetworkManager-dispatcher`: on each connection it sends your public IP to ipinfo.io and sets the time zone it returns; it does nothing while a VPN is active); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
 
 Details of step 3:
 
@@ -487,6 +487,7 @@ dotfiles/
 ├── system/                       copied to / by the installer (sudo)
 │   ├── etc/greetd/               greetd + ReGreet config and style
 │   ├── etc/keyd/thinkpad.conf    Alt/Super swap, Caps Lock → Ctrl
+│   ├── etc/NetworkManager/       dispatcher script for the automatic time zone
 │   └── usr/share/                greeter background, Plymouth "sobrio" theme
 └── screenshots/                  the images in this README
 ```
@@ -550,6 +551,7 @@ There's no uninstall script. To go back:
    - Login screen: `sudo systemctl disable greetd` and re-enable your previous display manager (e.g. `sudo systemctl enable sddm`).
    - Plymouth: `sudo plymouth-set-default-theme <another theme>` and regenerate the initramfs (`sudo limine-mkinitcpio` or `sudo mkinitcpio -P`).
    - keyd: `sudo rm /etc/keyd/thinkpad.conf && sudo systemctl restart keyd` (or `sudo systemctl disable --now keyd`).
+   - Automatic time zone: `sudo rm /etc/NetworkManager/dispatcher.d/90-timezone`.
 4. Remove the state files in `~/.local/state/` listed in [Repository structure](#repository-structure).
 
 ## Troubleshooting

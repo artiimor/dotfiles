@@ -1,0 +1,15 @@
+#!/bin/bash
+# Zona horaria automática: al conectarse a una red, NetworkManager ejecuta esto como root
+# ($1 = interfaz, $2 = acción) y pone la zona horaria de la ubicación que da la IP pública.
+# Privacidad: manda tu IP pública a ipinfo.io (HTTPS), nada más.
+# Con una VPN activa no hace nada: daría la zona de la salida de la VPN.
+# Si falla (sin red, sin respuesta o zona rara) no toca nada y se queda la que hubiera.
+
+[[ $2 == up ]] || exit 0
+nmcli -t -f TYPE connection show --active | grep -qxE 'vpn|wireguard|tun' && exit 0
+
+tz="$(curl -fsS --max-time 8 --retry 2 --retry-connrefused https://ipinfo.io/timezone)" || exit 0
+# Solo un nombre de zona válido (America/New_York): nada de rutas raras, y que exista en tzdata
+[[ $tz =~ ^[A-Za-z_]+(/[A-Za-z0-9_+-]+)+$ && -f /usr/share/zoneinfo/$tz ]] || exit 0
+[[ $tz == "$(timedatectl show -p Timezone --value)" ]] && exit 0
+timedatectl set-timezone "$tz" && logger -t timezone "zona horaria: $tz"
