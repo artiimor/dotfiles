@@ -13,7 +13,7 @@
 #   4. Tema de colores (theme-set) y perfil Modo Mac / Modo normal (config-set)
 #   5. Plugin hyprbars con los parches del modo escritorio (y quita los botones propios de GTK/Brave)
 #   6. Sistema (sudo): greetd + ReGreet, Plymouth "sobrio", keyd (ThinkPad), zona horaria
-#      automática, servicios
+#      automática, más intentos de contraseña antes del bloqueo (faillock), servicios
 #
 # Ejecútalo como tu usuario, no como root: pide sudo cuando lo necesita.
 # Se puede repetir sin miedo: pacman usa --needed, lo que se sobrescribe va a ~/.dotfiles-old
@@ -482,6 +482,11 @@ if ask "¿Zona horaria automática según la red?"; then
 	sudo install -Dm755 "$S/etc/NetworkManager/dispatcher.d/90-timezone" /etc/NetworkManager/dispatcher.d/90-timezone
 	# En Arch el servicio que ejecuta esos scripts no viene activado
 	sudo systemctl enable NetworkManager-dispatcher.service
+fi
+
+# faillock: 10 fallos seguidos bloquean la cuenta 10 min (por defecto 3); afecta a sudo y al bloqueo
+if ask "¿Permitir 10 intentos de contraseña antes de bloquear la cuenta (en vez de 3)?"; then
+	install_sys "$S/etc/security/faillock.conf" /etc/security/faillock.conf
 fi
 
 if ask "¿Activar servicios (NetworkManager, bluetooth, power-profiles-daemon)?"; then
