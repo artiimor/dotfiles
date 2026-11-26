@@ -6,6 +6,11 @@ Item {
     property bool active: false
     default property alias content: holder.data
     signal clicked(var mouse)
+    // rueda: solo si scrollable (si no, la rueda sigue de largo). Un paso por cada
+    // muesca (120); los touchpads y ratones de alta resolución mandan trozos y se suman
+    property bool scrollable: false
+    signal scrolled(int steps)   // > 0 arriba, < 0 abajo
+    property real _wheelAcc: 0
 
     implicitWidth: holder.childrenRect.width + 14
     implicitHeight: 22
@@ -35,5 +40,15 @@ Item {
         hoverEnabled: true
         acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
         onClicked: m => btn.clicked(m)
+        onWheel: w => {
+            if (!btn.scrollable) { w.accepted = false; return; }
+            btn._wheelAcc += w.angleDelta.y;
+            const steps = Math.trunc(btn._wheelAcc / 120);
+            if (steps !== 0) {
+                btn._wheelAcc -= steps * 120;
+                btn.scrolled(steps);
+            }
+        }
+        onExited: btn._wheelAcc = 0
     }
 }

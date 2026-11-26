@@ -29,6 +29,10 @@ ShellRoot {
     // (si no, se quedarían con el servidor de notificaciones)
     readonly property bool ownBar: Theme.profileReady && !Theme.mac
 
+    // Crea ya el singleton Idle (cafeína): sin barra propia (Modo Mac) nadie más lo
+    // usaría y su IPC (`qs ipc call idle toggle`, el botón de macshell) no existiría
+    readonly property bool idleInhibited: Idle.inhibited
+
     // Una barra por cada pantalla conectada. Al ocultarla (Super+B) se quitan
     // del todo, y con ellas sus menús y su hueco reservado
     Variants {

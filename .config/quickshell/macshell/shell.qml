@@ -15,7 +15,7 @@ ShellRoot {
     property var popups: []          // notificaciones que se ven ahora como banners
     property bool centerOpen: false
     property bool dnd: false
-    property string popupKind: ""    // "", "cc", "wifi", "battery", "clip", "tray"
+    property string popupKind: ""    // "", "cc", "wifi", "battery", "clip", "sound", "system", "tray"
     property var popupItem: null     // SystemTrayItem para "tray"
     property real popupRight: 6      // distancia de popWin al borde derecho de la pantalla
     readonly property int popupMargin: 8   // margen transparente de popWin alrededor de la tarjeta
@@ -73,10 +73,10 @@ ShellRoot {
 
     IpcHandler {
         target: "bar"
-        // qs -p ~/.config/quickshell/macshell ipc call bar open cc|wifi|battery|clip
+        // qs -p ~/.config/quickshell/macshell ipc call bar open cc|wifi|battery|clip|sound|system
         // ("tray" necesita un SystemTrayItem, así que no se acepta)
         function open(kind: string): void {
-            if (["cc", "wifi", "battery", "clip"].includes(kind)) root.openPopup(kind);
+            if (["cc", "wifi", "battery", "clip", "sound", "system"].includes(kind)) root.openPopup(kind);
         }
         function close(): void { root.closeAll(); }
     }
@@ -166,11 +166,75 @@ ShellRoot {
                 }
             }
 
+            // Ahora suena (MPRIS): solo con reproductor. Muestra lo que hará el clic
+            // (como la barra normal). Clic: pausa · Rueda: canción siguiente / anterior
+            BarButton {
+                visible: Sys.player !== null
+                scrollable: true
+                Row {
+                    spacing: 6
+                    Glyph {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 11; height: 11
+                        name: Sys.player && Sys.player.isPlaying ? "pause" : "play"
+                        color: Sys.player && Sys.player.isPlaying ? Theme.text : Theme.dim
+                    }
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: Math.min(implicitWidth, 180)
+                        elide: Text.ElideRight
+                        text: Sys.player ? [Sys.player.trackTitle, Sys.player.trackArtist].filter(t => t).join(" – ") || Sys.player.identity : ""
+                        color: Sys.player && Sys.player.isPlaying ? Theme.text : Theme.dim
+                        font.pointSize: 9.5
+                    }
+                }
+                onClicked: { root.closeAll(); Sys.player.togglePlaying(); }
+                onScrolled: steps => steps > 0 ? Sys.player.previous() : Sys.player.next()
+            }
+
+            // Cafeína: solo se ve mientras está activa (como Amphetamine); se activa
+            // desde el Control Center. Clic: desactivar
+            BarButton {
+                visible: Sys.caffeine
+                Glyph { width: 15; height: 15; name: "cup" }
+                onClicked: Sys.toggleCaffeine()
+            }
+
+            // Sistema: memoria, temperatura, perfil de energía y apagado (el cajón de la
+            // barra normal). El icono se pone rojo con la CPU a temperatura crítica
+            BarButton {
+                id: sysBtn
+                active: root.popupKind === "system"
+                Glyph {
+                    width: 16; height: 16
+                    name: "gauge"
+                    color: Sys.temp >= Sys.tempCritical ? Theme.red : Theme.text
+                }
+                onClicked: root.togglePopup("system", sysBtn)
+            }
+
             BarButton {
                 id: clipBtn
                 active: root.popupKind === "clip"
                 ClipIcon {}
                 onClicked: root.togglePopup("clip", clipBtn)
+            }
+
+            // Bluetooth · Clic: bzmenu con el lanzador de la config raíz (como la barra
+            // normal) · Clic derecho: encender / apagar
+            BarButton {
+                visible: Sys.bt !== null
+                Glyph {
+                    width: 16; height: 16
+                    name: Sys.btConnected.length > 0 ? "bluetooth-connected" : "bluetooth"
+                    off: !Sys.btOn
+                }
+                onClicked: m => {
+                    root.closeAll();
+                    if (m.button === Qt.RightButton) Sys.bt.enabled = !Sys.bt.enabled;
+                    else Quickshell.execDetached(["bzmenu", "-l", "custom", "--launcher-command",
+                        `${Quickshell.shellDir}/../scripts/dmenu-qs -p '{hint}'`]);
+                }
             }
 
             BarButton {
@@ -183,6 +247,31 @@ ShellRoot {
                     off: !Sys.wifiOn || (!Sys.wifiNetwork)
                 }
                 onClicked: root.togglePopup("wifi", wifiBtn)
+            }
+
+            // Brillo: solo con panel retroiluminado · Rueda: ±5 % · Clic: Control Center
+            BarButton {
+                id: brightBtn
+                visible: Sys.hasBacklight
+                scrollable: true
+                Glyph { width: 16; height: 16; name: "sun" }
+                onClicked: { Sys.refreshBrightness(); root.togglePopup("cc", brightBtn); }
+                onScrolled: steps => Sys.stepBrightness(steps)
+            }
+
+            // Sonido · Clic: menú de sonido · Clic derecho: silenciar · Rueda: ±5 %
+            BarButton {
+                id: soundBtn
+                active: root.popupKind === "sound"
+                scrollable: true
+                Glyph {
+                    width: 17; height: 17
+                    name: "speaker"
+                    level: Sys.volume
+                    off: Sys.muted
+                }
+                onClicked: m => m.button === Qt.RightButton ? Sys.toggleMute() : root.togglePopup("sound", soundBtn)
+                onScrolled: steps => Sys.stepVolume(0.05 * steps)
             }
 
             BarButton {
@@ -210,7 +299,7 @@ ShellRoot {
                 id: ccBtn
                 active: root.popupKind === "cc"
                 CCIcon {}
-                onClicked: { Sys.refreshBrightness(); root.togglePopup("cc", ccBtn); }
+                onClicked: { Sys.refreshBrightness(); Sys.refreshNight(); root.togglePopup("cc", ccBtn); }
             }
 
             BarButton {
@@ -272,7 +361,7 @@ ShellRoot {
             Loader {
                 id: popLoader
                 x: 10; y: 10
-                readonly property var widths: ({ cc: 330, wifi: 300, battery: 290, clip: 300, tray: 260 })
+                readonly property var widths: ({ cc: 330, wifi: 300, battery: 290, clip: 300, sound: 270, system: 250, tray: 260 })
                 width: widths[root.popupKind] ?? 280
                 height: item ? item.implicitHeight : 0
                 sourceComponent: {
@@ -282,6 +371,8 @@ ShellRoot {
                     case "battery": return batComp;
                     case "tray": return trayComp;
                     case "clip": return clipComp;
+                    case "sound": return soundComp;
+                    case "system": return systemComp;
                     default: return null;
                     }
                 }
@@ -299,6 +390,15 @@ ShellRoot {
         Component { id: wifiComp; WifiPanel { onDone: root.closeAll(); onOpenSettings: root.openNetwork() } }
         Component { id: batComp; BatteryPanel {} }
         Component { id: clipComp; ClipboardPanel { onDone: root.closeAll() } }
+        Component { id: soundComp; SoundPanel {} }
+        Component {
+            id: systemComp
+            SystemPanel {
+                // el menú de perfiles es el lanzador de la config raíz (sale junto a la barra)
+                onOpenProfiles: { root.closeAll(); Quickshell.execDetached(["qs", "ipc", "call", "launcher", "profiles"]); }
+                onOpenPower: { root.closeAll(); spotlight.close(); powerMenu.show(); }
+            }
+        }
         Component { id: trayComp; TrayMenu { item: root.popupItem; onDone: root.closeAll() } }
     }
 

@@ -48,11 +48,17 @@ Canvas {
             c.beginPath(); c.moveTo(10.2, 10.2); c.lineTo(14, 14); c.stroke();
             break;
         case "bluetooth":
+        case "bluetooth-connected":   // con un punto a cada lado (dispositivo conectado)
+            dim(!g.off);
             c.lineWidth = 1.5;
             c.beginPath();
             c.moveTo(4.5, 5); c.lineTo(11.5, 11); c.lineTo(8, 14.2);
             c.lineTo(8, 1.8); c.lineTo(11.5, 5); c.lineTo(4.5, 11);
             c.stroke();
+            if (g.name === "bluetooth-connected") {
+                c.beginPath(); c.arc(2.2, 8, 1.1, 0, Math.PI * 2); c.fill();
+                c.beginPath(); c.arc(13.8, 8, 1.1, 0, Math.PI * 2); c.fill();
+            }
             break;
         case "speaker": {
             c.beginPath();
@@ -139,6 +145,35 @@ Canvas {
             roundRect(c, 10, 10.5, 5, 4, 1); c.stroke();
             c.beginPath(); c.moveTo(8, 5.5); c.lineTo(8, 8); c.moveTo(3.5, 10.5); c.lineTo(3.5, 8);
             c.lineTo(12.5, 8); c.lineTo(12.5, 10.5); c.stroke();
+            break;
+        case "gauge":   // indicador de sistema (memoria, temperatura, energía)
+            c.lineWidth = 1.6;
+            c.beginPath(); c.arc(8, 10, 6.2, Math.PI * 0.85, Math.PI * 2.15); c.stroke();
+            c.lineWidth = 1.7;
+            c.beginPath(); c.moveTo(8, 10); c.lineTo(11, 6.2); c.stroke();
+            c.beginPath(); c.arc(8, 10, 1.5, 0, Math.PI * 2); c.fill();
+            break;
+        case "cup":     // cafeína: taza con vapor
+            c.lineWidth = 1.5;
+            c.beginPath(); c.moveTo(2.5, 6.5); c.lineTo(11, 6.5); c.lineTo(11, 11);
+            c.arcTo(11, 14, 8, 14, 2.5); c.lineTo(5.5, 14); c.arcTo(2.5, 14, 2.5, 11, 2.5);
+            c.closePath(); c.fill();
+            c.beginPath(); c.arc(11.5, 9.3, 2.2, -Math.PI / 2, Math.PI / 2); c.stroke();
+            c.lineWidth = 1.2;
+            c.beginPath(); c.moveTo(5, 1.5); c.quadraticCurveTo(6.2, 3, 5, 4.6);
+            c.moveTo(8.3, 1.5); c.quadraticCurveTo(9.5, 3, 8.3, 4.6); c.stroke();
+            break;
+        case "sunset":  // Night Shift: medio sol sobre el horizonte
+            c.beginPath(); c.arc(8, 11, 3.4, Math.PI, 0); c.closePath(); c.fill();
+            c.lineWidth = 1.4;
+            for (let i = 0; i < 5; i++) {
+                const a = Math.PI + i * Math.PI / 4;
+                c.beginPath();
+                c.moveTo(8 + Math.cos(a) * 5.2, 11 + Math.sin(a) * 5.2);
+                c.lineTo(8 + Math.cos(a) * 6.9, 11 + Math.sin(a) * 6.9);
+                c.stroke();
+            }
+            c.beginPath(); c.moveTo(1, 13.5); c.lineTo(15, 13.5); c.stroke();
             break;
         case "bolt":
             c.beginPath();

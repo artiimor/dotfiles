@@ -4,17 +4,41 @@
 // propia de 1×1 px, transparente, sin clics ni hueco reservado, que solo existe
 // mientras está activo. Así no depende de la barra (Super+B la destruye).
 // Como todo singleton, se crea la primera vez que alguien usa Idle (el botón
-// de la barra) y a partir de ahí vive hasta que se reinicia Quickshell.
+// de la barra, o shell.qml para que exista también en el Modo Mac) y a partir
+// de ahí vive hasta que se reinicia Quickshell.
+//
+// Modo Mac: macshell no crea su propio inhibidor. Lo cambia con
+// `qs ipc call idle toggle` y lee el estado de $XDG_RUNTIME_DIR/qs-idle-inhibited,
+// que se reescribe aquí en cada cambio ("1" o "0").
 pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Io
 import Quickshell.Wayland
 
 Singleton {
     id: root
 
     property bool inhibited: false
+
+    onInhibitedChanged: stateFile.setText(inhibited ? "1" : "0")
+    Component.onCompleted: stateFile.setText(inhibited ? "1" : "0")
+
+    FileView {
+        id: stateFile
+        path: (Quickshell.env("XDG_RUNTIME_DIR") || "/tmp") + "/qs-idle-inhibited"
+        // sin renombrar: así el FileView de macshell que lo vigila no lo pierde
+        atomicWrites: false
+        preload: false   // solo se escribe
+        printErrors: false
+    }
+
+    IpcHandler {
+        target: "idle"
+        function toggle(): void { root.inhibited = !root.inhibited; }
+        function get(): bool { return root.inhibited; }
+    }
 
     PanelWindow {
         id: win

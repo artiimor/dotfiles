@@ -23,6 +23,7 @@ Singleton {
     readonly property color button: tint(0.10)
     readonly property color buttonHover: tint(0.18)
     readonly property color accent: light ? "#007aff" : "#0a84ff"
+    readonly property color red: light ? "#ff3b30" : "#ff453a"   // aviso (temperatura crítica)
     // capas: blanco en el aspecto oscuro, negro en el claro. No es tint(): la píldora de
     // BarButton anima la opacidad y en claro quiere la misma que en oscuro, sin el × 0.6
     readonly property color ink: light ? "black" : "white"

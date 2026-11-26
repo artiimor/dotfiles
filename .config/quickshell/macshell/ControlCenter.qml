@@ -62,6 +62,37 @@ ColumnLayout {
         }
     }
 
+    // Night Shift (luz nocturna, hyprsunset) y Keep Awake (cafeína de la config raíz)
+    RowLayout {
+        Layout.fillWidth: true
+        spacing: 8
+
+        Tile {
+            Layout.fillWidth: true
+            Layout.preferredWidth: 1
+            Toggle {
+                Layout.fillWidth: true
+                icon: "sunset"
+                on: Sys.nightOn
+                title: "Night Shift"
+                subtitle: Sys.nightState === "unavailable" ? "Unavailable" : Sys.nightOn ? "On" : "Off"
+                onToggled: Sys.toggleNight()
+            }
+        }
+        Tile {
+            Layout.fillWidth: true
+            Layout.preferredWidth: 1
+            Toggle {
+                Layout.fillWidth: true
+                icon: "cup"
+                on: Sys.caffeine
+                title: "Keep Awake"
+                subtitle: Sys.caffeine ? "On" : "Off"
+                onToggled: Sys.toggleCaffeine()
+            }
+        }
+    }
+
     // Brillo: solo si hay panel retroiluminado (portátil)
     Tile {
         visible: Sys.hasBacklight
