@@ -46,6 +46,18 @@ esa carpeta en Dolphin para arrastrar imágenes. Se recuerda uno por tema;
 sin elegir, el primero (los Pepes si el tema no trae). También desde la terminal
 con `background-set` (ver el script).
 
+## Fuente
+
+La fuente monoespaciada va aparte del tema: no está en `theme.json` y no cambia al
+cambiar de tema ni con `--reapply`. Se elige en la pestaña **Fuente** de Super+T
+(cada fila escrita con su fuente) o con `font-set "<familia>"` (`font-set` sin nada
+lista las Nerd Fonts monoespaciadas instaladas, una por familia). Se guarda en
+`~/.local/state/font` y font-set escribe `kitty/font.conf`, `ghostty/font.ghostty` y
+`hypr/font.conf` (hyprbars en Modo normal, con la variante "Propo" si existe). Sin
+elegir ninguna, cada programa sigue con la suya: GeistMono en kitty, la de Ghostty
+por defecto y JetBrains Mono en hyprbars. La interfaz de Quickshell, hyprlock y el
+Modo Mac siguen con la suya.
+
 ## Temas claros
 
 `catppuccin-latte`, `rose-pine-dawn` y `snow` son claros (`"light": true`), con los 16
@@ -58,7 +70,8 @@ desde los botones); en los oscuros todo sigue igual. Los Neovim abiertos reciben
 
 En el menú de temas (Super+T) cada fila lleva su paleta (fondo y texto del
 terminal, acento y 6 colores) y un sol o una luna según sea claro u oscuro. Los
-temas van en dos pestañas, **Oscuros** y **Claros**; se abre en la del tema activo,
+temas van en dos pestañas, **Oscuros** y **Claros** (la tercera, **Fuente**, es la de
+font-set); se abre en la del tema activo,
 con él elegido. Se cambia de pestaña con clic, Tab / Shift+Tab o ←/→.
 
 ## Neovim
@@ -91,7 +104,7 @@ perfiles). Se aplica al momento, sin cerrar sesión.
 | Barra, notificaciones | macshell (`quickshell/macshell`) | la de Quickshell de aquí |
 | Super+Espacio / Super+Esc / Super+A | Spotlight / PowerMenu / centro de macshell | lanzador / menú de energía / notificaciones de aquí |
 | Ventanas | esquinas de 10 px y sombra | rectas, sombra por defecto |
-| hyprbars | gris Sur-Gris, Noto Sans, 32 px | color del tema, JetBrains Mono, 28 px |
+| hyprbars | gris Sur-Gris, Noto Sans, 32 px | color del tema, fuente de font-set (JetBrains Mono), 28 px |
 | Iconos (GTK, Qt, Dolphin) | Sur-Transparente (Sur con tema claro) | Papirus-Dark (Papirus-Light con tema claro) |
 | Qt (qt6ct) | Breeze, colores `mac-dark.conf`, Noto Sans | Fusion, colores del tema (`current.conf`) |
 | Workspaces | todos flotantes; Super+Alt+D pasa uno a tiling | tiling; Super+Alt+D pasa uno a flotante |

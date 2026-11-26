@@ -1,4 +1,4 @@
-# Lo común a theme-set, config-set y background-set: rutas, tema actual, perfil
+# Lo común a theme-set, config-set, background-set y font-set: rutas, tema actual, perfil
 # guardado, escritura de archivos y avisos a Quickshell. No es un tema (no tiene
 # theme.json) ni un script: lo importan ellos, que se ejecutan desde esta
 # carpeta (sys.path[0]) y ponen antes sys.dont_write_bytecode = True para que no
@@ -51,13 +51,18 @@ def theme_light():
 
 def saved_profile():
     # Lo que hay en ~/.local/state/desktop-profile, o None si no hay archivo
-    try:
-        return open(PROFILE_STATE).read().strip()
-    except OSError:
-        return None
+    return read_state(PROFILE_STATE)
 
 
 # ── Archivos ─────────────────────────────────────────────────
+
+def read_state(path):
+    # Contenido de un archivo de estado (~/.local/state/...), o None si no existe
+    try:
+        return open(path).read().strip()
+    except OSError:
+        return None
+
 
 def write(path, text):
     os.makedirs(os.path.dirname(path), exist_ok=True)
@@ -91,6 +96,11 @@ def run_quiet(cmd):
 def qs_theme_reload():
     # Quickshell relee theme.json y pide el fondo a background-set
     run_quiet(["qs", "ipc", "call", "theme", "reload"])
+
+
+def reload_terminals():
+    run_quiet(["pkill", "-USR1", "-x", "kitty"])  # kitty relee su config
+    run_quiet(["pkill", "-USR2", "-x", "ghostty"])  # ghostty también (SIGUSR2)
 
 
 def notify(app, title, body):

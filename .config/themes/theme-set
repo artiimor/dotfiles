@@ -47,8 +47,8 @@ import time
 
 sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
 from themelib import (CONF, CURRENT, HOME, QUIET, THEMES, current_theme, list_themes,
-                      load_script, load_theme, notify, qs_theme_reload, run_quiet,
-                      saved_profile, write)
+                      load_script, load_theme, notify, qs_theme_reload, reload_terminals,
+                      run_quiet, saved_profile, write)
 
 HEADER = "Generado por theme-set a partir de themes/{}/theme.json: no editar"
 
@@ -318,13 +318,6 @@ def sync_profile():
     return load_script("config-set").sync_theme()
 
 
-def reload_terminals():
-    # Lo primero tras escribir los archivos: así las terminales cambian a la vez que
-    # el resto y no esperan al reinicio de Quickshell de sync_profile
-    run_quiet(["pkill", "-USR1", "-x", "kitty"])  # kitty relee su config
-    run_quiet(["pkill", "-USR2", "-x", "ghostty"])  # ghostty también (SIGUSR2)
-
-
 def reload_all(restarted=False):
     if not restarted:  # si config-set ha reiniciado qs y Hyprland, ya leen el tema nuevo
         qs_theme_reload()
@@ -361,6 +354,8 @@ def apply(name):
     os.replace(tmp, CURRENT)
     for gen in GENERATORS:
         gen(name, t)
+    # Lo primero tras escribir los archivos: así las terminales cambian a la vez que
+    # el resto y no esperan al reinicio de Quickshell de sync_profile
     reload_terminals()
     reload_nvim(t)
     restarted = sync_profile()

@@ -1,0 +1,81 @@
+#!/usr/bin/env python3
+# Fuente monoespaciada de todo el escritorio, aparte del tema de colores (no va en
+# theme.json: cambiar de tema o `theme-set --reapply` no la tocan).
+#
+#   font-set              lista las fuentes (* = la actual)
+#   font-set <familia>    la aplica, p.ej. font-set "JetBrainsMono Nerd Font"
+#   font-set --list       para el menú de Quickshell (Super+T, pestaña Fuente): una
+#                         línea JSON por fuente, { font, cur }
+#
+# Las fuentes son las Nerd Fonts monoespaciadas instaladas, una por familia (sin
+# las variantes "Mono", de iconos estrechos, ni "Propo"). La elegida se guarda en
+# ~/.local/state/font y se escribe un archivo pequeño por programa, que su config
+# incluye después de su fuente por defecto (sin elegir ninguna, se queda esa):
+#
+#   kitty       kitty/font.conf     (globinclude en kitty.conf)        (al momento)
+#   Ghostty     ghostty/font.ghostty (config-file en config.ghostty)   (al momento)
+#   hyprbars    hypr/font.conf      (lo lee desktopmode.lua, Modo normal) (al momento)
+#
+# hyprbars usa la variante "Propo" (proporcional) si está instalada. hyprlock (solo
+# de reserva si Quickshell no está) sigue con JetBrains Mono.
+# La interfaz de Quickshell y el Modo Mac siguen con su fuente sans (Theme.qml).
+#
+# Rutas y utilidades comunes con theme-set: themelib.py.
+
+import json
+import subprocess
+import sys
+
+sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
+from themelib import CONF, HOME, notify, read_state, reload_terminals, run_quiet, write
+
+STATE = f"{HOME}/.local/state/font"
+HEADER = "Generado por font-set: no editar, elige la fuente con font-set (Super+T, Fuente)"
+
+
+def installed():
+    # {familia: es monoespaciada}, con el primer nombre de cada familia de fc-list
+    out = subprocess.run(["fc-list", "--format", "%{family[0]}\t%{spacing}\n"],
+                         capture_output=True, text=True).stdout
+    fams = {}
+    for line in out.splitlines():
+        fam, _, spacing = line.partition("\t")
+        fams[fam] = fams.get(fam, False) or spacing == "100"
+    return fams
+
+
+def families(fams):
+    # Las Nerd Fonts monoespaciadas, sin las variantes "... Nerd Font Mono/Propo"
+    return sorted(f for f, mono in fams.items() if mono and f.endswith(" Nerd Font"))
+
+
+def apply(fam, fams):
+    propo = f"{fam} Propo" if f"{fam} Propo" in fams else fam
+    write(STATE, fam + "\n")
+    write(f"{CONF}/kitty/font.conf", f"# {HEADER}\nfont_family {fam}\n")
+    write(f"{CONF}/ghostty/font.ghostty", f"# {HEADER}\nfont-family = {fam}\n")
+    write(f"{CONF}/hypr/font.conf", f"# {HEADER}\n{propo}\n")
+    reload_terminals()  # kitty y Ghostty releen su config
+    run_quiet(["hyprctl", "reload"])  # hyprbars
+    notify("Fuente", "Fuente", fam)
+
+
+def main():
+    fams = installed()
+    names = families(fams)
+    cur = read_state(STATE)
+    arg = sys.argv[1] if len(sys.argv) > 1 else None
+    if arg is None:
+        for f in names:
+            print(("* " if f == cur else "  ") + f)
+    elif arg == "--list":
+        for f in names:
+            print(json.dumps({"font": f, "cur": f == cur}))
+    elif arg in names:
+        apply(arg, fams)
+    else:
+        sys.exit(f"No está instalada la fuente «{arg}». Fuentes: {', '.join(names)}")
+
+
+if __name__ == "__main__":
+    main()

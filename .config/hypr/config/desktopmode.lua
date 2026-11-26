@@ -358,17 +358,28 @@ if util.exists(HYPRBARS) then
 	hl.plugin.load(HYPRBARS)
 end
 
+-- Fuente de la barra en Modo normal: la elegida con font-set (la línea de
+-- hypr/font.conf que no es comentario) o, si no hay, JetBrains Mono
+local function barFont()
+	for line in pairs(readLines(util.HOME .. "/.config/hypr/font.conf")) do
+		if not line:match("^#") then
+			return line
+		end
+	end
+	return "JetBrainsMono Nerd Font Propo"
+end
+
 if hl.plugin.hyprbars then
 	hl.config({
 		plugin = {
 			hyprbars = {
 				bar_height = TITLEBAR,
 				-- mac: colores, fuente y medidas de la decoración Sur-Gris de Plasma;
-				-- default: el fondo y el texto del tema de colores y JetBrains Mono
+				-- default: el fondo y el texto del tema de colores y la fuente de font-set
 				-- mac-light: gris claro de macOS con texto oscuro
 				bar_color = PROFILE_LIGHT and "rgba(ececedff)" or PROFILE_MAC and "rgba(2d2d2dff)" or THEME_BG,
 				col = { text = PROFILE_LIGHT and "rgba(3c3c43ff)" or PROFILE_MAC and "rgba(e1e1e1ff)" or THEME_FG or "rgba(d9d6e6ff)" },
-				bar_text_font = PROFILE_MAC and "Noto Sans" or "JetBrainsMono Nerd Font Propo",
+				bar_text_font = PROFILE_MAC and "Noto Sans" or barFont(),
 				bar_text_size = PROFILE_MAC and 10 or 11,
 				bar_text_align = "center",
 				bar_padding = PROFILE_MAC and 16 or 10,

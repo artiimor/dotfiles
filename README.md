@@ -99,6 +99,7 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 - **macOS-style titlebars** (close / minimize / maximize) on floating windows, using a patched `hyprbars` plugin.
 - **Color theme switcher** (**Super+T**, `theme-set`): one `theme.json` per theme recolors Hyprland, Quickshell, hyprlock,
   Ghostty, kitty, btop, fzf, GTK, Qt/KDE, fastfetch and running Neovim instances at once. 13 themes, 2 of them light.
+- **Monospace font picker** (**Super+T**, "Fuente" tab, `font-set`) for kitty, Ghostty and the Normal mode titlebars.
 - **Per-theme backgrounds** (**Super+Ctrl+B**, `background-set`), remembered per theme.
 - **Terminal setup**: Ghostty, bash + starship, a minimal Neovim built on mini.nvim (colors generated from the theme with
   mini.hues; LazyVim, available as `lazyvim`, shares the same colors and keeps `miami` and `basalt` colorschemes),
@@ -162,7 +163,7 @@ Details of step 3:
 - **Cursor**: downloads the black macOS cursor ([apple_cursor](https://github.com/ful1e5/apple_cursor) v2.0.1) into
   `~/.local/share/icons/macOS` and checks its SHA-256. If the download fails it switches GTK, `uwsm/env` and `hypr/config/environment.lua`
   to Adwaita instead. It also writes `~/.icons/default/index.theme` (for X11 apps) and sets the GNOME cursor setting.
-- Makes `theme-set`, `config-set`, `background-set` and the Quickshell scripts executable, and runs `xdg-user-dirs-update`.
+- Makes `theme-set`, `config-set`, `background-set`, `font-set` and the Quickshell scripts executable, and runs `xdg-user-dirs-update`.
 
 ### Packages
 
@@ -209,7 +210,7 @@ and KDE icon/style settings. Apps that are already open pick up new icons and Qt
 | Super+Esc / Super+A | macshell power menu / control center | Power menu / notification center |
 | Super+B | not bound (the bar belongs to macshell) | Show / hide the top bar |
 | Windows | 10 px rounded corners and a soft shadow | Square corners, default shadow |
-| Titlebars (hyprbars) | macOS gray, Noto Sans, 32 px | Theme colors, JetBrains Mono, 28 px |
+| Titlebars (hyprbars) | macOS gray, Noto Sans, 32 px | Theme colors, the [chosen font](#font) (JetBrains Mono by default), 28 px |
 | Icons (GTK, Qt, Dolphin) | Sur-Transparente (Sur with a light theme) | Papirus-Dark (Papirus-Light with a light theme) |
 | Qt apps (qt6ct) | Breeze, `mac-dark` colors, Noto Sans | Fusion, colors from the active theme |
 | Workspaces | All floating (desktop mode); Super+Alt+D makes one tiling | All tiling; Super+Alt+D makes one floating |
@@ -241,8 +242,8 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 
 ## Color themes
 
-**Super+T** opens the theme menu, split into two tabs, **Oscuros** (dark) and **Claros** (light); it opens on the
-active theme's tab with that theme selected. Switch tabs by clicking, with Tab / Shift+Tab or with ←/→. From a terminal:
+**Super+T** opens the theme menu, split into two tabs, **Oscuros** (dark) and **Claros** (light), plus a third, **Fuente**
+([font](#font)); it opens on the active theme's tab with that theme selected. Switch tabs by clicking, with Tab / Shift+Tab or with ←/→. From a terminal:
 
 ```sh
 ~/.config/themes/theme-set              # list themes (* = active)
@@ -292,6 +293,13 @@ The login screen (ReGreet, macOS-style dark gray) and Plymouth ("sobrio") are ou
 **Creating a theme**: copy a folder (`cp -r ~/.config/themes/miami ~/.config/themes/my-theme`), change `name` and the
 colors in its `theme.json` (add `"light": true` for a light theme) and pick it with Super+T.
 The meaning of each `theme.json` section is documented in [`.config/themes/README.md`](.config/themes/README.md) (Spanish).
+
+### Font
+
+The monospace font is separate from the color theme: pick it in the **Fuente** tab of Super+T (each row is written in
+its font) or with `~/.config/themes/font-set "<family>"` (no argument lists the installed Nerd Fonts). It applies at once
+to kitty, Ghostty and the hyprbars titlebars in Normal mode, and is saved in `~/.local/state/font`. The Quickshell UI
+(Inter, or Noto Sans in Mac mode) keeps its own font. Details in [`.config/themes/README.md`](.config/themes/README.md#fuente).
 
 ## Backgrounds
 
@@ -363,7 +371,7 @@ left **Alt** key (see [keyd](#keyboard-remapping-keyd)).
 | Super+B | Show / hide the top bar (Normal mode only) |
 | Super+Ctrl+V | Clipboard history |
 | Super+. | Emoji picker |
-| Super+T | Color theme menu |
+| Super+T | Color theme and font menu |
 | Super+Shift+T | Profile menu (Modo Mac / Modo normal) |
 | Super+Ctrl+B | Background picker |
 | Super+Ctrl+Shift+B | Next background |
@@ -467,7 +475,7 @@ dotfiles/
 │   │   ├── hyprbars-*.patch      local patches for the hyprbars plugin
 │   │   └── hypridle.conf  hyprlock.conf  hyprsunset.conf  xdph.conf
 │   ├── quickshell/               shell.qml, Bar.qml, Theme.qml, modules/, services/, components/, scripts/
-│   ├── themes/                   one folder per theme + theme-set, config-set, background-set
+│   ├── themes/                   one folder per theme + theme-set, config-set, background-set, font-set
 │   ├── backgrounds/              default wallpapers (Pepes) and the script that made them
 │   ├── uwsm/env                  session environment (Qt, cursor, Electron); install.sh adds env.d/gpu (NVIDIA)
 │   ├── ghostty/ kitty/ nvim/ nvim-lazyvim/ btop/ fastfetch/ starship.toml micro/
@@ -482,7 +490,7 @@ dotfiles/
 ```
 
 Runtime state (not in the repo) lives in `~/.local/state/`: `desktop-profile`, `desktop-workspaces`,
-`desktop-exceptions-mac`, `desktop-workspaces-default`, `desktop-applied-profile` and `theme-backgrounds`.
+`desktop-exceptions-mac`, `desktop-workspaces-default`, `desktop-applied-profile`, `theme-backgrounds` and `font`.
 
 ## Customizing
 

@@ -70,5 +70,9 @@ keybind = alt+l=next_tab
 # Barra de pestañas con el fondo/texto del tema, y que cambie al recargar (auto no se reevalúa)
 window-theme = ghostty
 
+# La fuente elegida con font-set (Super+T, Fuente), si hay. Para otra en user.ghostty,
+# pon antes font-family = "": si no, se añade como respaldo de esta
+config-file = ?font.ghostty
+
 # Tus cambios van en user.ghostty: se carga al final y gana (? = opcional)
 config-file = ?user.ghostty

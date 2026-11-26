@@ -3,12 +3,13 @@
 //
 // Estilo: limpio (buscador arriba, lista plana, sin
 // efectos), todo cuadrado y sin bordes. En el menú de temas cada fila lleva
-// su paleta de colores a la derecha y en el de fondos, su miniatura. En los
-// perfiles mac (Theme.mac) va como macshell: esquinas redondeadas, borde fino,
-// fondo translúcido con desenfoque y la fila elegida en azul.
+// su paleta de colores a la derecha (las fuentes, escritas con ella misma) y
+// en el de fondos, su miniatura. En los perfiles mac (Theme.mac) va como
+// macshell: esquinas redondeadas, borde fino, fondo translúcido con desenfoque
+// y la fila elegida en azul.
 //
 // Teclas: escribir filtra · ↑/↓ o Ctrl+K/J o Tab moverse · Enter elegir · Esc cerrar
-// Clic fuera también cierra. Con pestañas (temas: Oscuros / Claros), Tab, Shift+Tab
+// Clic fuera también cierra. Con pestañas (temas: Oscuros / Claros / Fuente), Tab, Shift+Tab
 // y ←/→ cambian de pestaña (ese menú no tiene buscador) y ↑/↓ se mueven.
 import QtQuick
 import QtQuick.Layouts
@@ -295,12 +296,13 @@ PanelWindow {
                             font.pixelSize: 16
                         }
 
+                        // Fuentes (pestaña Fuente de temas): cada una escrita con ella misma
                         Text {
                             Layout.fillWidth: true
                             elide: Text.ElideRight
                             text: row.modelData.text ?? ""
                             color: row.selected ? (Theme.mac ? Theme.onAccent : Theme.fg) : Theme.withAlpha(Theme.fg, Theme.mac ? 1 : 0.8)
-                            font.family: Theme.font
+                            font.family: row.modelData.font ?? Theme.font
                             font.pixelSize: 14
                             font.bold: row.selected && !Theme.mac
                         }

@@ -7,7 +7,7 @@
 //   clipboard   historial de cliphist             (Super+Ctrl+V)
 //   emoji       selector de emojis                (Super+.)
 //   profiles    perfil de energía                 (clic en el icono de la barra)
-//   themes      tema de colores                   (Super+T)
+//   themes      tema de colores y fuente          (Super+T)
 //   backgrounds fondo de pantalla del tema actual (Super+Ctrl+B)
 //   configs     perfil del escritorio: Modo Mac / Modo normal  (Super+Shift+T)
 //   keys        chuleta de atajos de Hyprland     (Super+?)
@@ -48,7 +48,7 @@ Singleton {
             { text: "Reiniciar", glyph: "󰜉", data: "reboot" },
             { text: "Apagar", glyph: "󰐥", data: "poweroff" }
         ] },
-        themes: { width: 420, prompt: "Tema", noSearch: true, proc: themeList, tabs: ["Oscuros", "Claros"] },
+        themes: { width: 420, prompt: "Tema", noSearch: true, proc: themeList, tabs: ["Oscuros", "Claros", "Fuente"] },
         backgrounds: { width: 420, prompt: "Fondo", noSearch: true, proc: backgroundList },
         configs: { width: 260, prompt: "Config", noSearch: true, proc: configList },
         keys: { width: 520, prompt: "Atajos", proc: binds, showSub: true },
@@ -158,7 +158,7 @@ Singleton {
         } else if (m === "themes") {
             // theme-set puede reiniciar Quickshell (Modo Mac al pasar de tema claro a
             // oscuro, ver config-set): setsid para que no muera con él
-            Quickshell.execDetached(["setsid", "-f", root.themesDir + "/theme-set", item.data]);
+            Quickshell.execDetached(["setsid", "-f", root.themesDir + (item.font ? "/font-set" : "/theme-set"), item.data]);
         } else if (m === "backgrounds") {
             // "+": abre en Dolphin la carpeta de fondos del tema (current es un enlace al tema)
             Quickshell.execDetached(item.data === "+"
@@ -254,7 +254,9 @@ Singleton {
     // uno se ejecuta theme-set, que recolorea todo (ver ese script). Cada fila
     // lleva su paleta (fondo y texto del terminal, acento y 6 colores ANSI) para
     // verla antes de elegir, y un sol o una luna según sea claro u oscuro. Van en
-    // dos pestañas, oscuros y claros; se abre en la del tema activo.
+    // dos pestañas, oscuros y claros; se abre en la del tema activo. La tercera,
+    // Fuente, es la fuente monoespaciada (terminales, hyprbars...), aparte del
+    // tema: la pone font-set, y cada fila se escribe con su fuente.
     readonly property string themesDir: Quickshell.env("HOME") + "/.config/themes"
 
     // Marca del elemento actual en temas, fondos y configs
@@ -264,12 +266,22 @@ Singleton {
 
     Process {
         id: themeList
-        // `theme-set --list`: cada línea, un JSON { dir, name, cur, light, bg, fg, colors }
-        command: [root.themesDir + "/theme-set", "--list"]
+        // `theme-set --list`: cada línea, un JSON { dir, name, cur, light, bg, fg, colors };
+        // detrás, `font-set --list`: { font, cur }
+        command: ["sh", "-c", '"$1/theme-set" --list; "$1/font-set" --list', "sh", root.themesDir]
         stdout: StdioCollector {
             onStreamFinished: {
                 const list = root.lines(text).map(l => {
                     const t = JSON.parse(l);
+                    if (t.font)
+                        return {
+                            text: t.font.replace(" Nerd Font", "") + root.curMark(t.cur),
+                            glyph: String.fromCodePoint(0xF06D6), // nf-md-format_font
+                            font: t.font,
+                            tab: 2,
+                            cur: t.cur,
+                            data: t.font
+                        };
                     return {
                         text: t.name + root.curMark(t.cur),
                         // Sol (claro) o luna (oscuro)
@@ -280,7 +292,7 @@ Singleton {
                         data: t.dir
                     };
                 });
-                root.tab = list.find(i => i.cur)?.tab ?? 0;
+                root.tab = list.find(i => i.cur && !i.font)?.tab ?? 0;
                 root.loaded("themes", list);
             }
         }
