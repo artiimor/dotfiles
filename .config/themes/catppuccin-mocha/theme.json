@@ -62,5 +62,26 @@
     "headerbar": "#181825",
     "card": "#313244"
   },
-  "nvim": "catppuccin"
+  "nvim": "catppuccin-mocha",
+  "nvimColors": {
+    "syn": {
+      "string": "#a6e3a1",
+      "number": "#fab387",
+      "constant": "#fab387",
+      "identifier": "#b4befe",
+      "parameter": "#eba0ac",
+      "fun": "#89b4fa",
+      "statement": "#cba6f7",
+      "keyword": "#cba6f7",
+      "operator": "#89dceb",
+      "preproc": "#f5c2e7",
+      "type": "#f9e2af",
+      "regex": "#f5c2e7",
+      "punct": "#9399b2",
+      "comment": "#9399b2",
+      "special1": "#f5c2e7",
+      "special2": "#f5c2e7",
+      "special3": "#89dceb"
+    }
+  }
 }

@@ -247,7 +247,9 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 
 | Folder | Name | Type | Neovim colorscheme |
 |---|---|---|---|
-| `catppuccin` | Catppuccin Mocha | dark | catppuccin |
+| `catppuccin-frappe` | Catppuccin Frappé | dark | catppuccin-frappe |
+| `catppuccin-macchiato` | Catppuccin Macchiato | dark | catppuccin-macchiato |
+| `catppuccin-mocha` | Catppuccin Mocha | dark | catppuccin-mocha |
 | `catppuccin-latte` | Catppuccin Latte | **light** | catppuccin-latte |
 | `dracula` | Dracula | dark | dracula |
 | `everforest` | Everforest | dark | everforest |

@@ -62,5 +62,26 @@
     "headerbar": "#28223c",
     "card": "#2e2945"
   },
-  "nvim": "miami"
+  "nvim": "miami",
+  "nvimColors": {
+    "syn": {
+      "string": "#8fd6b4",
+      "number": "#f2b8a0",
+      "constant": "#f2b8a0",
+      "identifier": "#e8cf8a",
+      "parameter": "#c9c5d8",
+      "fun": "#86d4dc",
+      "statement": "#e89bd0",
+      "keyword": "#e89bd0",
+      "operator": "#f0939f",
+      "preproc": "#f0939f",
+      "type": "#bdb2e2",
+      "regex": "#f0939f",
+      "punct": "#c9c5d8",
+      "comment": "#8582a8",
+      "special1": "#a3e0e6",
+      "special2": "#f0939f",
+      "special3": "#f0939f"
+    }
+  }
 }

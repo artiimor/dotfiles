@@ -62,5 +62,26 @@
     "headerbar": "#232a2e",
     "card": "#343f44"
   },
-  "nvim": "everforest"
+  "nvim": "everforest",
+  "nvimColors": {
+    "syn": {
+      "string": "#83c092",
+      "number": "#d699b6",
+      "constant": "#d699b6",
+      "identifier": "#7fbbb3",
+      "parameter": "#d3c6aa",
+      "fun": "#a7c080",
+      "statement": "#e67e80",
+      "keyword": "#e67e80",
+      "operator": "#e69875",
+      "preproc": "#d699b6",
+      "type": "#dbbc7f",
+      "regex": "#83c092",
+      "punct": "#9da9a0",
+      "comment": "#859289",
+      "special1": "#dbbc7f",
+      "special2": "#dbbc7f",
+      "special3": "#e69875"
+    }
+  }
 }

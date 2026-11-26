@@ -24,7 +24,8 @@ Cada carpeta con un `theme.json` es un tema. `current` es un enlace al tema acti
 | `hypr.group` | Borde de grupos de ventanas | Hyprland |
 | `term` | Fondo, texto, cursor, selección y los 16 colores ANSI (`colors[0..15]`) | kitty, btop, fzf, starship |
 | `gtk` | Ventanas, cabeceras, tarjetas y acento | apps GTK3/GTK4 |
-| `nvim` | Nombre del colorscheme: `catppuccin`, `catppuccin-latte`, `tokyonight`, `rose-pine`, `rose-pine-dawn`, `gruvbox`, `kanagawa-dragon`, `everforest`, `dracula` | Neovim |
+| `nvim` | Nombre del colorscheme: `catppuccin-mocha`, `catppuccin-macchiato`, `catppuccin-frappe`, `catppuccin-latte`, `tokyonight`, `rose-pine`, `rose-pine-dawn`, `gruvbox`, `kanagawa-dragon`, `everforest`, `dracula` | Neovim |
+| `nvimColors.syn` | Colores de sintaxis (string, fun, keyword, comment...) del colorscheme "tema"; sin ellos mini.hues queda casi gris. Todos los temas los traen, sacados de su paleta original | Neovim |
 | `light` | `true` en los temas claros (sin él, oscuro): decide Mac claro u oscuro y GTK claro u oscuro (ver abajo) | config-set |
 
 Cuándo se ve el cambio: Quickshell, Hyprland, kitty, Ghostty y los Neovim abiertos

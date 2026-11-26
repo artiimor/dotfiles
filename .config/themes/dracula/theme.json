@@ -62,5 +62,26 @@
     "headerbar": "#21222c",
     "card": "#343746"
   },
-  "nvim": "dracula"
+  "nvim": "dracula",
+  "nvimColors": {
+    "syn": {
+      "string": "#f1fa8c",
+      "number": "#bd93f9",
+      "constant": "#bd93f9",
+      "identifier": "#f8f8f2",
+      "parameter": "#ffb86c",
+      "fun": "#50fa7b",
+      "statement": "#ff79c6",
+      "keyword": "#ff79c6",
+      "operator": "#ff79c6",
+      "preproc": "#ff79c6",
+      "type": "#8be9fd",
+      "regex": "#ff5555",
+      "punct": "#f8f8f2",
+      "comment": "#6272a4",
+      "special1": "#bd93f9",
+      "special2": "#ff79c6",
+      "special3": "#ff79c6"
+    }
+  }
 }

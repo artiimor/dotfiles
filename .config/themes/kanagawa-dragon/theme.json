@@ -62,5 +62,26 @@
     "headerbar": "#12120f",
     "card": "#282727"
   },
-  "nvim": "kanagawa-dragon"
+  "nvim": "kanagawa-dragon",
+  "nvimColors": {
+    "syn": {
+      "string": "#87a987",
+      "number": "#a292a3",
+      "constant": "#b6927b",
+      "identifier": "#c4b28a",
+      "parameter": "#a6a69c",
+      "fun": "#8ba4b0",
+      "statement": "#8992a7",
+      "keyword": "#8992a7",
+      "operator": "#c4746e",
+      "preproc": "#c4746e",
+      "type": "#8ea4a2",
+      "regex": "#c4746e",
+      "punct": "#9e9b93",
+      "comment": "#737c73",
+      "special1": "#949fb5",
+      "special2": "#c4746e",
+      "special3": "#c4746e"
+    }
+  }
 }

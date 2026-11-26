@@ -62,5 +62,26 @@
     "headerbar": "#0a0a0a",
     "card": "#141414"
   },
-  "nvim": "vantablack"
+  "nvim": "vantablack",
+  "nvimColors": {
+    "syn": {
+      "string": "#a3b3a3",
+      "number": "#ccbc94",
+      "constant": "#ccbc94",
+      "identifier": "#d4d4d4",
+      "parameter": "#bdbdbd",
+      "fun": "#a0abbd",
+      "statement": "#b9a3bd",
+      "keyword": "#b9a3bd",
+      "operator": "#cc8080",
+      "preproc": "#cc8080",
+      "type": "#a0b8b8",
+      "regex": "#cc8080",
+      "punct": "#9e9e9e",
+      "comment": "#6e6e6e",
+      "special1": "#a0abbd",
+      "special2": "#cc8080",
+      "special3": "#cc8080"
+    }
+  }
 }
