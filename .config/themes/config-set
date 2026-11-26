@@ -46,13 +46,20 @@
 #   Qt           qt6ct/qt6ct.conf: estilo, colores, iconos y fuentes
 #   KDE          kdeglobals [Icons] (Dolphin)
 #
-# Todo se aplica sin cerrar sesión. Las apps ya abiertas mantienen sus iconos y
-# estilo Qt hasta que se vuelven a abrir.
+# Todo se aplica sin cerrar sesión. Las apps abiertas cambian a claro u oscuro al
+# momento: las GTK4/libadwaita, Firefox y Electron por color-scheme (vía el portal
+# xdg-desktop-portal-gtk), las GTK3 por gtk-theme, y las Qt porque qt6ct vigila su
+# carpeta y recarga paleta, estilo e iconos ~3 s después de que se reemplace
+# qt6ct.conf (por eso se escribe con write_atomic: escribirlo encima no lo avisa).
+# Lo que no cambia hasta reabrir la app: los colores del gtk.css del tema (GTK los
+# lee al arrancar) y los iconos GTK; en Dolphin, su esquema KDE "Theme"
+# (dolphinrc [UiSettings]); al recargar qt6ct le pone mientras su paleta.
 #
 # Rutas y utilidades comunes con theme-set y background-set: themelib.py.
 
 import configparser
 import fcntl
+import io
 import os
 import re
 import subprocess
@@ -214,8 +221,9 @@ def set_qt(p):
     if not cp.has_section("Appearance"):
         cp.add_section("Appearance")
     a = cp["Appearance"]
-    # Ruta absoluta del usuario actual (no se supone /home/$USER)
-    a["color_scheme_path"] = f"{CONF}/qt6ct/colors/{p['qt_colors']}"
+    # $HOME lo expande qt6ct (como en el qt6ct.conf del repo): ni se supone
+    # /home/$USER ni queda el usuario escrito en un archivo que va en el repo
+    a["color_scheme_path"] = f"$HOME/.config/qt6ct/colors/{p['qt_colors']}"
     a["custom_palette"] = "true"
     a["icon_theme"] = p["icons"]
     a["style"] = p["qt_style"]
@@ -226,9 +234,10 @@ def set_qt(p):
             cp["Fonts"][k] = v
     else:
         cp.remove_section("Fonts")
-    os.makedirs(os.path.dirname(path), exist_ok=True)
-    with open(path, "w") as f:
-        cp.write(f, space_around_delimiters=False)
+    # Reemplazándolo de golpe, qt6ct recarga las apps Qt abiertas (ver la cabecera)
+    text = io.StringIO()
+    cp.write(text, space_around_delimiters=False)
+    write_atomic(path, text.getvalue())
 
 
 def set_kde(p):
@@ -309,23 +318,24 @@ def sync_theme():
     # La llama theme-set después de escribir los archivos del nuevo tema (ya con
     # el enlace current cambiado). En Modo Mac pasa a mac-light o a mac si cambia
     # la claridad: reinicia Quickshell y hace hyprctl reload (sin aviso: ya avisa
-    # theme-set). En Modo normal solo pone GTK e iconos claros u oscuros.
-    # Devuelve True si ha reiniciado Quickshell.
+    # theme-set). Si no, y siempre en Modo normal, vuelve a poner GTK (color-scheme
+    # incluido), Qt e iconos claros u oscuros. Devuelve True si ha reiniciado Quickshell.
     _lock = lock()
     cur = current()
     if cur in MAC_PROFILES:
         want = resolve("mac")
-        if not has_macshell():
-            # Sin macshell, Mac se ve como Modo normal en Hyprland y Quickshell: no
-            # hace falta reiniciar nada, solo guardar el perfil y poner GTK/Qt/iconos
-            if want != cur or saved() is None:
-                write_state(want)
-            write_files(want)  # con su gtk.css: el claro fijo o el del tema
-            return False
-        if want == cur and saved() is not None:
-            return False
-        apply(want, notify=False)
-        return True
+        changed = want != cur or saved() is None
+        if has_macshell() and changed:
+            apply(want, notify=False)
+            return True
+        # Misma claridad, o sin macshell (Mac se ve como Modo normal en Hyprland y
+        # Quickshell): no hace falta reiniciar nada, solo guardar el perfil y poner
+        # GTK/Qt/iconos. El gtk.css solo si cambia el perfil: si no, ya está bien
+        # (el del tema lo ha escrito theme-set; el claro fijo de mac-light no cambia)
+        if changed:
+            write_state(want)
+        write_files(want, css=changed)
+        return False
     if saved() is None:
         write_state(cur)
     write_files(cur, css=False)  # el gtk.css del tema ya lo ha escrito theme-set

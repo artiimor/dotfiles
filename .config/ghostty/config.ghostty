@@ -66,3 +66,6 @@ theme = current
 # Cambiar de pestaña con Alt+H / Alt+L (Tab y Ctrl se usan en nvim)
 keybind = alt+h=previous_tab
 keybind = alt+l=next_tab
+
+# Barra de pestañas con el fondo/texto del tema, y que cambie al recargar (auto no se reevalúa)
+window-theme = ghostty
