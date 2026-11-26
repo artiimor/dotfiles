@@ -26,12 +26,13 @@ vim.g.tema_key = theme_key(t)
 -- Sin colors_name antes de tocar 'background', para que no se vuelva a cargar este archivo
 vim.g.colors_name = nil
 vim.o.background = t.light and "light" or "dark"
-require("mini.hues").setup({
+local hues = {
   background = ui.bg or "#141518",
   foreground = ui.fg or "#c8ccd4",
   saturation = "lowmedium", -- sobrio; prueba "medium" si lo ves muy apagado
   accent = "bg",
-})
+}
+require("mini.hues").setup(hues)
 
 -- transparencia: que se vea el fondo de kitty
 for _, g in ipairs({ "Normal", "NormalNC", "SignColumn", "LineNr", "EndOfBuffer", "FoldColumn" }) do
@@ -71,10 +72,12 @@ end
 -- nvimColors.ui (opcional) pisa cualquiera de estas claves: panel (menús, flotantes,
 -- statusline), sel (fila elegida), cursorline, visual, linenr, nontext, whitespace,
 -- special, border (por defecto ui.border al 25 %), dim, accent, accent2, muted, red, yellow, ok, info, hint.
+-- Lo que falte en el tema sale de la paleta de mini.hues (p).
 if t.ui then
   local term = t.term or {}
   local o = (t.nvimColors or {}).ui or {}
-  local tbg = (term.background or ui.bg):lower()
+  local p = require("mini.hues").make_palette(hues)
+  local tbg = (term.background or p.bg):lower()
   -- el primero que se distingue del fondo de la terminal (Normal es transparente)
   local function visible(...)
     for i = 1, select("#", ...) do
@@ -97,19 +100,20 @@ if t.ui then
   end
   local c = {}
   for k, v in pairs({
-    fg = ui.fg, bg = ui.bg, muted = ui.muted, accent = ui.accent, accent2 = ui.accent2,
-    dim = ui.accentDim, red = ui.red, yellow = ui.yellow, ok = ui.ok,
-    info = ui.cyan, hint = ui.accent2, sel = ui.launcherSel,
-    panel = visible(ui.launcherBg, ui.bg, ui.surface),
-    cursorline = visible(ui.bg, ui.surface, ui.launcherSel),
-    visual = term.selection_background or ui.launcherSel,
-    nontext = ui.muted, whitespace = ui.accentDim, special = ui.muted,
+    fg = p.fg, bg = p.bg, muted = ui.muted or p.fg_mid2, accent = ui.accent or p.blue,
+    accent2 = ui.accent2 or p.purple, dim = ui.accentDim or p.bg_mid2, red = ui.red or p.red,
+    yellow = ui.yellow or p.yellow, ok = ui.ok or p.green, info = ui.cyan or p.cyan,
+    hint = ui.accent2 or p.purple, sel = ui.launcherSel or p.bg_mid,
+    panel = visible(ui.launcherBg, ui.bg, ui.surface) or p.bg_edge,
+    cursorline = visible(ui.bg, ui.surface, ui.launcherSel) or p.bg_mid,
+    visual = term.selection_background or ui.launcherSel or p.bg_mid2,
+    nontext = ui.muted or p.fg_mid2, whitespace = ui.accentDim or p.bg_mid2, special = ui.muted or p.fg_mid2,
   }) do
     c[k] = o[k] or v
   end
   c.linenr = o.linenr or c.nontext
   -- borde de los flotantes: ui.border al 25 % sobre el panel, como las islas de Quickshell
-  c.border = o.border or blend(ui.border, c.panel, 0.25)
+  c.border = o.border or (ui.border and blend(ui.border, c.panel, 0.25)) or p.bg_mid2
   local mode = function(bg) return { fg = c.bg, bg = bg, bold = true } end
   local float = { fg = c.fg, bg = c.panel }
   local hl = {
