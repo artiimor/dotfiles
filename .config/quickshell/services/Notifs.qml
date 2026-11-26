@@ -11,6 +11,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
+import qs
 
 Singleton {
     id: root
@@ -39,7 +40,7 @@ Singleton {
     // el toggle lo volvería a abrir. Esto lo evita.
     property real _closedAt: 0
     function togglePanel() {
-        if (!centerOpen && Date.now() - _closedAt < 300)
+        if (!centerOpen && Date.now() - _closedAt < Theme.reopenDelay)
             return;
         centerOpen = !centerOpen;
     }

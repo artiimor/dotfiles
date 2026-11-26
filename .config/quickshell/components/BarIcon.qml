@@ -8,6 +8,7 @@
 //       onScrolledUp: ...
 //   }
 import QtQuick
+import Quickshell
 import qs
 
 Item {
@@ -18,7 +19,7 @@ Item {
     property string tooltip
     property int pixelSize: Theme.iconSize
     property bool italic: false
-    property int padding: 14
+    property int padding: 10
     property bool clickable: true   // false: sin la manita (solo tooltip o rueda)
     readonly property bool hovered: mouse.containsMouse
 
@@ -48,7 +49,7 @@ Item {
         id: mouse
         anchors.fill: parent
         hoverEnabled: true
-        acceptedButtons: Qt.LeftButton | Qt.RightButton | Qt.MiddleButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         cursorShape: root.clickable ? Qt.PointingHandCursor : Qt.ArrowCursor
         onClicked: m => root.clicked(m)
         onWheel: w => {
@@ -59,9 +60,14 @@ Item {
         }
     }
 
-    Tooltip {
-        target: root
-        text: root.tooltip
-        show: root.hovered
+    // Solo se crea con el ratón encima y texto (el retraso del Tooltip tapa la creación)
+    LazyLoader {
+        active: root.hovered && root.tooltip !== ""
+
+        Tooltip {
+            target: root
+            text: root.tooltip
+            show: true
+        }
     }
 }

@@ -9,7 +9,6 @@ import qs.components
 
 Island {
     id: root
-    padding: 6
     spacing: 4
 
 

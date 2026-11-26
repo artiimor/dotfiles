@@ -5,6 +5,7 @@
 //       onMoved: v => ...
 //       onIconClicked: ...          // p. ej. silenciar
 //   }
+// muted: icono de silencio y barra apagada (sigue respondiendo)
 import QtQuick
 import QtQuick.Layouts
 import qs
@@ -16,8 +17,7 @@ RowLayout {
     property color iconColor: Theme.accent
     property string tooltip
     property real value: 0
-    // false: la barra se ve apagada (p. ej. silenciado), pero sigue respondiendo
-    property bool active: true
+    property bool muted: false
 
     signal moved(real value)
     signal iconClicked
@@ -28,15 +28,15 @@ RowLayout {
         implicitHeight: 24
         padding: 4
         pixelSize: 15
-        icon: root.icon
-        color: root.iconColor
+        icon: root.muted ? "󰝟" : root.icon
+        color: root.muted ? Theme.muted : root.iconColor
         tooltip: root.tooltip
         onClicked: root.iconClicked()
     }
     Slider {
         Layout.fillWidth: true
         value: root.value
-        enabled: root.active
+        active: !root.muted
         onMoved: v => root.moved(v)
     }
     Text {

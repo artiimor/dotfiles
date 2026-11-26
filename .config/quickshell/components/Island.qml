@@ -3,17 +3,15 @@
 import QtQuick
 import qs
 
-Rectangle {
+Item {
     id: root
 
     default property alias content: row.data
-    property int padding: 15
+    property int padding: 6
     property alias spacing: row.spacing
 
     implicitWidth: row.implicitWidth + padding * 2
     implicitHeight: Theme.barHeight
-    radius: Theme.radius
-    color: "transparent"
     clip: true
 
     Behavior on implicitWidth {

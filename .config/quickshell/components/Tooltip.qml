@@ -11,57 +11,48 @@ PopupWindow {
     property string text
     property bool show: false
     property bool above: false
-    default property alias content: extra.data
+    default property alias content: col.data
 
-    // Pequeño retraso para que no parpadee al pasar el ratón de largo
+    // Pequeño retraso para que no parpadee al pasar el ratón de largo.
+    // Cuenta desde que hay algo que enseñar (el primer hijo de col es el texto).
+    readonly property bool _wanted: show && (text !== "" || col.children.length > 1)
     property bool _ready: false
     Timer {
         interval: 350
-        running: root.show
+        running: root._wanted
         onTriggered: root._ready = true
     }
-    onShowChanged: if (!show) _ready = false
+    on_WantedChanged: if (!_wanted) _ready = false
 
-    visible: _ready && (text !== "" || extra.children.length > 0)
+    visible: _ready
 
     anchor.item: target
     anchor.rect.width: target.width
-    anchor.rect.y: above ? -10 : 0
-    anchor.rect.height: target.height + (above ? 0 : 10)
+    anchor.rect.y: above ? -Theme.popupGap : 0
+    anchor.rect.height: target.height + (above ? 0 : Theme.popupGap)
     anchor.edges: above ? Edges.Top : Edges.Bottom
     anchor.gravity: above ? Edges.Top : Edges.Bottom
 
-    implicitWidth: box.implicitWidth
-    implicitHeight: box.implicitHeight
+    implicitWidth: col.implicitWidth + 24
+    implicitHeight: col.implicitHeight + 16
     color: "transparent"
 
-    Rectangle {
-        id: box
-        implicitWidth: Math.max(label.implicitWidth, extra.childrenRect.width) + 24
-        implicitHeight: (label.visible ? label.implicitHeight : 0) + extra.childrenRect.height + 16
-        radius: Theme.radius
-        color: Theme.bgSolid
-        border.width: 1
-        border.color: Theme.accentDim
+    PopupBox {
+        anchors.fill: parent
 
-        Text {
-            id: label
-            visible: root.text !== ""
+        Column {
+            id: col
             x: 12
             y: 8
-            text: root.text
-            color: Theme.fg
-            font.family: Theme.font
-            font.pixelSize: Theme.fontSize
-            font.bold: true
-        }
 
-        Item {
-            id: extra
-            x: 12
-            y: 8
-            width: childrenRect.width
-            height: childrenRect.height
+            Text {
+                visible: root.text !== ""
+                text: root.text
+                color: Theme.fg
+                font.family: Theme.font
+                font.pixelSize: Theme.fontSize
+                font.bold: true
+            }
         }
     }
 }

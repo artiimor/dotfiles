@@ -22,6 +22,7 @@ Island {
     BarIcon {
         // Mismo criterio que Waybar: muestra el botón de lo que hará el clic
         icon: (root.playing ? "󰏤" : "󰐊") + "  " + root.trackText()
+        padding: 14
         pixelSize: Theme.fontSize
         italic: !root.playing
         color: root.playing ? Theme.accent : Theme.muted

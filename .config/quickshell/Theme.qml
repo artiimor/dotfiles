@@ -119,6 +119,7 @@ Singleton {
     readonly property int barHeight: 26
     readonly property int gap: 8      // separación entre islas y margen de la barra
     readonly property int radius: mac ? 14 : 10
+    readonly property int popupGap: 10 // separación entre la barra y sus popups y tooltips
 
     // Fondo de pantalla (también se usa, desenfocado, en la pantalla de bloqueo)
     readonly property string wallpaper: "file://" + Quickshell.env("HOME") + "/.config/backgrounds/wallpaper.jpg"
@@ -136,4 +137,7 @@ Singleton {
 
     readonly property int anim: 250   // duración de las animaciones (ms)
     readonly property int drawerAnim: 400
+    // Tras cerrar un popup con un clic fuera, ese mismo clic en su icono no lo
+    // vuelve a abrir si llega antes de este tiempo (ms)
+    readonly property int reopenDelay: 300
 }

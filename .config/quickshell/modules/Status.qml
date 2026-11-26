@@ -20,23 +20,17 @@ Item {
     readonly property bool drawerOpen: drawer.open
 
     // Solo cuenta lo fijo; el cajón sobresale hacia la izquierda
-    implicitWidth: root.implicitWidth
+    implicitWidth: fixed.implicitWidth
     implicitHeight: Theme.barHeight
-
-    // El cajón sigue abierto mientras el ratón esté en lo fijo o en el cajón
-    HoverHandler { id: hover }
-    HoverHandler { id: drawerHover; parent: drawer }
 
     // ── Cajón: lo que no hace falta ver siempre ───────────
     Drawer {
         id: drawer
-        anchors.right: root.left
+        anchors.right: fixed.left
         fromRight: true
-        open: hover.hovered || drawerHover.hovered
 
         BarIcon {
             icon: "󰍛"
-            padding: 10
             color: Theme.muted
             clickable: false
             tooltip: `${SysStats.memUsed.toFixed(1)} / ${SysStats.memTotal.toFixed(1)} GiB`
@@ -45,7 +39,6 @@ Item {
         BarIcon {
             readonly property bool critical: SysStats.temp >= SysStats.tempCritical
             icon: ["󱃃", "󰔏", "󱃂"][Math.min(2, Math.floor(3 * SysStats.temp / SysStats.tempCritical))]
-            padding: 10
             color: critical ? Theme.red : Theme.muted
             clickable: false
             tooltip: `${SysStats.temp}°C`
@@ -58,7 +51,6 @@ Item {
             icon: profile === PowerProfile.Performance ? "󰓅"
                 : profile === PowerProfile.PowerSaver ? "󰾆"
                 : "󰾅"
-            padding: 10
             color: Theme.fg
             tooltip: `Perfil: ${PowerProfile.toString(profile)}\nClic: cambiar`
 
@@ -68,7 +60,6 @@ Item {
         // Apagado · Clic: menú de energía (también con Super+Escape)
         BarIcon {
             icon: "⏻"
-            padding: 10
             color: hovered ? Theme.red : Theme.muted
             onClicked: Launcher.toggle("power")
         }
@@ -88,37 +79,35 @@ Item {
     }
 
     Island {
-        id: root
+        id: fixed
         anchors.right: parent.right
-        padding: 6
 
         // ── Audio ─────────────────────────────────────────────
         // Clic: mezclador · Clic derecho: silenciar · Rueda: volumen ±5%
         readonly property PwNode sink: Pipewire.defaultAudioSink
         // Sin esto Pipewire no rellena sink.audio
-        PwObjectTracker { objects: [root.sink] }
+        PwObjectTracker { objects: [fixed.sink] }
 
         BarIcon {
             id: volumeIcon
-            readonly property real volume: root.sink?.audio?.volume ?? 0
-            readonly property bool muted: root.sink?.audio?.muted ?? false
-            readonly property bool bluetooth: (root.sink?.name ?? "").startsWith("bluez")
+            readonly property real volume: fixed.sink?.audio?.volume ?? 0
+            readonly property bool muted: fixed.sink?.audio?.muted ?? false
+            readonly property bool bluetooth: (fixed.sink?.name ?? "").startsWith("bluez")
 
             icon: muted ? "󰝟" : (bluetooth ? "󰂯 " : "") + ["󰕿", "󰖀", "󰕾"][Math.min(2, Math.floor(volume * 3))]
-            padding: 10
             color: muted ? Theme.muted : Theme.fg
             tooltip: mixer.visible ? ""
-                : root.sink ? `${root.sink.description}\nVolumen ${Math.round(volume * 100)}%`
+                : fixed.sink ? `${fixed.sink.description}\nVolumen ${Math.round(volume * 100)}%`
                 : "Sin salida de audio"
 
             onClicked: m => {
                 if (m.button === Qt.RightButton)
-                    root.sink.audio.muted = !muted;
+                    fixed.sink.audio.muted = !muted;
                 else
                     mixer.toggle();
             }
-            onScrolledUp: root.sink.audio.volume = Math.min(1, volume + 0.05)
-            onScrolledDown: root.sink.audio.volume = Math.max(0, volume - 0.05)
+            onScrolledUp: fixed.sink.audio.volume = Math.min(1, volume + 0.05)
+            onScrolledDown: fixed.sink.audio.volume = Math.max(0, volume - 0.05)
 
             VolumeMixer {
                 id: mixer
@@ -131,7 +120,6 @@ Item {
         BarIcon {
             visible: Brightness.available
             icon: ["󰃞", "󰃟", "󰃠"][Math.min(2, Math.floor(Brightness.percent / 34))]
-            padding: 10
             color: Theme.yellow
             clickable: false
             tooltip: `Brillo ${Brightness.percent}%\nRueda: ajustar`
@@ -145,7 +133,6 @@ Item {
             icon: Net.wired ? "󰈀"
                 : Net.wifi ? ["󰤟", "󰤢", "󰤥", "󰤨"][Math.min(3, Math.floor(Net.signal / 25))]
                 : "󰤭"
-            padding: 10
             color: Net.wired || Net.wifi ? Theme.fg : Theme.muted
             tooltip: {
                 if (!Net.wired && !Net.wifi)
@@ -163,13 +150,12 @@ Item {
         readonly property var btConnected: adapter?.devices.values.filter(d => d.connected) ?? []
 
         BarIcon {
-            readonly property bool on: root.adapter?.enabled ?? false
+            readonly property bool on: fixed.adapter?.enabled ?? false
 
-            icon: !on ? "󰂲" : root.btConnected.length > 0 ? "󰂱" : "󰂯"
-            padding: 10
+            icon: !on ? "󰂲" : fixed.btConnected.length > 0 ? "󰂱" : "󰂯"
             color: on ? Theme.fg : Theme.muted
             tooltip: !on ? "Bluetooth apagado"
-                : root.btConnected.length > 0 ? root.btConnected.map(d => d.name).join("\n")
+                : fixed.btConnected.length > 0 ? fixed.btConnected.map(d => d.name).join("\n")
                 : "Bluetooth encendido"
 
             onClicked: Quickshell.execDetached(["bzmenu", "-l", "custom", "--launcher-command",
@@ -197,21 +183,20 @@ Item {
 
         BarIcon {
             id: batteryIcon
-            visible: root.hasBattery
-            readonly property bool warning: !root.charging && root.percent <= 30
-            readonly property bool critical: !root.charging && !root.plugged && root.percent <= 15
+            visible: fixed.hasBattery
+            readonly property bool warning: !fixed.charging && fixed.percent <= 30
+            readonly property bool critical: !fixed.charging && !fixed.plugged && fixed.percent <= 15
 
-            icon: root.charging ? "󰂄"
-                : root.plugged ? "󰚥"
-                : ["󰂎", "󰁺", "󰁼", "󰁾", "󰂀", "󰂂", "󰁹"][Math.min(6, Math.floor(root.percent / 100 * 7))]
-            padding: 10
-            color: root.charging ? Theme.fg
+            icon: fixed.charging ? "󰂄"
+                : fixed.plugged ? "󰚥"
+                : ["󰂎", "󰁺", "󰁼", "󰁾", "󰂀", "󰂂", "󰁹"][Math.min(6, Math.floor(fixed.percent / 100 * 7))]
+            color: fixed.charging ? Theme.fg
                 : critical ? (blink ? Theme.fg : Theme.red)
                 : warning ? Theme.yellow
                 : Theme.fg
             tooltip: {
-                const time = root.formatTime(root.charging ? root.battery?.timeToFull : root.battery?.timeToEmpty);
-                return `${root.percent}%${time ? " · " + time : ""}\n${Math.abs(root.battery?.changeRate ?? 0).toFixed(1)} W`;
+                const time = fixed.formatTime(fixed.charging ? fixed.battery?.timeToFull : fixed.battery?.timeToEmpty);
+                return `${fixed.percent}%${time ? " · " + time : ""}\n${Math.abs(fixed.battery?.changeRate ?? 0).toFixed(1)} W`;
             }
 
             // Parpadeo con batería crítica
@@ -230,7 +215,6 @@ Item {
         BarIcon {
             visible: Notifs.count > 0 || Notifs.dnd || Notifs.centerOpen
             icon: Notifs.dnd ? "󰂛" : Notifs.count > 0 ? "󱅫" : "󰂚"
-            padding: 10
             color: Notifs.centerOpen || Notifs.count > 0 ? Theme.accent : Theme.muted
             tooltip: Notifs.count > 0 ? `${Notifs.count} notificaciones` : ""
 

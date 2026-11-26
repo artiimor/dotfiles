@@ -7,6 +7,7 @@ import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import qs
+import qs.components
 import qs.services
 
 PanelWindow {
@@ -124,27 +125,12 @@ PanelWindow {
                 font.pixelSize: 18
             }
 
-            Rectangle {
+            Slider {
                 anchors.verticalCenter: parent.verticalCenter
                 width: 160
-                height: 8
-                radius: 4
-                color: Theme.surface
-                opacity: osd.muted ? 0.4 : 1
-
-                Rectangle {
-                    height: parent.height
-                    width: Math.max(height, parent.width * Math.min(1, osd.value))
-                    radius: 4
-                    gradient: Gradient {
-                        orientation: Gradient.Horizontal
-                        GradientStop { position: 0; color: Theme.accentDim }
-                        GradientStop { position: 1; color: Theme.accent }
-                    }
-                    Behavior on width {
-                        NumberAnimation { duration: 120; easing.type: Easing.OutCubic }
-                    }
-                }
+                enabled: false
+                value: osd.value
+                active: !osd.muted
             }
 
             Text {

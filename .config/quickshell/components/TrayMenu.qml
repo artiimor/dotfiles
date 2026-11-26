@@ -18,9 +18,10 @@ BarPopup {
     implicitWidth: Math.max(180, column.implicitWidth + 12)
     implicitHeight: column.implicitHeight + 12
 
+    // Solo carga el menú (por DBus) mientras está abierto
     QsMenuOpener {
         id: opener
-        menu: root.current
+        menu: root.visible ? root.current : null
     }
 
     Column {
@@ -40,42 +41,40 @@ BarPopup {
         Repeater {
             model: opener.children
 
-            Loader {
+            // Cada entrada es una fila o un separador, según lo que sea
+            Column {
+                id: entry
                 required property QsMenuEntry modelData
                 width: column.width
-                sourceComponent: modelData.isSeparator ? separator : entry
 
-                Component {
-                    id: separator
-                    Item {
-                        implicitHeight: 9
-                        Rectangle {
-                            anchors.centerIn: parent
-                            width: parent.width - 12
-                            height: 1
-                            color: Theme.border
-                        }
+                Item {
+                    visible: entry.modelData.isSeparator
+                    width: parent.width
+                    implicitHeight: 9
+                    Rectangle {
+                        anchors.centerIn: parent
+                        width: parent.width - 12
+                        height: 1
+                        color: Theme.border
                     }
                 }
 
-                Component {
-                    id: entry
-                    MenuRow {
-                        readonly property QsMenuEntry e: modelData
-                        label: e.text.replace(/_(?!_)/g, "") // quita los "_" de los atajos de teclado
-                        enabled: e.enabled
-                        icon: e.icon
-                        leading: e.buttonType === QsMenuButtonType.None ? ""
-                            : e.checkState === Qt.Checked ? (e.buttonType === QsMenuButtonType.RadioButton ? "󰐾" : "󰄵")
-                            : (e.buttonType === QsMenuButtonType.RadioButton ? "󰄯" : "󰄱")
-                        trailing: e.hasChildren ? "󰅂" : ""
-                        onActivated: {
-                            if (e.hasChildren) {
-                                root.stack = [...root.stack, e];
-                            } else {
-                                e.triggered();
-                                root.close();
-                            }
+                MenuRow {
+                    readonly property QsMenuEntry e: entry.modelData
+                    visible: !e.isSeparator
+                    label: e.text.replace(/_(?!_)/g, "") // quita los "_" de los atajos de teclado
+                    enabled: e.enabled
+                    icon: e.icon
+                    leading: e.buttonType === QsMenuButtonType.None ? ""
+                        : e.checkState === Qt.Checked ? (e.buttonType === QsMenuButtonType.RadioButton ? "󰐾" : "󰄵")
+                        : (e.buttonType === QsMenuButtonType.RadioButton ? "󰄯" : "󰄱")
+                    trailing: e.hasChildren ? "󰅂" : ""
+                    onActivated: {
+                        if (e.hasChildren) {
+                            root.stack = [...root.stack, e];
+                        } else {
+                            e.triggered();
+                            root.close();
                         }
                     }
                 }
@@ -90,14 +89,13 @@ BarPopup {
         property string icon
         property string leading
         property string trailing
-        property bool enabled: true
         signal activated
 
         width: parent?.width ?? 0
         implicitWidth: rowContent.implicitWidth + 20
         implicitHeight: 30
         radius: 6
-        color: mouse.containsMouse && enabled ? Theme.surface : "transparent"
+        color: mouse.containsMouse ? Theme.surface : "transparent"
 
         Row {
             id: rowContent
@@ -125,7 +123,7 @@ BarPopup {
                 text: row.label
                 color: !row.enabled ? Theme.muted : mouse.containsMouse ? Theme.accent : Theme.fg
                 font.family: Theme.font
-                font.pixelSize: 13
+                font.pixelSize: Theme.fontSize
                 font.bold: true
             }
             // Hueco para que la flecha no pise el texto
@@ -143,14 +141,13 @@ BarPopup {
             text: row.trailing
             color: Theme.muted
             font.family: Theme.font
-            font.pixelSize: 13
+            font.pixelSize: Theme.fontSize
         }
 
         MouseArea {
             id: mouse
             anchors.fill: parent
             hoverEnabled: true
-            enabled: row.enabled
             cursorShape: Qt.PointingHandCursor
             onClicked: row.activated()
         }

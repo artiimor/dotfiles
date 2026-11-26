@@ -15,13 +15,14 @@ BarPopup {
     implicitHeight: column.implicitHeight + 24
 
     // Las apps que mandan audio a la salida actual
+    // (solo con el mezclador abierto; el icono de la barra sigue la salida por su cuenta)
     PwNodeLinkTracker {
         id: links
-        node: root.sink
+        node: root.visible ? root.sink : null
     }
     readonly property var apps: links.linkGroups.map(g => g.source).filter(n => n?.audio)
     // Sin esto Pipewire no rellena node.audio
-    PwObjectTracker { objects: [root.sink, ...root.apps] }
+    PwObjectTracker { objects: root.visible ? [root.sink, ...root.apps] : [] }
 
     Column {
         id: column
@@ -82,10 +83,9 @@ BarPopup {
         SliderRow {
             visible: channel.node !== null
             width: parent.width
-            icon: channel.muted ? "󰝟" : "󰕾"
-            iconColor: channel.muted ? Theme.muted : Theme.accent
+            icon: "󰕾"
             value: channel.node?.audio?.volume ?? 0
-            active: !channel.muted
+            muted: channel.muted
             onIconClicked: channel.node.audio.muted = !channel.muted
             onMoved: v => channel.node.audio.volume = v
         }

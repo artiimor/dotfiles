@@ -17,14 +17,26 @@ Singleton {
     readonly property bool available: device !== ""
     property int percent: 0
 
-    function raise() { set("5%+"); }
-    function lower() { set("5%-"); }
+    function raise() { set(percent + 5); }
+    function lower() { set(percent - 5); }
 
-    function set(value) {
+    // Valor (en %) que falta por aplicar: al arrastrar llegan valores mientras
+    // brightnessctl aún corre; se guarda el último y se aplica al terminar
+    property int pending: -1
+
+    function set(p) {
         if (!available)
             return;
+        // percent cambia ya, así la barra sigue al ratón y las teclas se acumulan
+        percent = pending = Math.max(1, Math.min(100, Math.round(p)));
+        if (!setter.running)
+            apply();
+    }
+
+    function apply() {
         // -d: siempre el panel detectado (sin él brightnessctl podría coger un LED)
-        setter.command = ["brightnessctl", "-d", device.split("/").pop(), "--min-value=1", "set", value];
+        setter.command = ["brightnessctl", "-d", device.split("/").pop(), "--min-value=1", "set", pending + "%"];
+        pending = -1;
         setter.running = true;
     }
 
@@ -46,7 +58,7 @@ Singleton {
 
     Process {
         id: setter
-        onExited: current.reload()
+        onExited: root.pending >= 0 ? root.apply() : current.reload()
     }
 
     // sysfs no avisa de cambios, así que se consulta cada pocos segundos
@@ -55,7 +67,8 @@ Singleton {
         interval: 2000
         running: root.available
         repeat: true
-        onTriggered: current.reload()
+        // Mientras se aplica un cambio, leerlo daría el valor viejo
+        onTriggered: if (!setter.running) current.reload()
     }
 
     FileView {

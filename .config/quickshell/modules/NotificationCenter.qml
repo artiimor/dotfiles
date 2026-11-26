@@ -216,11 +216,10 @@ PanelWindow {
             SliderRow {
                 readonly property var audio: Pipewire.defaultAudioSink?.audio
                 Layout.fillWidth: true
-                icon: audio?.muted ? "󰝟" : "󰕾"
-                iconColor: audio?.muted ? Theme.muted : Theme.accent
+                icon: "󰕾"
                 tooltip: "Clic: silenciar"
                 value: audio?.volume ?? 0
-                active: !(audio?.muted ?? false)
+                muted: audio?.muted ?? false
                 onIconClicked: audio.muted = !audio.muted
                 onMoved: v => audio.volume = v
             }
@@ -232,7 +231,7 @@ PanelWindow {
                 icon: "󰃟"
                 iconColor: Theme.yellow
                 value: Brightness.percent / 100
-                onMoved: v => Brightness.set(Math.max(1, Math.round(v * 100)) + "%")
+                onMoved: v => Brightness.set(v * 100)
             }
 
             Rectangle {

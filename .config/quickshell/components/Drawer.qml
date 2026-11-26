@@ -1,4 +1,5 @@
-// Cajón: una fila que se despliega (de 0 a su ancho) cuando `open` es true.
+// Cajón: una fila que se despliega (de 0 a su ancho) mientras el ratón esté en
+// la zona fija del módulo (su padre) o en el propio cajón.
 // Es lo que hace "drawer" en Waybar: el reloj y la flecha de sistema lo usan.
 import QtQuick
 import qs
@@ -6,7 +7,7 @@ import qs
 Item {
     id: root
 
-    property bool open: false
+    readonly property bool open: hover.hovered || zoneHover.hovered
     // true: crece hacia la izquierda (anclado por la derecha), el contenido sale pegado al borde fijo
     property bool fromRight: false
     default property alias content: row.data
@@ -15,6 +16,9 @@ Item {
     implicitWidth: open ? row.implicitWidth : 0
     clip: true
     opacity: open ? 1 : 0
+
+    HoverHandler { id: hover }
+    HoverHandler { id: zoneHover; parent: root.parent }
 
     Behavior on implicitWidth {
         NumberAnimation { duration: Theme.drawerAnim; easing.type: Easing.OutCubic }

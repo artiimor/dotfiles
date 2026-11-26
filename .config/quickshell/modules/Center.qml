@@ -17,10 +17,6 @@ Item {
     implicitWidth: clockIcon.implicitWidth
     implicitHeight: Theme.barHeight
 
-    // El cajón sigue abierto mientras el ratón esté en el reloj o en el cajón
-    HoverHandler { id: hover }
-    HoverHandler { id: drawerHover; parent: drawer }
-
     SystemClock {
         id: clock
         precision: SystemClock.Minutes
@@ -50,10 +46,10 @@ Item {
     Drawer {
         id: drawer
         anchors.left: clockIcon.right
-        open: hover.hovered || drawerHover.hovered
 
         BarIcon {
             icon: NightLight.icon
+            padding: 14
             color: NightLight.state === "on" ? Theme.yellow
                  : NightLight.state === "off" ? Theme.muted
                  : Qt.alpha(Theme.muted, 0.5)
@@ -65,6 +61,7 @@ Item {
 
         BarIcon {
             icon: Idle.inhibited ? "󰅶" : "󰾪"
+            padding: 14
             color: Idle.inhibited ? Theme.yellow : Theme.muted
             tooltip: Idle.inhibited ? "Sin suspensión automática" : "Suspensión automática activa"
             onClicked: Idle.inhibited = !Idle.inhibited

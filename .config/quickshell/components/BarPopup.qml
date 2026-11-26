@@ -1,5 +1,5 @@
 // Ventana que se despliega debajo de un elemento de la barra (menú de la
-// bandeja, mezclador de volumen...). Se cierra con close() o haciendo clic fuera.
+// bandeja, mezclador de volumen...). Se cierra con close(), con Escape o haciendo clic fuera.
 // El tamaño lo pone quien la usa (implicitWidth / implicitHeight).
 //
 //   BarPopup {
@@ -24,7 +24,7 @@ PopupWindow {
     // y el toggle lo volvería a abrir. Esto lo evita.
     property real _closedAt: 0
     function open() {
-        if (Date.now() - _closedAt >= 300)
+        if (Date.now() - _closedAt >= Theme.reopenDelay)
             visible = true;
     }
     function close() {
@@ -37,25 +37,24 @@ PopupWindow {
 
     anchor.item: target
     anchor.rect.width: target.width
-    anchor.rect.height: target.height + 10
+    anchor.rect.height: target.height + Theme.popupGap
     anchor.edges: Edges.Bottom
     anchor.gravity: Edges.Bottom
 
     color: "transparent"
 
-    // Clic fuera = cerrar
+    // Clic fuera = cerrar. Además le da el teclado al popup (para Escape).
+    // Con `visible` el grab se pide antes de que exista la superficie y no llega a activarse.
     HyprlandFocusGrab {
         windows: [root]
-        active: root.visible
+        active: root.backingWindowVisible
         onCleared: root.close()
     }
 
-    Rectangle {
+    PopupBox {
         id: box
         anchors.fill: parent
-        radius: Theme.radius
-        color: Theme.bgSolid
-        border.width: 1
-        border.color: Theme.accentDim
+        focus: true
+        Keys.onEscapePressed: root.close()
     }
 }
