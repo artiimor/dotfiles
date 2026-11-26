@@ -74,6 +74,15 @@ bindDigits(" + SHIFT + ALT", function(i)
 	end
 end, "Mover ventana al workspace (sin ir)")
 
+-- Resize active window. Pasos de 50 px; se repite al mantener la tecla
+local function resizeBind(key, x, y, desc)
+	hl.bind(mainMod .. " + ALT + " .. key, hl.dsp.window.resize({ x = x, y = y, relative = true }), { repeating = true, description = desc })
+end
+resizeBind("H", -50, 0, "Ventana más estrecha")
+resizeBind("J", 0, 50, "Ventana más alta")
+resizeBind("K", 0, -50, "Ventana más baja")
+resizeBind("L", 50, 0, "Ventana más ancha")
+
 -- Move & Resize with mouse
 hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { description = "Mover ventana con el ratón" })
 hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { description = "Redimensionar con el ratón" })

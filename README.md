@@ -390,6 +390,7 @@ left **Alt** key (see [keyd](#keyboard-remapping-keyd)).
 | Super+Shift+Esc | Kill a window (click it) |
 | Super+H / J / K / L | Move focus left / down / up / right |
 | Super+Shift+H / J / K / L | Move window left / down / up / right |
+| Super+Alt+H / J / K / L | Resize window: narrower / taller / shorter / wider (50 px, hold to repeat) |
 | Super+D | Toggle floating / tiling |
 | Super+Shift+M | Maximize (toggle) |
 | Super+Ctrl+J | Toggle split direction |
