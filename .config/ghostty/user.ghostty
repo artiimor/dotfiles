@@ -1,0 +1,4 @@
+# Tu configuración de Ghostty. Se carga después de config.ghostty, así que lo que
+# pongas aquí gana, e install.sh no pisa este archivo si ya existe.
+# Ejemplo:
+# font-size = 12

@@ -1,0 +1,4 @@
+-- Tus cambios propios. Se carga el último, así que puede añadir binds o cambiar opciones
+-- de los demás módulos, e install.sh no lo sobrescribe. Por ejemplo:
+-- hl.bind("SUPER + E", hl.dsp.exec_cmd("firefox"), { description = "Firefox" })
+-- hl.config({ general = { gaps_out = 8 } })

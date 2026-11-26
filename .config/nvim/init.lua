@@ -231,3 +231,6 @@ vim.api.nvim_create_autocmd({ "InsertLeave", "TextChanged" }, {
 
 -- Resaltar lo copiado
 vim.api.nvim_create_autocmd("TextYankPost", { callback = function() vim.hl.on_yank({ timeout = 150 }) end })
+
+-- Configuración del usuario: lua/user.lua (install.sh no lo pisa) ---------------
+require("user")

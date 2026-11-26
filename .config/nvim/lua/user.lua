@@ -1,0 +1,4 @@
+-- Tu configuración de Neovim. Se carga al final de init.lua, así que lo que pongas
+-- aquí gana, e install.sh no pisa este archivo si ya existe.
+-- Ejemplo:
+-- vim.o.wrap = true

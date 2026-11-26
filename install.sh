@@ -16,7 +16,7 @@
 #
 # Ejecútalo como tu usuario, no como root: pide sudo cuando lo necesita.
 # Se puede repetir sin miedo: pacman usa --needed, lo que se sobrescribe va a ~/.dotfiles-old
-# y monitors.lua, variables.lua, inputs.lua y el tema elegido se respetan si ya existen.
+# y monitors.lua, variables.lua, inputs.lua, los archivos user.* y el tema elegido se respetan si ya existen.
 
 set -euo pipefail
 
@@ -95,7 +95,8 @@ SUDO_KEEPALIVE=$!
 trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null' EXIT
 
 # Archivos de config que se editan a mano: si ya existen no se pisan al repetir
-KEEP=(hypr/config/monitors.lua hypr/config/variables.lua hypr/config/inputs.lua themes/current)
+KEEP=(hypr/config/monitors.lua hypr/config/variables.lua hypr/config/inputs.lua themes/current
+	hypr/config/user.lua ghostty/user.ghostty nvim/lua/user.lua)
 
 # Copia de un archivo de /etc (o similar) antes de sobrescribirlo
 backup_sys() {

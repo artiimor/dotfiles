@@ -123,7 +123,7 @@ git clone https://github.com/artiimor/dotfiles.git ~/dotfiles
 ```
 
 The script is safe to re-run: `pacman` uses `--needed`, overwritten files are backed up, and your own
-`monitors.lua`, `variables.lua`, `inputs.lua` and chosen theme are kept if they already exist.
+`monitors.lua`, `variables.lua`, `inputs.lua`, user files (below) and chosen theme are kept if they already exist.
 It asks for `sudo` once at the start and keeps it alive. A failed package, AUR build or download is only a warning.
 Its prompts are in Spanish (`[S/n]`: `s`/`y` or Enter means yes).
 
@@ -147,7 +147,11 @@ Details of step 3:
 - **Backups**: every file it would overwrite is first saved to `~/.dotfiles-old/<YYYYmmdd-HHMMSS>/`, keeping the same
   relative path (e.g. `~/.dotfiles-old/20261119-120000/.config/hypr/hyprland.lua`). Copying is done with
   `rsync -a --backup`, so nothing in your `~/.config` is deleted, only overwritten. `hypr/config/monitors.lua`,
-  `variables.lua`, `inputs.lua` and `themes/current` are only copied if you don't have them yet.
+  `variables.lua`, `inputs.lua`, `themes/current` and the user files are only copied if you don't have them yet.
+- **Your own changes**: put them in `~/.config/hypr/config/user.lua`, `~/.config/ghostty/user.ghostty` and
+  `~/.config/nvim/lua/user.lua`. They are loaded last, so they win over the defaults; the installer creates them
+  (with commented examples) on the first run and never overwrites them. Everything else in `~/.config`, Quickshell and the themes
+  included, is overwritten on re-install (with the old copy in `~/.dotfiles-old`).
 - **Monitors**: on a first install (no `monitors.lua` yet) it writes one with a rule per connected output, read
   from `hyprctl monitors` if Hyprland is running or from `/sys/class/drm` otherwise. Scale is a guess from the
   resolution (internal panel ≥ 2560 wide → 1.6, ≥ 3200 → 2; external 4K → 1.5; `auto` if it wouldn't divide evenly),

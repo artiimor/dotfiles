@@ -69,3 +69,6 @@ keybind = alt+l=next_tab
 
 # Barra de pestañas con el fondo/texto del tema, y que cambie al recargar (auto no se reevalúa)
 window-theme = ghostty
+
+# Tus cambios van en user.ghostty: se carga al final y gana (? = opcional)
+config-file = ?user.ghostty
