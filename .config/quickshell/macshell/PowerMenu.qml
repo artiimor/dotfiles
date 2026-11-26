@@ -5,16 +5,13 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
-// Lock / sleep / log out / restart / shut down, with the round buttons of the
-// macOS login window. Super+Esc on Hyprland (`ipc call power toggle`).
-// Arrows or Tab to move, Enter to choose, Esc or click outside to close.
-PanelWindow {
+// Bloquear / suspender / cerrar sesión / reiniciar / apagar, con los botones redondos de la
+// ventana de inicio de sesión de macOS. Super+Esc en Hyprland (`ipc call power toggle`).
+// Flechas o Tab para moverse, Intro para elegir, Esc o clic fuera para cerrar.
+OverlayWindow {
     id: win
 
-    property bool open: false
-    function toggle() { open ? close() : show(); }
-    function show() { sel = 0; open = true; }
-    function close() { open = false; }
+    onShown: sel = 0
 
     property string userName: Quickshell.env("USER") ?? ""
     Process {
@@ -38,40 +35,21 @@ PanelWindow {
         Quickshell.execDetached(["sh", "-c", actions[i].cmd]);
     }
 
-    visible: open || card.opacity > 0
-    anchors { top: true; bottom: true; left: true; right: true }
-    exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "macshell-power"
-    WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-    color: "transparent"
+    dim: 0.35
+    fadeMs: 180
+    scaleMs: 220
+    closedScale: 0.94
 
-    BackgroundEffect.blurRegion: Region { item: card; radius: 22 }
+    card.y: (height - card.height) / 2
+    card.width: buttons.implicitWidth + 64
+    card.height: col.implicitHeight + 48
+    card.color: Theme.card
 
-    // dim the desktop
-    Rectangle {
-        anchors.fill: parent
-        color: "black"
-        opacity: win.open ? 0.35 : 0
-        Behavior on opacity { NumberAnimation { duration: 180 } }
-    }
-    MouseArea { anchors.fill: parent; onClicked: win.close() }
-
-    Rectangle {
-        id: card
+    Column {
+        id: col
         anchors.centerIn: parent
-        width: buttons.implicitWidth + 64
-        height: col.implicitHeight + 48
-        radius: 22
-        color: Theme.card
-        border.color: Theme.border
-        opacity: win.open ? 1 : 0
-        scale: win.open ? 1 : 0.94
-        Behavior on opacity { NumberAnimation { duration: 180 } }
-        Behavior on scale { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
-
-        MouseArea { anchors.fill: parent }   // clicks on the card don't close it
-
+        spacing: 22
         focus: win.open
         Keys.onPressed: e => {
             const n = win.actions.length;
@@ -83,64 +61,58 @@ PanelWindow {
             e.accepted = true;
         }
 
-        Column {
-            id: col
-            anchors.centerIn: parent
-            spacing: 22
+        Text {
+            anchors.horizontalCenter: parent.horizontalCenter
+            text: win.userName
+            color: Theme.text
+            font.pointSize: 13
+            font.weight: Font.DemiBold
+        }
 
-            Text {
-                anchors.horizontalCenter: parent.horizontalCenter
-                text: win.userName
-                color: Theme.text
-                font.pointSize: 13
-                font.weight: Font.DemiBold
-            }
+        Row {
+            id: buttons
+            anchors.horizontalCenter: parent.horizontalCenter
+            spacing: 26
 
-            Row {
-                id: buttons
-                anchors.horizontalCenter: parent.horizontalCenter
-                spacing: 26
+            Repeater {
+                model: win.actions
+                delegate: Item {
+                    id: btn
+                    required property var modelData
+                    required property int index
+                    readonly property bool current: win.sel === index
+                    width: 64
+                    height: circle.height + 10 + label.implicitHeight
 
-                Repeater {
-                    model: win.actions
-                    delegate: Item {
-                        id: btn
-                        required property var modelData
-                        required property int index
-                        readonly property bool current: win.sel === index
-                        width: 64
-                        height: circle.height + 10 + label.implicitHeight
-
-                        Rectangle {
-                            id: circle
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            width: 56; height: 56; radius: 28
-                            color: btn.current ? Theme.tint(0.28) : Theme.button
-                            border.width: btn.current ? 2 : 0
-                            border.color: Theme.accent
-                            Behavior on color { ColorAnimation { duration: 120 } }
-                            Glyph {
-                                anchors.centerIn: parent
-                                width: 24; height: 24
-                                name: btn.modelData.glyph
-                            }
+                    Rectangle {
+                        id: circle
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        width: 56; height: 56; radius: 28
+                        color: btn.current ? Theme.tint(0.28) : Theme.button
+                        border.width: btn.current ? 2 : 0
+                        border.color: Theme.accent
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                        Glyph {
+                            anchors.centerIn: parent
+                            width: 24; height: 24
+                            name: btn.modelData.glyph
                         }
-                        Text {
-                            id: label
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            anchors.top: circle.bottom
-                            anchors.topMargin: 10
-                            text: btn.modelData.label
-                            color: Theme.text
-                            opacity: btn.current ? 1 : 0.75
-                            font.pointSize: 9.5
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            onEntered: win.sel = btn.index
-                            onClicked: win.run(btn.index)
-                        }
+                    }
+                    Text {
+                        id: label
+                        anchors.horizontalCenter: parent.horizontalCenter
+                        anchors.top: circle.bottom
+                        anchors.topMargin: 10
+                        text: btn.modelData.label
+                        color: Theme.text
+                        opacity: btn.current ? 1 : 0.75
+                        font.pointSize: 9.5
+                    }
+                    MouseArea {
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        onEntered: win.sel = btn.index
+                        onClicked: win.run(btn.index)
                     }
                 }
             }

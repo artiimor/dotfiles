@@ -1,6 +1,6 @@
 import QtQuick
 
-// macOS-style battery: outlined body, fill proportional to charge, bolt when charging.
+// Batería estilo macOS: cuerpo con contorno, relleno según la carga y rayo al cargar.
 Item {
     id: b
     property real fraction: 1

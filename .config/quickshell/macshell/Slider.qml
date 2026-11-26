@@ -1,6 +1,6 @@
 import QtQuick
 
-// Thick macOS Control Center slider with an icon inside the track.
+// Slider grueso del Control Center de macOS, con el icono dentro de la barra.
 Item {
     id: s
     property real value: 0.5
@@ -9,6 +9,10 @@ Item {
     property bool iconOff: false
     signal moved(real v)
     signal iconClicked()
+
+    // ancho de la zona del icono, a la izquierda: ahí el clic va al icono
+    // (silenciar) y no mueve el valor
+    readonly property int iconZone: 26
 
     implicitHeight: 24
 
@@ -38,10 +42,10 @@ Item {
     }
     MouseArea {
         anchors.fill: parent
-        anchors.leftMargin: 26
+        anchors.leftMargin: s.iconZone
         preventStealing: true
         function set(mx) {
-            const v = Math.max(0, Math.min(1, (mx + 26) / track.width));
+            const v = Math.max(0, Math.min(1, (mx + s.iconZone) / track.width));
             s.moved(v);
         }
         onPressed: m => set(m.x)

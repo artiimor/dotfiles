@@ -7,7 +7,6 @@
 import QtQuick
 import Quickshell
 import Quickshell.Bluetooth
-import Quickshell.Services.Pipewire
 import Quickshell.Services.UPower
 import qs
 import qs.components
@@ -60,7 +59,8 @@ Item {
         // Apagado · Clic: menú de energía (también con Super+Escape)
         BarIcon {
             icon: "⏻"
-            color: hovered ? Theme.red : Theme.muted
+            color: Theme.muted
+            hoverColor: Theme.red
             onClicked: Launcher.toggle("power")
         }
 
@@ -84,30 +84,17 @@ Item {
 
         // ── Audio ─────────────────────────────────────────────
         // Clic: mezclador · Clic derecho: silenciar · Rueda: volumen ±5%
-        readonly property PwNode sink: Pipewire.defaultAudioSink
-        // Sin esto Pipewire no rellena sink.audio
-        PwObjectTracker { objects: [fixed.sink] }
-
         BarIcon {
             id: volumeIcon
-            readonly property real volume: fixed.sink?.audio?.volume ?? 0
-            readonly property bool muted: fixed.sink?.audio?.muted ?? false
-            readonly property bool bluetooth: (fixed.sink?.name ?? "").startsWith("bluez")
-
-            icon: muted ? "󰝟" : (bluetooth ? "󰂯 " : "") + ["󰕿", "󰖀", "󰕾"][Math.min(2, Math.floor(volume * 3))]
-            color: muted ? Theme.muted : Theme.fg
+            icon: (Audio.bluetooth && !Audio.muted ? "󰂯 " : "") + Audio.icon
+            color: Audio.muted ? Theme.muted : Theme.fg
             tooltip: mixer.visible ? ""
-                : fixed.sink ? `${fixed.sink.description}\nVolumen ${Math.round(volume * 100)}%`
+                : Audio.sink ? `${Audio.sink.description}\nVolumen ${Math.round(Audio.volume * 100)}%`
                 : "Sin salida de audio"
 
-            onClicked: m => {
-                if (m.button === Qt.RightButton)
-                    fixed.sink.audio.muted = !muted;
-                else
-                    mixer.toggle();
-            }
-            onScrolledUp: fixed.sink.audio.volume = Math.min(1, volume + 0.05)
-            onScrolledDown: fixed.sink.audio.volume = Math.max(0, volume - 0.05)
+            onClicked: m => m.button === Qt.RightButton ? Audio.toggleMute() : mixer.toggle()
+            onScrolledUp: Audio.step(0.05)
+            onScrolledDown: Audio.step(-0.05)
 
             VolumeMixer {
                 id: mixer
@@ -119,7 +106,7 @@ Item {
         // Rueda: brillo ±5% · Solo con panel retroiluminado (portátil)
         BarIcon {
             visible: Brightness.available
-            icon: ["󰃞", "󰃟", "󰃠"][Math.min(2, Math.floor(Brightness.percent / 34))]
+            icon: Brightness.icon
             color: Theme.yellow
             clickable: false
             tooltip: `Brillo ${Brightness.percent}%\nRueda: ajustar`
@@ -164,15 +151,6 @@ Item {
 
         // ── Batería ───────────────────────────────────────────
         // Solo si UPower ve una batería de portátil (en un sobremesa no hay)
-        readonly property UPowerDevice battery: UPower.displayDevice
-        readonly property bool hasBattery: battery?.isLaptopBattery ?? false
-        readonly property int percent: {
-            const p = battery?.percentage ?? 0;
-            return Math.round(p > 1 ? p : p * 100);
-        }
-        readonly property bool charging: battery?.state === UPowerDeviceState.Charging
-        readonly property bool plugged: !UPower.onBattery && !charging
-
         function formatTime(seconds) {
             if (!seconds)
                 return "";
@@ -183,20 +161,20 @@ Item {
 
         BarIcon {
             id: batteryIcon
-            visible: fixed.hasBattery
-            readonly property bool warning: !fixed.charging && fixed.percent <= 30
-            readonly property bool critical: !fixed.charging && !fixed.plugged && fixed.percent <= 15
+            visible: Battery.present
+            readonly property bool warning: !Battery.charging && Battery.percent <= 30
+            readonly property bool critical: !Battery.charging && !Battery.plugged && Battery.percent <= 15
 
-            icon: fixed.charging ? "󰂄"
-                : fixed.plugged ? "󰚥"
-                : ["󰂎", "󰁺", "󰁼", "󰁾", "󰂀", "󰂂", "󰁹"][Math.min(6, Math.floor(fixed.percent / 100 * 7))]
-            color: fixed.charging ? Theme.fg
+            icon: Battery.charging ? "󰂄"
+                : Battery.plugged ? "󰚥"
+                : ["󰂎", "󰁺", "󰁼", "󰁾", "󰂀", "󰂂", "󰁹"][Math.min(6, Math.floor(Battery.percent / 100 * 7))]
+            color: Battery.charging ? Theme.fg
                 : critical ? (blink ? Theme.fg : Theme.red)
                 : warning ? Theme.yellow
                 : Theme.fg
             tooltip: {
-                const time = fixed.formatTime(fixed.charging ? fixed.battery?.timeToFull : fixed.battery?.timeToEmpty);
-                return `${fixed.percent}%${time ? " · " + time : ""}\n${Math.abs(fixed.battery?.changeRate ?? 0).toFixed(1)} W`;
+                const time = fixed.formatTime(Battery.charging ? Battery.device?.timeToFull : Battery.device?.timeToEmpty);
+                return `${Battery.percent}%${time ? " · " + time : ""}\n${Math.abs(Battery.device?.changeRate ?? 0).toFixed(1)} W`;
             }
 
             // Parpadeo con batería crítica

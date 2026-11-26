@@ -8,24 +8,20 @@ import Quickshell.Wayland
 
 // Buscador estilo Spotlight de macOS (Cmd/Super + Espacio).
 // Apps, calculadora (qalc) y archivos de $HOME (fd).
-PanelWindow {
+OverlayWindow {
     id: win
 
-    property bool open: false
-    function toggle() { open ? close() : show(); }
-    function show() { field.text = ""; sel = 0; open = true; field.forceActiveFocus(); }
-    function close() { open = false; }
     function setQuery(q) { field.text = q; }
+    onShown: { field.text = ""; sel = 0; field.forceActiveFocus(); }
 
-    visible: open || card.opacity > 0
-    anchors { top: true; bottom: true; left: true; right: true }
-    exclusionMode: ExclusionMode.Ignore
-    WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "macshell-spotlight"
-    WlrLayershell.keyboardFocus: open ? WlrKeyboardFocus.Exclusive : WlrKeyboardFocus.None
-    color: "transparent"
 
-    BackgroundEffect.blurRegion: Region { item: card; radius: 22 }
+    card.width: 680
+    card.y: height * 0.22
+    card.height: 56 + (rows.length ? Math.min(list.contentHeight, 440) + 13 : 0)
+    card.color: Theme.overlay
+    card.clip: true
+    Behavior on card.height { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
 
     // ── búsqueda ──
     readonly property string query: field.text.trim()
@@ -59,43 +55,38 @@ PanelWindow {
             .map(x => x.e);
     }
 
-    // Lista plana de filas: { kind: "header"|"top"|"app"|"calc"|"file", ... }
+    // Lista plana de filas: { kind: "header"|"top"|"item", type: "app"|"calc"|"file", ... }.
+    // La primera fila es "top": la cuenta si la hay; si no, el primer resultado de la primera sección.
     readonly property var rows: {
         const q = query;
         if (!q) return [];
+        const sections = [
+            ["Applications", appHits.map(e => ({ kind: "item", type: "app", entry: e, title: e.name,
+                sub: (e.genericName && e.genericName !== e.name) ? e.genericName : "", icon: e.icon }))],
+            ["Documents", fileHits.map(f => ({ kind: "item", type: "file", path: f.path, title: f.name, sub: f.dir, icon: f.icon }))]
+        ];
+        let top = calc !== "" ? { type: "calc", title: calc, sub: q + " =", icon: "accessories-calculator" } : null;
         const out = [];
-        const add = r => out.push(r);
-        if (calc !== "")
-            add({ kind: "top", type: "calc", title: calc, sub: q + " =", icon: "accessories-calculator" });
-        const a = appHits;
-        if (a.length) {
-            if (calc === "")
-                add({ kind: "top", type: "app", entry: a[0], title: a[0].name, sub: "Application", icon: a[0].icon });
-            const rest = calc === "" ? a.slice(1) : a;
-            if (rest.length) {
-                add({ kind: "header", title: "Applications" });
-                rest.forEach(e => add({ kind: "item", type: "app", entry: e, title: e.name, sub: (e.genericName && e.genericName !== e.name) ? e.genericName : "", icon: e.icon }));
+        for (const [title, items] of sections) {
+            if (!top && items.length) {
+                top = items.shift();
+                if (top.type === "app") top.sub = "Application";
             }
+            if (items.length) out.push({ kind: "header", title }, ...items);
         }
-        if (fileHits.length) {
-            const first = out.length === 0;
-            fileHits.forEach((f, i) => {
-                const r = { kind: "item", type: "file", path: f.path, title: f.name, sub: f.dir, icon: f.icon };
-                if (first && i === 0) { r.kind = "top"; add(r); add({ kind: "header", title: "Documents" }); }
-                else { if (i === 0) add({ kind: "header", title: "Documents" }); add(r); }
-            });
-        }
-        // si la sección de documentos quedó vacía tras el primero, quita su cabecera
-        return out.filter((r, i) => !(r.kind === "header" && (i === out.length - 1 || out[i + 1].kind === "header")));
+        if (top) out.unshift(Object.assign(top, { kind: "top" }));
+        return out;
     }
     readonly property var selectable: rows.map((r, i) => r.kind === "header" ? -1 : i).filter(i => i >= 0)
 
     onQueryChanged: {
         sel = 0;
-        calc = "";
-        fileHits = [];
+        // los resultados viejos se quedan hasta que llegan los nuevos (así la tarjeta no parpadea);
+        // solo se vacían cuando ya no aplican
+        if (query.length < 2) fileHits = [];
         fileTimer.restart();
         if (/\d/.test(query) && /[-+*/^%()]|sqrt|sin|cos|tan|log|pi|to |in /.test(query)) calcTimer.restart();
+        else calc = "";
     }
     onRowsChanged: if (sel >= selectable.length) sel = Math.max(0, selectable.length - 1)
 
@@ -123,9 +114,10 @@ PanelWindow {
         command: ["qalc", "-t", "-set", "decimal comma off", q]
         stdout: StdioCollector {
             onStreamFinished: {
+                // salida vacía: proceso cortado por una consulta más nueva
                 const t = text.trim();
-                if (calcProc.q === win.query && t && !/error|warning/i.test(t) && t !== calcProc.q)
-                    win.calc = t;
+                if (calcProc.q === win.query && t)
+                    win.calc = !/error|warning/i.test(t) && t !== calcProc.q ? t : "";
             }
         }
     }
@@ -145,18 +137,19 @@ PanelWindow {
         property string q: ""
         command: ["fd", "-i", "--max-results", "6", "--max-depth", "6", "-E", "node_modules", "-E", ".cache",
                   "--fixed-strings", "--", q, Quickshell.env("HOME")]
-        stdout: StdioCollector {
-            onStreamFinished: {
-                if (fileProc.q !== win.query) return;
-                const home = Quickshell.env("HOME");
-                win.fileHits = text.split("\n").filter(l => l).map(p => {
-                    const isDir = p.endsWith("/");
-                    const clean = isDir ? p.slice(0, -1) : p;
-                    const i = clean.lastIndexOf("/");
-                    return { path: clean, name: clean.slice(i + 1), dir: clean.slice(0, i).replace(home, "~") || "/",
-                             icon: isDir ? "folder" : win.iconFor(clean) };
-                });
-            }
+        stdout: StdioCollector { id: fileOut }
+        // en onExited y no en onStreamFinished: así se ignora un fd cortado (código != 0),
+        // que si no vaciaría la lista
+        onExited: code => {
+            if (code !== 0 || fileProc.q !== win.query) return;
+            const home = Quickshell.env("HOME");
+            win.fileHits = fileOut.text.split("\n").filter(l => l).map(p => {
+                const isDir = p.endsWith("/");
+                const clean = isDir ? p.slice(0, -1) : p;
+                const i = clean.lastIndexOf("/");
+                return { path: clean, name: clean.slice(i + 1), dir: clean.slice(0, i).replace(home, "~") || "/",
+                         icon: isDir ? "folder" : win.iconFor(clean) };
+            });
         }
     }
     function iconFor(p) {
@@ -173,157 +166,133 @@ PanelWindow {
                     ods: "x-office-spreadsheet", ppt: "x-office-presentation", pptx: "x-office-presentation" })
 
     // ── interfaz ──
-    MouseArea { anchors.fill: parent; enabled: win.open; onClicked: win.close() }
+    Item {
+        id: header
+        width: parent.width
+        height: 56
+
+        Glyph {
+            x: 20; anchors.verticalCenter: parent.verticalCenter
+            width: 22; height: 22
+            name: "search"
+            color: Theme.dim
+        }
+        TextInput {
+            id: field
+            anchors { left: parent.left; leftMargin: 54; right: parent.right; rightMargin: 20; verticalCenter: parent.verticalCenter }
+            color: Theme.text
+            selectionColor: Theme.accent
+            font.pointSize: 17
+            font.weight: Font.Light
+            clip: true
+            focus: true
+            Text {
+                visible: !field.text
+                text: "Search"
+                color: Theme.dim
+                font: field.font
+            }
+            Keys.onPressed: ev => {
+                const ctrl = ev.modifiers & Qt.ControlModifier;
+                if (ev.key === Qt.Key_Escape) { win.close(); ev.accepted = true; }
+                else if (ev.key === Qt.Key_Down || ev.key === Qt.Key_Tab || (ctrl && ev.key === Qt.Key_N)) { win.move(1); ev.accepted = true; }
+                else if (ev.key === Qt.Key_Up || ev.key === Qt.Key_Backtab || (ctrl && ev.key === Qt.Key_P)) { win.move(-1); ev.accepted = true; }
+                else if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) {
+                    win.activate(win.rows[win.selectable[win.sel]]); ev.accepted = true;
+                }
+            }
+        }
+    }
 
     Rectangle {
-        id: card
-        width: 680
-        x: (parent.width - width) / 2
-        y: parent.height * 0.22
-        height: 56 + (win.rows.length ? Math.min(list.contentHeight, 440) + 13 : 0)
-        radius: 22
-        color: Theme.overlay
-        border.color: Theme.border
-        clip: true
-        opacity: win.open ? 1 : 0
-        scale: win.open ? 1 : 0.97
-        Behavior on opacity { NumberAnimation { duration: 140 } }
-        Behavior on scale { NumberAnimation { duration: 160; easing.type: Easing.OutCubic } }
-        Behavior on height { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
+        visible: win.rows.length > 0
+        y: 56; width: parent.width; height: 1
+        color: Theme.border
+    }
 
-        MouseArea { anchors.fill: parent }   // no cerrar al hacer clic dentro
+    ListView {
+        id: list
+        y: 63
+        x: 8
+        width: parent.width - 16
+        height: Math.min(contentHeight, 440)
+        interactive: contentHeight > height
+        boundsBehavior: Flickable.StopAtBounds
+        model: win.rows
 
-        Item {
-            id: header
-            width: parent.width
-            height: 56
+        delegate: Item {
+            id: row
+            required property var modelData
+            required property int index
+            readonly property bool isHeader: modelData.kind === "header"
+            readonly property bool isTop: modelData.kind === "top"
+            readonly property bool current: win.selectable[win.sel] === index
+            readonly property color softWhite: Qt.rgba(1, 1, 1, 0.75)   // texto secundario sobre la selección
+            width: list.width
+            height: isHeader ? 26 : isTop ? 54 : 34
 
-            Glyph {
-                x: 20; anchors.verticalCenter: parent.verticalCenter
-                width: 22; height: 22
-                name: "search"
-                color: Theme.dim
+            SectionLabel {
+                visible: row.isHeader
+                x: 12; anchors.bottom: parent.bottom; anchors.bottomMargin: 4
+                text: row.modelData.title
             }
-            TextInput {
-                id: field
-                anchors { left: parent.left; leftMargin: 54; right: parent.right; rightMargin: 20; verticalCenter: parent.verticalCenter }
-                color: Theme.text
-                selectionColor: Theme.accent
-                font.pointSize: 17
-                font.weight: Font.Light
-                clip: true
-                focus: true
-                Text {
-                    visible: !field.text
-                    text: "Search"
-                    color: Theme.dim
-                    font: field.font
-                }
-                Keys.onPressed: ev => {
-                    const ctrl = ev.modifiers & Qt.ControlModifier;
-                    if (ev.key === Qt.Key_Escape) { win.close(); ev.accepted = true; }
-                    else if (ev.key === Qt.Key_Down || ev.key === Qt.Key_Tab || (ctrl && ev.key === Qt.Key_N)) { win.move(1); ev.accepted = true; }
-                    else if (ev.key === Qt.Key_Up || ev.key === Qt.Key_Backtab || (ctrl && ev.key === Qt.Key_P)) { win.move(-1); ev.accepted = true; }
-                    else if (ev.key === Qt.Key_Return || ev.key === Qt.Key_Enter) {
-                        win.activate(win.rows[win.selectable[win.sel]]); ev.accepted = true;
-                    }
-                }
+
+            Rectangle {
+                visible: !row.isHeader
+                anchors.fill: parent
+                radius: 10
+                color: row.current ? Theme.accent : hover.hovered ? Theme.button : "transparent"
             }
-        }
+            HoverHandler { id: hover; enabled: !row.isHeader }
+            TapHandler {
+                enabled: !row.isHeader
+                onTapped: win.activate(row.modelData)
+            }
 
-        Rectangle {
-            visible: win.rows.length > 0
-            y: 56; width: parent.width; height: 1
-            color: Theme.border
-        }
-
-        ListView {
-            id: list
-            y: 63
-            x: 8
-            width: parent.width - 16
-            height: Math.min(contentHeight, 440)
-            interactive: contentHeight > height
-            boundsBehavior: Flickable.StopAtBounds
-            model: win.rows
-
-            delegate: Item {
-                id: row
-                required property var modelData
-                required property int index
-                readonly property bool isHeader: modelData.kind === "header"
-                readonly property bool isTop: modelData.kind === "top"
-                readonly property bool current: win.selectable[win.sel] === index
-                width: list.width
-                height: isHeader ? 26 : isTop ? 54 : 34
-
-                Text {
-                    visible: row.isHeader
-                    x: 12; anchors.bottom: parent.bottom; anchors.bottomMargin: 4
-                    text: row.modelData.title
-                    color: Theme.dim
-                    font.pointSize: 8.5
-                    font.weight: Font.DemiBold
+            RowLayout {
+                visible: !row.isHeader
+                anchors { fill: parent; leftMargin: 10; rightMargin: 12 }
+                spacing: 10
+                Image {
+                    Layout.preferredWidth: row.isTop ? 38 : 22
+                    Layout.preferredHeight: row.isTop ? 38 : 22
+                    sourceSize: Qt.size(64, 64)
+                    source: Quickshell.iconPath(row.modelData.icon || "", "application-x-executable")
+                    smooth: true
                 }
-
-                Rectangle {
-                    visible: !row.isHeader
-                    anchors.fill: parent
-                    radius: 10
-                    color: row.current ? Theme.accent : hover.hovered ? Theme.button : "transparent"
-                }
-                HoverHandler { id: hover; enabled: !row.isHeader }
-                TapHandler {
-                    enabled: !row.isHeader
-                    onTapped: win.activate(row.modelData)
-                }
-
-                RowLayout {
-                    visible: !row.isHeader
-                    anchors { fill: parent; leftMargin: 10; rightMargin: 12 }
-                    spacing: 10
-                    Image {
-                        Layout.preferredWidth: row.isTop ? 38 : 22
-                        Layout.preferredHeight: row.isTop ? 38 : 22
-                        sourceSize: Qt.size(64, 64)
-                        source: Quickshell.iconPath(row.modelData.icon || "", "application-x-executable")
-                        smooth: true
-                        asynchronous: false
-                    }
-                    ColumnLayout {
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 0
+                    Text {
                         Layout.fillWidth: true
-                        spacing: 0
-                        Text {
-                            Layout.fillWidth: true
-                            text: row.modelData.title
-                            color: row.current ? "white" : Theme.text
-                            font.pointSize: row.isTop ? 13 : 10.5
-                            font.weight: row.isTop ? Font.DemiBold : Font.Normal
-                            elide: Text.ElideRight
-                        }
-                        Text {
-                            visible: row.isTop && text !== ""
-                            Layout.fillWidth: true
-                            text: row.modelData.sub ?? ""
-                            color: row.current ? Qt.rgba(1, 1, 1, 0.75) : Theme.dim
-                            font.pointSize: 9
-                            elide: Text.ElideMiddle
-                        }
+                        text: row.modelData.title
+                        color: row.current ? "white" : Theme.text
+                        font.pointSize: row.isTop ? 13 : 10.5
+                        font.weight: row.isTop ? Font.DemiBold : Font.Normal
+                        elide: Text.ElideRight
                     }
                     Text {
-                        visible: !row.isTop && text !== ""
-                        Layout.maximumWidth: 260
+                        visible: row.isTop && text !== ""
+                        Layout.fillWidth: true
                         text: row.modelData.sub ?? ""
-                        color: row.current ? Qt.rgba(1, 1, 1, 0.75) : Theme.dim
+                        color: row.current ? row.softWhite : Theme.dim
                         font.pointSize: 9
                         elide: Text.ElideMiddle
                     }
-                    Text {
-                        visible: row.current
-                        text: row.modelData.type === "calc" ? "↵ copy" : "↵"
-                        color: Qt.rgba(1, 1, 1, 0.75)
-                        font.pointSize: 9
-                    }
+                }
+                Text {
+                    visible: !row.isTop && text !== ""
+                    Layout.maximumWidth: 260
+                    text: row.modelData.sub ?? ""
+                    color: row.current ? row.softWhite : Theme.dim
+                    font.pointSize: 9
+                    elide: Text.ElideMiddle
+                }
+                Text {
+                    visible: row.current
+                    text: row.modelData.type === "calc" ? "↵ copy" : "↵"
+                    color: row.softWhite
+                    font.pointSize: 9
                 }
             }
         }

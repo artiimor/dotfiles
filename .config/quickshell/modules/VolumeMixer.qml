@@ -5,11 +5,12 @@ import Quickshell
 import Quickshell.Services.Pipewire
 import qs
 import qs.components
+import qs.services
 
 BarPopup {
     id: root
 
-    readonly property PwNode sink: Pipewire.defaultAudioSink
+    readonly property PwNode sink: Audio.sink
 
     implicitWidth: 320
     implicitHeight: column.implicitHeight + 24
@@ -21,8 +22,8 @@ BarPopup {
         node: root.visible ? root.sink : null
     }
     readonly property var apps: links.linkGroups.map(g => g.source).filter(n => n?.audio)
-    // Sin esto Pipewire no rellena node.audio
-    PwObjectTracker { objects: root.visible ? [root.sink, ...root.apps] : [] }
+    // Sin esto Pipewire no rellena node.audio (la salida ya la sigue Audio)
+    PwObjectTracker { objects: root.visible ? root.apps : [] }
 
     Column {
         id: column
@@ -53,7 +54,8 @@ BarPopup {
             padding: 4
             icon: "Más ajustes  󰒓"
             pixelSize: Theme.fontSize
-            color: hovered ? Theme.accent : Theme.muted
+            color: Theme.muted
+            hoverColor: Theme.accent
             onClicked: {
                 root.close();
                 Quickshell.execDetached(["pavucontrol"]);

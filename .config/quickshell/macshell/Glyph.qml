@@ -1,12 +1,12 @@
 import QtQuick
 
-// Small vector icons drawn by hand so they always match the bar (monochrome, macOS-like).
+// Iconos vectoriales pequeños dibujados a mano para que siempre casen con la barra (monocromos, estilo macOS).
 Canvas {
     id: g
     property string name: ""
     property color color: Theme.text
-    property real level: 1          // wifi 0..3, speaker 0..1
-    property bool off: false        // muted / disabled
+    property real level: 1          // wifi 0..3, altavoz 0..1
+    property bool off: false        // silenciado / desactivado
     implicitWidth: 16
     implicitHeight: 16
 
@@ -46,13 +46,6 @@ Canvas {
             c.beginPath(); c.arc(6.6, 6.6, 4.6, 0, Math.PI * 2); c.stroke();
             c.lineWidth = 2;
             c.beginPath(); c.moveTo(10.2, 10.2); c.lineTo(14, 14); c.stroke();
-            break;
-        case "cc":
-            c.lineWidth = 1.3;
-            roundRect(c, 1, 2.5, 14, 5, 2.5); c.stroke();
-            c.beginPath(); c.arc(12.5, 5, 1.6, 0, Math.PI * 2); c.fill();
-            roundRect(c, 1, 8.5, 14, 5, 2.5); c.stroke();
-            c.beginPath(); c.arc(3.5, 11, 1.6, 0, Math.PI * 2); c.fill();
             break;
         case "bluetooth":
             c.lineWidth = 1.5;
@@ -114,10 +107,6 @@ Canvas {
         case "chevron":
             c.lineWidth = 1.6;
             c.beginPath(); c.moveTo(6, 3.5); c.lineTo(10.5, 8); c.lineTo(6, 12.5); c.stroke();
-            break;
-        case "back":
-            c.lineWidth = 1.6;
-            c.beginPath(); c.moveTo(10, 3.5); c.lineTo(5.5, 8); c.lineTo(10, 12.5); c.stroke();
             break;
         case "check":
             c.lineWidth = 1.8;

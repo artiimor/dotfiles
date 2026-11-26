@@ -6,32 +6,32 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 
-// Left half of the top bar: workspaces 1-5, then the name of the focused app in bold
-// where the global menu would be.
-// Floating workspaces (desktop mode: all of them in the mac profiles, see desktopmode.lua) get their
-// number inside a small rounded box; tiling ones are a plain number.
+// Mitad izquierda de la barra superior: workspaces 1-5 y luego el nombre de la app enfocada
+// en negrita, donde iría el menú global.
+// Los workspaces flotantes (modo escritorio: todos en los perfiles mac, ver desktopmode.lua) llevan
+// el número dentro de una cajita redondeada; los de tiling, el número sin más.
 Row {
     id: lh
     required property var screen
     spacing: 10
 
     readonly property HyprlandMonitor monitor: (screen ? Hyprland.monitorFor(screen) : null) ?? Hyprland.focusedMonitor
-    // Hyprland ids are monitor*10 + n (wsFor in binds.lua)
+    // los ids de Hyprland son monitor*10 + n (wsFor en binds.lua)
     readonly property int base: (monitor?.id ?? 0) * 10
     readonly property int activeId: monitor?.activeWorkspace?.id ?? -1
 
-    // names of the workspaces in desktop (floating) mode, one per line
-    property var floatingNames: []
+    // ids de los workspaces en modo escritorio (flotantes), uno por línea
+    property var floatingIds: []
     FileView {
         path: Quickshell.env("HOME") + "/.local/state/desktop-workspaces"
         watchChanges: true
-        printErrors: false   // doesn't exist until desktop mode is used once
+        printErrors: false   // no existe hasta que se usa el modo escritorio una vez
         onFileChanged: reload()
-        onLoaded: lh.floatingNames = text().split("\n").filter(l => l !== "")
-        onLoadFailed: lh.floatingNames = []
+        onLoaded: lh.floatingIds = text().split("\n").filter(l => l !== "")
+        onLoadFailed: lh.floatingIds = []
     }
 
-    // workspace ids that hold at least one window
+    // ids de los workspaces con al menos una ventana
     readonly property var busyIds: Hyprland.toplevels.values.map(t => t.workspace?.id ?? -1)
 
     readonly property var slots: {
@@ -41,7 +41,7 @@ Row {
     }
 
     function goTo(target) {
-        // Hyprland config is Lua, so dispatch takes hl.dsp syntax
+        // la config de Hyprland es Lua, así que dispatch usa la sintaxis hl.dsp
         Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.focus({ workspace = "${target}" })`]);
     }
 
@@ -61,7 +61,7 @@ Row {
                     readonly property int wsId: lh.base + modelData
                     readonly property bool active: wsId === lh.activeId
                     readonly property bool busy: lh.busyIds.includes(wsId)
-                    readonly property bool floating: lh.floatingNames.includes(String(wsId))
+                    readonly property bool floating: lh.floatingIds.includes(String(wsId))
                     width: floating ? 26 : 20
                     height: label.implicitHeight + 5
                     onClicked: lh.goTo(wsId)
@@ -75,7 +75,7 @@ Row {
                         font.bold: ws.active
                         font.pointSize: 10
                     }
-                    // floating workspace: number inside a rounded box, like a tiny window
+                    // workspace flotante: número dentro de una caja redondeada, como una ventanita
                     Rectangle {
                         visible: ws.floating
                         anchors.centerIn: label
@@ -87,7 +87,7 @@ Row {
                         border.color: label.color
                         opacity: label.opacity
                     }
-                    // small dot under workspaces that have windows
+                    // puntito bajo los workspaces que tienen ventanas
                     Rectangle {
                         visible: ws.busy
                         width: 3; height: 3; radius: 1.5
@@ -106,7 +106,7 @@ Row {
         }
     }
 
-    // focused app name, bold, like the first entry of the macOS menu bar
+    // nombre de la app enfocada, en negrita, como la primera entrada de la barra de menús de macOS
     Text {
         anchors.verticalCenter: parent.verticalCenter
         readonly property var win: ToplevelManager.activeToplevel

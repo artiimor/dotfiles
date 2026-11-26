@@ -1,6 +1,6 @@
 import QtQuick
 
-// Clickable area in the bar with the subtle macOS hover/active pill.
+// Zona pulsable de la barra con la píldora sutil de macOS al pasar el ratón o estar activa.
 Item {
     id: btn
     property bool active: false
@@ -10,7 +10,7 @@ Item {
     implicitWidth: holder.childrenRect.width + 14
     implicitHeight: 22
 
-    // distance from this button's right edge to the screen's right edge
+    // distancia del borde derecho de este botón al borde derecho de la pantalla
     function rightDistance() {
         const p = btn.mapToItem(null, btn.width, 0);
         return btn.Window.window ? btn.Window.window.width - p.x : 0;

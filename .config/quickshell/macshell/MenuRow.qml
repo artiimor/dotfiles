@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 
-// A macOS menu row: blue highlight on hover, optional check/icon/submenu arrow.
+// Fila de menú estilo macOS: resaltado azul al pasar el ratón, check/icono/flecha de submenú opcionales.
 Rectangle {
     id: r
     property string text: ""
@@ -12,9 +12,13 @@ Rectangle {
     property bool enabledItem: true
     signal triggered()
 
+    // resaltada: fondo de acento y contenido en blanco (como Spotlight), también en mac-light
+    readonly property bool lit: mouse.containsMouse && enabledItem
+    readonly property color fg: lit ? "white" : Theme.text
+
     implicitHeight: 26
     radius: 6
-    color: mouse.containsMouse && enabledItem ? Theme.accent : "transparent"
+    color: lit ? Theme.accent : "transparent"
 
     RowLayout {
         anchors.fill: parent
@@ -23,7 +27,7 @@ Rectangle {
         Item {
             visible: r.checkable
             implicitWidth: 12; implicitHeight: 12
-            Glyph { anchors.fill: parent; visible: r.checked; name: "check"; color: Theme.text }
+            Glyph { anchors.fill: parent; visible: r.checked; name: "check"; color: r.fg }
         }
         Image {
             visible: r.iconSource !== ""
@@ -34,7 +38,7 @@ Rectangle {
         Text {
             Layout.fillWidth: true
             text: r.text
-            color: Theme.text
+            color: r.fg
             opacity: r.enabledItem ? 1 : 0.4
             font.pointSize: 9.5
             elide: Text.ElideRight
@@ -42,7 +46,7 @@ Rectangle {
         Glyph {
             visible: r.submenu
             name: "chevron"
-            color: Theme.text
+            color: r.fg
         }
     }
     MouseArea {

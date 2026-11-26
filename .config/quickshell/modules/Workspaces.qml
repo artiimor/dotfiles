@@ -17,9 +17,9 @@ Island {
     required property ShellScreen screen
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
 
-    function focus(target) {
-        // La config de Hyprland es Lua, así que dispatch usa sintaxis hl.dsp
-        Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.focus({ workspace = "${target}" })`]);
+    // (no se puede llamar focus: lo taparía la propiedad focus de Item)
+    function goTo(target) {
+        Hypr.dispatch(`hl.dsp.focus({ workspace = "${target}" })`);
     }
 
     Repeater {
@@ -29,12 +29,12 @@ Island {
         Item {
             id: ws
             required property HyprlandWorkspace modelData
-            // En el portátil, los 11..20 (huérfanos del monitor externo) muestran su número real
+            // En el portátil (su pantalla es eDP-…), los 11..20 (huérfanos del
+            // monitor externo) muestran su número real
             readonly property int num: root.screen.name.startsWith("eDP") ? modelData.id : (modelData.id - 1) % 10 + 1
             readonly property bool active: modelData.id === root.monitor?.activeWorkspace?.id
             readonly property bool hovered: mouse.containsMouse
             readonly property bool desktop: DesktopMode.workspaces.includes(modelData.name)
-            readonly property color tint: Theme.accent
 
             anchors.verticalCenter: parent.verticalCenter
             implicitHeight: Theme.barHeight - 8
@@ -47,7 +47,7 @@ Island {
                 height: 2
                 radius: 1
                 width: ws.active ? 14 : 0
-                color: ws.modelData.urgent ? Theme.red : ws.tint
+                color: ws.modelData.urgent ? Theme.red : Theme.accent
 
                 Behavior on width {
                     NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic }
@@ -69,7 +69,7 @@ Island {
                 id: label
                 anchors.centerIn: parent
                 text: ws.num
-                color: ws.modelData.urgent ? Theme.red : ws.active ? ws.tint : ws.hovered ? Theme.fg : Theme.muted
+                color: ws.modelData.urgent ? Theme.red : ws.active ? Theme.accent : ws.hovered ? Theme.fg : Theme.muted
                 font.family: Theme.font
                 font.pixelSize: Theme.fontSize
                 font.bold: true
@@ -89,6 +89,6 @@ Island {
     WheelHandler {
         parent: root
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad
-        onWheel: e => root.focus(e.angleDelta.y > 0 ? "m+1" : "m-1")
+        onWheel: e => root.goTo(e.angleDelta.y > 0 ? "m+1" : "m-1")
     }
 }

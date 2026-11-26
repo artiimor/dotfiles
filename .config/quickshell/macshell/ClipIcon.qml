@@ -1,6 +1,6 @@
 import QtQuick
 
-// Clipboard icon from pixel-aligned rectangles.
+// Icono del portapapeles hecho con rectángulos alineados al píxel.
 Item {
     property color color: Theme.text
     implicitWidth: 13

@@ -16,6 +16,8 @@ Singleton {
     property string device: ""
     readonly property bool available: device !== ""
     property int percent: 0
+    // Icono según el nivel (tres tramos, como el del volumen)
+    readonly property string icon: ["󰃞", "󰃟", "󰃠"][Math.min(2, Math.floor(percent / 100 * 3))]
 
     function raise() { set(percent + 5); }
     function lower() { set(percent - 5); }
@@ -71,9 +73,12 @@ Singleton {
         onTriggered: if (!setter.running) current.reload()
     }
 
+    // blockLoading: si no, `current` puede cargar antes que `max`, percent
+    // quedaría en 0 y una tecla de subir pondría el brillo al 5 %
     FileView {
         id: max
         path: root.available ? root.device + "/max_brightness" : ""
+        blockLoading: true
     }
     FileView {
         id: current

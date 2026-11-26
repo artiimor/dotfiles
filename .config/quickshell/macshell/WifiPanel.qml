@@ -2,8 +2,10 @@ pragma ComponentBehavior: Bound
 
 import QtQuick
 import QtQuick.Layouts
+import Quickshell
 import Quickshell.Networking
 
+// Popup Wi‑Fi de la barra: interruptor, lista de redes y acceso a la ventana Network.
 ColumnLayout {
     id: wp
     signal done()
@@ -11,7 +13,7 @@ ColumnLayout {
     implicitWidth: 300
     spacing: 6
 
-    property string askingFor: ""   // network name waiting for a password
+    property string askingFor: ""   // red que espera contraseña
 
     Component.onCompleted: Sys.scanUsers++
     Component.onDestruction: Sys.scanUsers--
@@ -26,29 +28,17 @@ ColumnLayout {
             font.pointSize: 10.5
             font.weight: Font.DemiBold
         }
-        // macOS switch
-        Rectangle {
-            implicitWidth: 32; implicitHeight: 18; radius: 9
-            color: Sys.wifiOn ? Theme.accent : Theme.tint(0.2)
-            Behavior on color { ColorAnimation { duration: 120 } }
-            Rectangle {
-                width: 14; height: 14; radius: 7
-                y: 2
-                x: Sys.wifiOn ? parent.width - width - 2 : 2
-                color: "white"
-                Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-            }
-            MouseArea { anchors.fill: parent; onClicked: Networking.wifiEnabled = !Networking.wifiEnabled }
+        Switch {
+            implicitWidth: 32; implicitHeight: 18
+            on: Sys.wifiOn
+            onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
         }
     }
 
-    Text {
+    SectionLabel {
         visible: Sys.wifiOn
         Layout.leftMargin: 4
         text: "Networks"
-        color: Theme.dim
-        font.pointSize: 8.5
-        font.weight: Font.DemiBold
     }
 
     Column {
@@ -56,11 +46,15 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: 0
         Repeater {
-            model: Sys.wifiDevice
-                ? Sys.wifiDevice.networks.values.slice()
-                    .sort((a, b) => (b.connected - a.connected) || (b.known - a.known) || (b.signalStrength - a.signalStrength))
-                    .slice(0, 10)
-                : []
+            // ScriptModel y no un array: con cada cambio de señal llega una lista
+            // nueva y así se reaprovechan las filas (sin perder la contraseña a medio escribir)
+            model: ScriptModel {
+                values: Sys.wifiDevice
+                    ? Sys.wifiDevice.networks.values.slice()
+                        .sort((a, b) => (b.connected - a.connected) || (b.known - a.known) || (b.signalStrength - a.signalStrength))
+                        .slice(0, 10)
+                    : []
+            }
             delegate: Column {
                 id: rowItem
                 required property var modelData
@@ -83,7 +77,7 @@ ColumnLayout {
                                 anchors.centerIn: parent
                                 width: 13; height: 13
                                 name: "wifi"
-                                level: Math.max(1, Math.ceil(rowItem.modelData.signalStrength * 3))
+                                level: Sys.wifiBars(rowItem.modelData.signalStrength)
                                 color: "white"
                             }
                         }
@@ -119,43 +113,22 @@ ColumnLayout {
                     }
                 }
 
-                // password prompt for new secured networks
-                Rectangle {
+                // contraseña para una red protegida nueva
+                PasswordField {
                     visible: wp.askingFor === rowItem.modelData.name
                     width: parent.width
-                    height: visible ? 30 : 0
-                    radius: 7
-                    color: Theme.tint(0.10)
-                    border.color: pass.activeFocus ? Theme.accent : "transparent"
-                    TextInput {
-                        id: pass
-                        anchors.fill: parent
-                        anchors.margins: 8
-                        verticalAlignment: TextInput.AlignVCenter
-                        echoMode: TextInput.Password
-                        color: Theme.text
-                        font.pointSize: 9.5
-                        focus: parent.visible
-                        onVisibleChanged: if (visible) forceActiveFocus()
-                        onAccepted: {
-                            rowItem.modelData.connectWithPsk(text);
-                            text = "";
-                            wp.askingFor = "";
-                        }
-                        Text {
-                            visible: !pass.text.length
-                            anchors.verticalCenter: parent.verticalCenter
-                            text: "Password — press Enter"
-                            color: Theme.dim
-                            font.pointSize: 9.5
-                        }
+                    implicitHeight: 30
+                    placeholder: "Password — press Enter"
+                    onSubmitted: psk => {
+                        rowItem.modelData.connectWithPsk(psk);
+                        wp.askingFor = "";
                     }
                 }
             }
         }
     }
 
-    Rectangle { Layout.fillWidth: true; implicitHeight: 1; color: Theme.tint(0.1) }
+    Divider {}
 
     MenuRow {
         Layout.fillWidth: true

@@ -62,11 +62,6 @@ Variants {
             height: 2
         }
 
-        function dispatch(...cmds) {
-            // La config de Hyprland es Lua: cada orden es una expresión hl.dsp
-            Quickshell.execDetached(["hyprctl", "--batch", cmds.map(c => "dispatch " + c).join(" ; ")]);
-        }
-
         // El dock va dentro de area: así su HoverHandler sigue activo aunque
         // el ratón esté sobre los botones (sus MouseArea no le roban el hover)
         Item {
@@ -148,12 +143,12 @@ Variants {
                                 onClicked: {
                                     const win = `window = "${app.target}"`;
                                     if (app.minimized)
-                                        dock.dispatch(`hl.dsp.window.move({ workspace = "${dock.workspace.name}", follow = false, ${win} })`,
-                                                      `hl.dsp.focus({ ${win} })`, `hl.dsp.window.bring_to_top()`);
+                                        Hypr.dispatch(`hl.dsp.window.move({ workspace = "${dock.workspace.name}", follow = false, ${win} })`,
+                                                     `hl.dsp.focus({ ${win} })`, `hl.dsp.window.bring_to_top()`);
                                     else if (app.active)
-                                        dock.dispatch(`hl.dsp.window.move({ workspace = "special:minimized", follow = false, ${win} })`);
+                                        Hypr.dispatch(`hl.dsp.window.move({ workspace = "special:minimized", follow = false, ${win} })`);
                                     else
-                                        dock.dispatch(`hl.dsp.focus({ ${win} })`, `hl.dsp.window.bring_to_top()`);
+                                        Hypr.dispatch(`hl.dsp.focus({ ${win} })`, `hl.dsp.window.bring_to_top()`);
                                 }
                             }
 

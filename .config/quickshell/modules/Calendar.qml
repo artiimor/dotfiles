@@ -11,7 +11,8 @@ Column {
     function shift(n) { offset += n; }
     function reset() { offset = 0; }
 
-    readonly property date today: new Date()
+    // Lo pasa el reloj de Center (si no, se quedaría en el día de arranque)
+    required property date today
     readonly property date month: new Date(today.getFullYear(), today.getMonth() + offset, 1)
 
     // 42 celdas (6 semanas); null = hueco

@@ -4,10 +4,10 @@
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Services.Polkit
 import qs
+import qs.components
 
 Scope {
     id: root
@@ -21,7 +21,7 @@ Scope {
     // Pantalla entera oscurecida con el diálogo en el centro
     PanelWindow {
         id: win
-        screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
+        screen: Theme.focusedScreen
         visible: agent.isActive && root.flow !== null
 
         anchors {
@@ -154,6 +154,9 @@ Scope {
 
                     DialogButton {
                         text: "Cancelar"
+                        color: hovered ? Theme.surface : "transparent"
+                        border.width: 1
+                        border.color: Theme.border
                         onClicked: win.cancel()
                     }
                     DialogButton {
@@ -166,35 +169,9 @@ Scope {
         }
     }
 
-    component DialogButton: Rectangle {
-        property alias text: label.text
-        property bool primary: false
-        signal clicked
-
-        implicitWidth: label.implicitWidth + 28
+    component DialogButton: TextButton {
         implicitHeight: 32
-        radius: 7
-        color: primary ? (Theme.mac ? (mouse.containsMouse ? Qt.lighter(Theme.accent, 1.12) : Theme.accent)
-                                    : (mouse.containsMouse ? Theme.accent : Theme.accentDim))
-            : (mouse.containsMouse ? Theme.surface : "transparent")
-        border.width: primary ? 0 : 1
-        border.color: Theme.border
-
-        Text {
-            id: label
-            anchors.centerIn: parent
-            color: parent.primary ? Theme.onAccent : Theme.fg
-            font.family: Theme.font
-            font.pixelSize: 13
-            font.bold: true
-        }
-
-        MouseArea {
-            id: mouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: parent.clicked()
-        }
+        padding: 28
+        font.pixelSize: 13
     }
 }

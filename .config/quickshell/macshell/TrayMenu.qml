@@ -4,14 +4,14 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 
-// Renders an app's tray (DBus) menu with our own look. Submenus open in place.
+// Dibuja el menú de bandeja (DBus) de una app con nuestro aspecto. Los submenús se abren en el sitio.
 ColumnLayout {
     id: tm
     required property var item          // SystemTrayItem
     signal done()
-    property var stack: []              // submenu handles
+    property var stack: []              // submenús abiertos
     readonly property var current: stack.length ? stack[stack.length - 1] : item.menu
-    // the popup is reused when another tray icon is right-clicked: start at its top level
+    // el popup se reutiliza al hacer clic derecho en otro icono: empezar en su nivel superior
     onItemChanged: stack = []
 
     implicitWidth: 240
@@ -19,15 +19,11 @@ ColumnLayout {
 
     QsMenuOpener { id: opener; menu: tm.current }
 
-    Text {
+    SectionLabel {
         Layout.fillWidth: true
         Layout.margins: 6
         visible: tm.stack.length === 0
         text: tm.item.tooltipTitle || tm.item.title || tm.item.id
-        color: Theme.dim
-        font.pointSize: 8.5
-        font.weight: Font.DemiBold
-        elide: Text.ElideRight
     }
     MenuRow {
         Layout.fillWidth: true
@@ -47,7 +43,7 @@ ColumnLayout {
                 id: sep
                 Item {
                     implicitHeight: 9
-                    Rectangle { anchors.centerIn: parent; width: parent.width - 12; height: 1; color: Theme.tint(0.12) }
+                    Divider { anchors.centerIn: parent; width: parent.width - 12 }
                 }
             }
             Component {

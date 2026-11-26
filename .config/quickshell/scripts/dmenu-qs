@@ -27,6 +27,9 @@ mkfifo "$dir/out"
 
 qs ipc call launcher dmenu "$dir" "$prompt" "$password" >/dev/null || exit 1
 
-result=$(cat "$dir/out")
+# Si Quickshell se recarga o se reinicia mientras esperas, el lanzador nuevo no
+# sabe de esta petición y nadie escribiría en el fifo: a los 10 min se da por
+# cancelada, para no dejar el script colgado para siempre
+result=$(timeout 600 cat "$dir/out")
 [ -n "$result" ] || exit 1
 printf '%s\n' "$result"

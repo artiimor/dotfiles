@@ -2,13 +2,12 @@
 // en la pantalla que tenga el foco.
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Wayland
 import qs
 import qs.services
 
 PanelWindow {
-    screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
+    screen: Theme.focusedScreen
     visible: Notifs.popups.length > 0
 
     anchors {
@@ -18,14 +17,14 @@ PanelWindow {
     // En la capa Overlay Hyprland no aparta los popups de la barra,
     // así que se dejan debajo a mano (si está oculta, arriba del todo)
     margins {
-        top: TopBar.shown ? Theme.barHeight + Theme.gap * 2 : Theme.gap
+        top: TopBar.belowBar
         right: Theme.gap
     }
     exclusionMode: ExclusionMode.Ignore
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-notifications"
 
-    implicitWidth: 400
+    implicitWidth: 400   // ancho de las tarjetas
     implicitHeight: column.implicitHeight
     color: "transparent"
 
@@ -38,6 +37,7 @@ PanelWindow {
             model: Notifs.popups.slice(0, 5) // como mucho 5 a la vez
 
             NotificationCard {
+                width: column.width
                 popup: true
             }
         }

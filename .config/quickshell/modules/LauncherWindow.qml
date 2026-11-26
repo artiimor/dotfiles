@@ -14,14 +14,13 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
-import Quickshell.Widgets
 import qs
 import qs.services
 
 PanelWindow {
     id: win
 
-    screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
+    screen: Theme.focusedScreen
     visible: Launcher.open
 
     // Apps, portapapeles, emojis y energía (Super+Escape) en el centro; el
@@ -31,7 +30,7 @@ PanelWindow {
         right: !Launcher.centered
     }
     margins {
-        top: TopBar.shown ? Theme.barHeight + Theme.gap * 2 : Theme.gap
+        top: TopBar.belowBar
         right: Theme.gap
     }
     exclusionMode: ExclusionMode.Ignore
@@ -93,17 +92,12 @@ PanelWindow {
     // Altura máxima de la lista según el modo
     readonly property int maxRows: Launcher.centered ? 8 : 6
     readonly property int rowHeight: 38
-    // Colores propios del launcher (vienen del tema: launcherBg / launcherSel)
-    readonly property color bgColor: Theme.launcherBg
-    readonly property color selColor: Theme.launcherSel
-    // Menús cortos (apagar, temas, fondos, configs): sin buscador
-    readonly property bool noSearch: ["power", "themes", "backgrounds", "configs"].includes(Launcher.mode)
 
     Rectangle {
         id: box
         width: Launcher.width
         implicitHeight: column.implicitHeight + 28
-        color: win.bgColor
+        color: Theme.launcherBg
         radius: Theme.mac ? Theme.radius : 0
         border.width: Theme.mac ? 1 : 0
         border.color: Theme.border
@@ -113,7 +107,7 @@ PanelWindow {
             x: 14
             y: 14
             width: parent.width - 28
-            spacing: win.noSearch ? 0 : 12
+            spacing: Launcher.noSearch ? 0 : 12
 
             // ── Buscador: solo el texto, sin fondo ni lupa ──────
             // (el candado aparece únicamente al pedir una contraseña)
@@ -121,10 +115,10 @@ PanelWindow {
             // existiendo para recibir las teclas (flechas, Enter, Esc)
             Item {
                 Layout.fillWidth: true
-                implicitHeight: win.noSearch ? 0 : 36
+                implicitHeight: Launcher.noSearch ? 0 : 36
                 Layout.preferredHeight: implicitHeight
                 Layout.maximumHeight: implicitHeight
-                opacity: win.noSearch ? 0 : 1
+                opacity: Launcher.noSearch ? 0 : 1
 
                 Text {
                     id: searchIcon
@@ -151,7 +145,7 @@ PanelWindow {
                     font.family: Theme.font
                     font.pixelSize: 15
                     echoMode: Launcher.password ? TextInput.Password : TextInput.Normal
-                    readOnly: win.noSearch
+                    readOnly: Launcher.noSearch
                     clip: true
 
                     // Sin cursor visible
@@ -210,7 +204,7 @@ PanelWindow {
                     Rectangle {
                         anchors.fill: parent
                         radius: Theme.mac ? 8 : 0
-                        color: row.selected ? win.selColor : mouse.containsMouse ? Theme.withAlpha(win.selColor, 0.5) : "transparent"
+                        color: row.selected ? Theme.launcherSel : mouse.containsMouse ? Theme.withAlpha(Theme.launcherSel, 0.5) : "transparent"
                     }
 
                     RowLayout {
@@ -298,7 +292,7 @@ PanelWindow {
 
                         // Descripción corta a la derecha (p. ej. "Navegador web")
                         Text {
-                            visible: !!row.modelData.sub && (Launcher.mode === "apps" || Launcher.mode === "keys")
+                            visible: !!row.modelData.sub && Launcher.showSub
                             Layout.maximumWidth: Launcher.mode === "keys" ? 240 : 180
                             elide: Text.ElideRight
                             text: row.modelData.sub ?? ""

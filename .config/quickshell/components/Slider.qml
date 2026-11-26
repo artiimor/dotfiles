@@ -51,11 +51,11 @@ Item {
         onPressed: m => root.moved(root.clamp(m.x / width))
         onPositionChanged: m => { if (pressed) root.moved(root.clamp(m.x / width)); }
         // 120 = un paso de rueda = 5 %; el touchpad manda pasos más pequeños.
-        // Por encima del 100 % (Pipewire lo permite) subir no lo baja a 100
+        // Por encima del 100 %, ver Theme.wheelStep
         onWheel: w => {
-            const d = w.angleDelta.y / 120 * 0.05;
-            if (d < 0 || (d > 0 && root.value < 1))
-                root.moved(root.clamp(root.value + d));
+            const v = Theme.wheelStep(root.value, w.angleDelta.y / 120 * 0.05);
+            if (v !== root.value)
+                root.moved(v);
         }
     }
 }

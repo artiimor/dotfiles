@@ -6,8 +6,6 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Hyprland
 import Quickshell.Wayland
-import Quickshell.Services.Mpris
-import Quickshell.Services.Pipewire
 import qs
 import qs.components
 import qs.services
@@ -15,7 +13,7 @@ import qs.services
 PanelWindow {
     id: panel
 
-    screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
+    screen: Theme.focusedScreen
     visible: Notifs.centerOpen
 
     anchors {
@@ -72,8 +70,10 @@ PanelWindow {
                     font.bold: true
                 }
 
-                PanelButton {
+                TextButton {
                     text: "󰎟  Limpiar"
+                    hoverColor: Theme.red
+                    textColor: hovered ? Theme.bgSolid : Theme.fg
                     visible: Notifs.count > 0
                     onClicked: Notifs.clearAll()
                 }
@@ -122,11 +122,7 @@ PanelWindow {
             // ── Música ────────────────────────────────────
             Rectangle {
                 id: media
-                readonly property MprisPlayer player: {
-                    const ps = Mpris.players.values.filter(p => !p.dbusName.includes("playerctld"));
-                    return ps.find(p => p.isPlaying) ?? ps[0] ?? null;
-                }
-                visible: player !== null
+                visible: Player.player !== null
                 Layout.fillWidth: true
                 implicitHeight: 76
                 radius: Theme.radius
@@ -146,13 +142,13 @@ PanelWindow {
 
                         Image {
                             anchors.fill: parent
-                            source: media.player?.trackArtUrl ?? ""
+                            source: Player.player?.trackArtUrl ?? ""
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
                         }
                         Text {
                             anchors.centerIn: parent
-                            visible: !media.player?.trackArtUrl
+                            visible: !Player.player?.trackArtUrl
                             text: "󰎈"
                             color: Theme.muted
                             font.family: Theme.font
@@ -167,7 +163,7 @@ PanelWindow {
                         Text {
                             Layout.fillWidth: true
                             elide: Text.ElideRight
-                            text: media.player?.trackTitle || media.player?.identity || ""
+                            text: Player.player?.trackTitle || Player.player?.identity || ""
                             color: Theme.accent
                             font.family: Theme.font
                             font.pixelSize: Theme.fontSize
@@ -176,7 +172,7 @@ PanelWindow {
                         Text {
                             Layout.fillWidth: true
                             elide: Text.ElideRight
-                            text: media.player?.trackArtist ?? ""
+                            text: Player.player?.trackArtist ?? ""
                             color: Theme.muted
                             font.family: Theme.font
                             font.pixelSize: 12
@@ -188,40 +184,37 @@ PanelWindow {
                         padding: 6
                         pixelSize: 16
                         icon: "󰒮"
-                        color: hovered ? Theme.accent : Theme.fg
-                        onClicked: media.player.previous()
+                        hoverColor: Theme.accent
+                        onClicked: Player.player.previous()
                     }
                     BarIcon {
                         implicitHeight: 30
                         padding: 6
                         pixelSize: 18
-                        icon: media.player?.isPlaying ? "󰏤" : "󰐊"
+                        icon: Player.playing ? "󰏤" : "󰐊"
                         color: Theme.accent
-                        onClicked: media.player.togglePlaying()
+                        onClicked: Player.player.togglePlaying()
                     }
                     BarIcon {
                         implicitHeight: 30
                         padding: 6
                         pixelSize: 16
                         icon: "󰒭"
-                        color: hovered ? Theme.accent : Theme.fg
-                        onClicked: media.player.next()
+                        hoverColor: Theme.accent
+                        onClicked: Player.player.next()
                     }
                 }
             }
 
             // ── Volumen y brillo ──────────────────────────
-            PwObjectTracker { objects: [Pipewire.defaultAudioSink] }
-
             SliderRow {
-                readonly property var audio: Pipewire.defaultAudioSink?.audio
                 Layout.fillWidth: true
                 icon: "󰕾"
                 tooltip: "Clic: silenciar"
-                value: audio?.volume ?? 0
-                muted: audio?.muted ?? false
-                onIconClicked: audio.muted = !audio.muted
-                onMoved: v => audio.volume = v
+                value: Audio.volume
+                muted: Audio.muted
+                onIconClicked: Audio.toggleMute()
+                onMoved: v => Audio.setVolume(v)
             }
 
             // Brillo: solo si hay panel retroiluminado (portátil)
@@ -305,7 +298,8 @@ PanelWindow {
                                 implicitHeight: 24
                                 padding: 4
                                 icon: "󰎟"
-                                color: hovered ? Theme.red : Theme.muted
+                                color: Theme.muted
+                                hoverColor: Theme.red
                                 tooltip: "Borrar el grupo"
                                 onClicked: Notifs.clearGroup(group.notifs)
                             }
@@ -355,38 +349,6 @@ PanelWindow {
                     }
                 }
             }
-        }
-    }
-
-    // Botón con texto del panel
-    component PanelButton: Rectangle {
-        property alias text: label.text
-        signal clicked
-
-        implicitWidth: label.implicitWidth + 20
-        implicitHeight: 28
-        radius: 7
-        color: mouse.containsMouse ? Theme.red : Theme.surface
-
-        Behavior on color {
-            ColorAnimation { duration: Theme.anim }
-        }
-
-        Text {
-            id: label
-            anchors.centerIn: parent
-            color: mouse.containsMouse ? Theme.bgSolid : Theme.fg
-            font.family: Theme.font
-            font.pixelSize: 12
-            font.bold: true
-        }
-
-        MouseArea {
-            id: mouse
-            anchors.fill: parent
-            hoverEnabled: true
-            cursorShape: Qt.PointingHandCursor
-            onClicked: parent.clicked()
         }
     }
 }

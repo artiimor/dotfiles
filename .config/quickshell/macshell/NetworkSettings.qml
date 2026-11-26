@@ -6,10 +6,10 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Networking
 
-// "Network" window in the style of macOS System Settings. Opened from
-// "Network Settings…" in the Wi‑Fi panel on Hyprland (`ipc call network open`).
-// Live state comes from Quickshell.Networking; details, saved connections and
-// VPNs from nmcli.
+// Ventana "Network" al estilo de Ajustes del Sistema de macOS. Se abre desde
+// "Network Settings…" en el panel Wi‑Fi en Hyprland (`ipc call network open`).
+// El estado en vivo sale de Quickshell.Networking; los detalles, las conexiones
+// guardadas y las VPN, de nmcli.
 FloatingWindow {
     id: win
     title: "Network"
@@ -19,33 +19,37 @@ FloatingWindow {
     implicitHeight: 660
     minimumSize: Qt.size(460, 420)
 
-    // If it's already open (maybe on another workspace, or closed from the
-    // titlebar without us noticing) recreate it so it shows up where you are
+    // Si ya está abierta (quizá en otro workspace) se recrea para que aparezca donde estás
     function show() {
         if (visible) { visible = false; Qt.callLater(() => { win.visible = true; }); }
         else visible = true;
         refresh();
     }
+    // Cerrada desde Hyprland (Super+Q, barra de título): visible no cambia solo, y
+    // sin esto seguirían el escaneo y el Timer de nmcli
+    onClosed: visible = false
 
-    // ── data from nmcli ──
+    // ── datos de nmcli ──
     property var saved: []        // [{ name, uuid, type }]
+    property var ssids: ({})      // uuid → SSID de las Wi‑Fi guardadas (el NAME puede ser otro)
     property var activeUuids: []
     property var wifiInfo: ({})   // IP4.ADDRESS[1], IP4.GATEWAY, IP4.DNS[1], GENERAL.HWADDR...
     property var wiredInfo: ({})
-    property string expanded: ""  // uuid of the saved row showing its buttons
     property bool showDetails: false
     property string askingFor: ""
 
     readonly property var wifiDev: Sys.wifiDevice
     readonly property var wiredDev: Sys.wiredDevice
     readonly property var current: Sys.wifiNetwork
-    readonly property var savedWifi: saved.filter(c => c.type === "802-11-wireless" && (!current || c.name !== current.name))
+    readonly property var savedWifi: saved.filter(c => c.type === "802-11-wireless" && (!current || ssidOf(c) !== current.name))
     readonly property var vpns: saved.filter(c => c.type === "vpn" || c.type === "wireguard")
     readonly property var others: wifiDev
         ? wifiDev.networks.values.filter(n => !n.connected && !n.known && n.name)
             .sort((a, b) => b.signalStrength - a.signalStrength).slice(0, 12)
         : []
+    readonly property bool searching: !wifiDev || wifiDev.networks.values.length === 0
 
+    function ssidOf(c) { return ssids[c.uuid] ?? c.name; }
     function nm(args) { Quickshell.execDetached(["nmcli"].concat(args)); refreshSoon.restart(); }
 
     function refresh() {
@@ -55,7 +59,7 @@ FloatingWindow {
         if (wiredDev) { wiredInfoProc.dev = wiredDev.name; wiredInfoProc.running = true; }
     }
 
-    // nmcli -t escapes ":" inside values as "\:"
+    // nmcli -t escapa los ":" de los valores como "\:"
     function parseFields(text) {
         const out = {};
         text.split("\n").forEach(l => {
@@ -64,7 +68,8 @@ FloatingWindow {
         });
         return out;
     }
-    function splitTerse(l) { return l.split(/(?<!\\):/).map(f => f.replace(/\\:/g, ":")); }
+    // (sin lookbehind: el motor de QML no lo soporta y no partía la línea)
+    function splitTerse(l) { return l.replace(/\\:/g, "\x01").split(":").map(f => f.replace(/\x01/g, ":")); }
 
     Timer { id: refreshSoon; interval: 1200; onTriggered: win.refresh() }
     Timer { interval: 4000; repeat: true; running: win.visible; onTriggered: win.refresh() }
@@ -75,10 +80,33 @@ FloatingWindow {
         id: savedProc
         command: ["nmcli", "-t", "-f", "NAME,UUID,TYPE", "connection", "show"]
         stdout: StdioCollector {
-            onStreamFinished: win.saved = text.split("\n").filter(l => l).map(l => {
-                const f = win.splitTerse(l);
-                return { name: f[0], uuid: f[1], type: f[2] };
-            })
+            onStreamFinished: {
+                win.saved = text.split("\n").filter(l => l).map(l => {
+                    const f = win.splitTerse(l);
+                    return { name: f[0], uuid: f[1], type: f[2] };
+                });
+                const wifi = win.saved.filter(c => c.type === "802-11-wireless");
+                if (!wifi.length) return;
+                ssidProc.command = ["nmcli", "-t", "-f", "connection.uuid,802-11-wireless.ssid", "connection", "show"]
+                    .concat(...wifi.map(c => ["uuid", c.uuid]));
+                ssidProc.running = true;
+            }
+        }
+    }
+    // El SSID no sale en la lista: se pide por conexión y llega en bloques uuid/ssid
+    Process {
+        id: ssidProc
+        stdout: StdioCollector {
+            onStreamFinished: {
+                const out = {};
+                let uuid = "";
+                text.split("\n").forEach(l => {
+                    const f = win.parseFields(l);
+                    if (f["connection.uuid"]) uuid = f["connection.uuid"];
+                    else if (f["802-11-wireless.ssid"]) out[uuid] = f["802-11-wireless.ssid"];
+                });
+                win.ssids = out;
+            }
         }
     }
     Process {
@@ -99,78 +127,69 @@ FloatingWindow {
         stdout: StdioCollector { onStreamFinished: win.wiredInfo = win.parseFields(text) }
     }
 
-    // ── building blocks ──
-    component SectionTitle: Text {
+    // ── piezas ──
+    component SectionTitle: SectionLabel {
         Layout.topMargin: 14
         Layout.leftMargin: 4
-        color: Theme.dim
         font.pointSize: 9
-        font.weight: Font.DemiBold
     }
 
-    // rounded grouped box like System Settings
-    component Group: Rectangle {
-        default property alias rows: groupCol.data
-        Layout.fillWidth: true
-        implicitHeight: groupCol.implicitHeight
-        radius: 10
-        color: Theme.tint(0.05)
-        border.color: Theme.tint(0.08)
-        ColumnLayout {
-            id: groupCol
-            anchors { left: parent.left; right: parent.right; top: parent.top }
-            spacing: 0
-        }
-    }
+    // caja redondeada que agrupa filas, como en Ajustes del Sistema
+    component Group: Tile { Layout.fillWidth: true; padding: 0; spacing: 0 }
 
-    component Divider: Rectangle {
-        Layout.fillWidth: true
-        Layout.leftMargin: 12
-        Layout.rightMargin: 12
-        implicitHeight: 1
-        color: Theme.tint(0.07)
-    }
+    component RowDivider: Divider { Layout.leftMargin: 12; Layout.rightMargin: 12 }
 
-    component Switch: Rectangle {
-        property bool on: false
-        signal toggled()
-        implicitWidth: 38; implicitHeight: 22; radius: 11
-        color: on ? Theme.accent : Theme.tint(0.2)
-        Behavior on color { ColorAnimation { duration: 120 } }
-        Rectangle {
-            width: 18; height: 18; radius: 9; y: 2
-            x: parent.on ? parent.width - width - 2 : 2
-            color: "white"
-            Behavior on x { NumberAnimation { duration: 140; easing.type: Easing.OutCubic } }
-        }
-        MouseArea { anchors.fill: parent; onClicked: parent.toggled() }
-    }
-
-    component PillButton: Rectangle {
-        property string text: ""
-        property bool danger: false
-        signal clicked()
-        implicitWidth: pbText.implicitWidth + 22
-        implicitHeight: 24
-        radius: 6
-        color: pbMouse.containsMouse ? Theme.tint(0.20) : Theme.tint(0.12)
-        Text {
-            id: pbText
-            anchors.centerIn: parent
-            text: parent.text
-            color: parent.danger ? "#ff6961" : Theme.text
-            font.pointSize: 9.5
-        }
-        MouseArea { id: pbMouse; anchors.fill: parent; hoverEnabled: true; onClicked: parent.clicked() }
-    }
-
-    component IconBadge: Rectangle {
+    // icono en un cuadrado de color, título y estado; los hijos van a la derecha
+    component BadgeRow: RowLayout {
+        id: br
         property string glyph: ""
-        property real level: 3
         property color tint: Theme.accent
-        implicitWidth: 28; implicitHeight: 28; radius: 7
-        color: tint
-        Glyph { anchors.centerIn: parent; width: 16; height: 16; name: parent.glyph; level: parent.level; color: "white" }
+        property string title: ""
+        property string subtitle: ""
+        Layout.fillWidth: true
+        Layout.margins: 12
+        spacing: 10
+        Rectangle {
+            implicitWidth: 28; implicitHeight: 28; radius: 7
+            color: br.tint
+            Glyph { anchors.centerIn: parent; width: 16; height: 16; name: br.glyph; level: 3; color: "white" }
+        }
+        ColumnLayout {
+            spacing: 1
+            Text { text: br.title; color: Theme.text; font.pointSize: 10.5; font.weight: Font.DemiBold }
+            Text { text: br.subtitle; color: Theme.dim; font.pointSize: 9 }
+        }
+        Item { Layout.fillWidth: true }
+    }
+
+    // fila de red: nombre, estado en gris y, a la derecha, los hijos
+    component NetRow: Rectangle {
+        id: nr
+        property string name: ""
+        property string status: ""
+        property alias clickable: area.enabled
+        readonly property alias hovered: hover.hovered
+        default property alias trailing: row.data
+        signal clicked()
+        Layout.fillWidth: true
+        implicitHeight: 40
+        radius: 10
+        color: hover.hovered ? Theme.tint(0.04) : "transparent"
+        HoverHandler { id: hover }
+        MouseArea { id: area; anchors.fill: parent; onClicked: nr.clicked() }
+        RowLayout {
+            id: row
+            anchors.fill: parent
+            anchors.leftMargin: 14; anchors.rightMargin: 12
+            spacing: 10
+            Text {
+                Layout.fillWidth: true
+                text: nr.name
+                color: Theme.text; font.pointSize: 10
+                elide: Text.ElideRight
+            }
+            Text { visible: nr.status !== ""; text: nr.status; color: Theme.dim; font.pointSize: 9 }
+        }
     }
 
     component InfoRow: RowLayout {
@@ -185,7 +204,7 @@ FloatingWindow {
         Text { text: parent.value; color: Theme.dim; font.pointSize: 9.5 }
     }
 
-    // ── content ──
+    // ── contenido ──
     Flickable {
         anchors.fill: parent
         contentHeight: content.implicitHeight + 40
@@ -208,26 +227,17 @@ FloatingWindow {
 
             // ── Wi‑Fi ──
             Group {
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.margins: 12
-                    spacing: 10
-                    IconBadge { glyph: "wifi"; tint: Sys.wifiOn ? Theme.accent : Theme.tint(0.18) }
-                    ColumnLayout {
-                        spacing: 1
-                        Text { text: "Wi‑Fi"; color: Theme.text; font.pointSize: 10.5; font.weight: Font.DemiBold }
-                        Text {
-                            text: !Sys.wifiOn ? "Off" : win.current ? "Connected" : "Not connected"
-                            color: Theme.dim; font.pointSize: 9
-                        }
-                    }
-                    Item { Layout.fillWidth: true }
+                BadgeRow {
+                    glyph: "wifi"
+                    tint: Sys.wifiOn ? Theme.accent : Theme.tint(0.18)
+                    title: "Wi‑Fi"
+                    subtitle: !Sys.wifiOn ? "Off" : win.current ? "Connected" : "Not connected"
                     Switch { on: Sys.wifiOn; onToggled: Networking.wifiEnabled = !Networking.wifiEnabled }
                 }
 
-                Divider { visible: Sys.wifiOn && win.current !== null }
+                RowDivider { visible: Sys.wifiOn && win.current !== null }
 
-                // current network
+                // red actual
                 RowLayout {
                     visible: Sys.wifiOn && win.current !== null
                     Layout.fillWidth: true
@@ -245,7 +255,7 @@ FloatingWindow {
                         name: "lock"; color: Theme.dim
                     }
                     Glyph { name: "wifi"; level: Sys.wifiLevel; color: Theme.text }
-                    PillButton { text: win.showDetails ? "Hide Details" : "Details…"; onClicked: win.showDetails = !win.showDetails }
+                    PillButton { text: win.showDetails ? "Hide Details" : "Details…"; onTapped: win.showDetails = !win.showDetails }
                 }
 
                 ColumnLayout {
@@ -253,7 +263,7 @@ FloatingWindow {
                     Layout.fillWidth: true
                     Layout.bottomMargin: 10
                     spacing: 0
-                    Divider {}
+                    RowDivider {}
                     InfoRow { label: "IP Address"; value: (win.wifiInfo["IP4.ADDRESS[1]"] ?? "").split("/")[0] }
                     InfoRow { label: "Subnet"; value: (win.wifiInfo["IP4.ADDRESS[1]"] ?? "").includes("/") ? "/" + win.wifiInfo["IP4.ADDRESS[1]"].split("/")[1] : "" }
                     InfoRow { label: "Router"; value: win.wifiInfo["IP4.GATEWAY"] ?? "" }
@@ -266,12 +276,12 @@ FloatingWindow {
                         Layout.leftMargin: 14; Layout.rightMargin: 14; Layout.topMargin: 6
                         spacing: 8
                         Item { Layout.fillWidth: true }
-                        PillButton { text: "Disconnect"; onClicked: { win.current.disconnect(); win.showDetails = false; } }
+                        PillButton { text: "Disconnect"; onTapped: { win.current.disconnect(); win.showDetails = false; } }
                         PillButton {
                             text: "Forget This Network…"
                             danger: true
-                            onClicked: {
-                                const c = win.saved.find(s => s.type === "802-11-wireless" && s.name === win.current.name);
+                            onTapped: {
+                                const c = win.saved.find(s => s.type === "802-11-wireless" && win.ssidOf(s) === win.current.name);
                                 if (c) win.nm(["connection", "delete", "uuid", c.uuid]);
                                 win.showDetails = false;
                             }
@@ -280,7 +290,7 @@ FloatingWindow {
                 }
             }
 
-            // ── Known networks ──
+            // ── redes conocidas ──
             SectionTitle { visible: Sys.wifiOn && win.savedWifi.length > 0; text: "Known Networks" }
             Group {
                 visible: Sys.wifiOn && win.savedWifi.length > 0
@@ -290,151 +300,83 @@ FloatingWindow {
                         id: known
                         required property var modelData
                         required property int index
-                        readonly property var live: win.wifiDev ? win.wifiDev.networks.values.find(n => n.name === modelData.name) ?? null : null
+                        readonly property string ssid: win.ssidOf(modelData)
+                        readonly property var live: win.wifiDev ? win.wifiDev.networks.values.find(n => n.name === ssid) ?? null : null
                         Layout.fillWidth: true
                         spacing: 0
-                        Divider { visible: known.index > 0 }
-                        Rectangle {
-                            Layout.fillWidth: true
-                            implicitHeight: 40
-                            color: knownHover.hovered ? Theme.tint(0.04) : "transparent"
-                            radius: 10
-                            HoverHandler { id: knownHover }
-                            MouseArea {
-                                id: knownMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: win.nm(["connection", "up", "uuid", known.modelData.uuid])
+                        RowDivider { visible: known.index > 0 }
+                        NetRow {
+                            id: knownRow
+                            name: known.ssid
+                            status: known.live ? "" : "Not in range"
+                            // fuera de alcance no hay a qué conectarse (olvidarla sí se puede)
+                            clickable: known.live !== null
+                            onClicked: known.live.connect()
+                            Glyph {
+                                visible: known.live !== null
+                                name: "wifi"
+                                level: known.live ? Sys.wifiBars(known.live.signalStrength) : 0
+                                color: Theme.text
                             }
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 14; anchors.rightMargin: 12
-                                spacing: 10
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: known.modelData.name
-                                    color: Theme.text; font.pointSize: 10
-                                    elide: Text.ElideRight
-                                }
-                                Text {
-                                    visible: !known.live
-                                    text: "Not in range"
-                                    color: Theme.dim; font.pointSize: 9
-                                }
-                                Glyph {
-                                    visible: known.live !== null
-                                    name: "wifi"
-                                    level: known.live ? Math.max(1, Math.ceil(known.live.signalStrength * 3)) : 0
-                                    color: Theme.text
-                                }
-                                PillButton {
-                                    visible: knownHover.hovered
-                                    text: "Forget"
-                                    danger: true
-                                    onClicked: win.nm(["connection", "delete", "uuid", known.modelData.uuid])
-                                }
+                            PillButton {
+                                visible: knownRow.hovered
+                                text: "Forget"
+                                danger: true
+                                onTapped: win.nm(["connection", "delete", "uuid", known.modelData.uuid])
                             }
                         }
                     }
                 }
             }
 
-            // ── Other networks ──
-            SectionTitle { visible: Sys.wifiOn; text: "Other Networks" }
+            // ── otras redes ──
+            SectionTitle { visible: Sys.wifiOn && (win.searching || win.others.length > 0); text: "Other Networks" }
             Group {
-                visible: Sys.wifiOn
+                visible: Sys.wifiOn && (win.searching || win.others.length > 0)
                 Text {
-                    visible: win.others.length === 0
+                    visible: win.searching
                     Layout.margins: 14
                     text: "Searching…"
                     color: Theme.dim; font.pointSize: 9.5
                 }
                 Repeater {
-                    model: win.others
+                    // ScriptModel y no un array: reaprovecha las filas cuando cambia la
+                    // señal, así no se pierde la contraseña a medio escribir
+                    model: ScriptModel { values: win.others }
                     delegate: ColumnLayout {
                         id: other
                         required property var modelData
                         required property int index
                         readonly property bool secured: modelData.security !== WifiSecurityType.Open
+                        readonly property bool asking: win.askingFor === modelData.name
                         Layout.fillWidth: true
                         spacing: 0
-                        Divider { visible: other.index > 0 }
-                        Rectangle {
-                            Layout.fillWidth: true
-                            implicitHeight: 40
-                            radius: 10
-                            color: otherMouse.containsMouse ? Theme.tint(0.04) : "transparent"
-                            MouseArea {
-                                id: otherMouse
-                                anchors.fill: parent
-                                hoverEnabled: true
-                                onClicked: {
-                                    if (!other.secured) other.modelData.connect();
-                                    else win.askingFor = (win.askingFor === other.modelData.name ? "" : other.modelData.name);
-                                }
+                        RowDivider { visible: other.index > 0 }
+                        NetRow {
+                            name: other.modelData.name
+                            status: other.modelData.stateChanging ? "Connecting…" : ""
+                            onClicked: {
+                                if (!other.secured) other.modelData.connect();
+                                else win.askingFor = other.asking ? "" : other.modelData.name;
                             }
-                            RowLayout {
-                                anchors.fill: parent
-                                anchors.leftMargin: 14; anchors.rightMargin: 14
-                                spacing: 10
-                                Text {
-                                    Layout.fillWidth: true
-                                    text: other.modelData.name
-                                    color: Theme.text; font.pointSize: 10
-                                    elide: Text.ElideRight
-                                }
-                                Text {
-                                    visible: other.modelData.stateChanging
-                                    text: "Connecting…"
-                                    color: Theme.dim; font.pointSize: 9
-                                }
-                                Glyph { visible: other.secured; name: "lock"; color: Theme.dim }
-                                Glyph {
-                                    name: "wifi"
-                                    level: Math.max(1, Math.ceil(other.modelData.signalStrength * 3))
-                                    color: Theme.text
-                                }
-                            }
+                            Glyph { visible: other.secured; name: "lock"; color: Theme.dim }
+                            Glyph { name: "wifi"; level: Sys.wifiBars(other.modelData.signalStrength); color: Theme.text }
                         }
-                        // password for a new secured network
+                        // contraseña para una red protegida nueva
                         RowLayout {
-                            visible: win.askingFor === other.modelData.name
+                            visible: other.asking
                             Layout.fillWidth: true
                             Layout.leftMargin: 14; Layout.rightMargin: 14; Layout.bottomMargin: 10
                             spacing: 8
-                            Rectangle {
+                            PasswordField {
+                                id: pass
                                 Layout.fillWidth: true
-                                implicitHeight: 26
-                                radius: 6
-                                color: Theme.tint(0.08)
-                                border.color: pass.activeFocus ? Theme.accent : Theme.tint(0.12)
-                                TextInput {
-                                    id: pass
-                                    anchors.fill: parent
-                                    anchors.leftMargin: 8; anchors.rightMargin: 8
-                                    verticalAlignment: TextInput.AlignVCenter
-                                    echoMode: TextInput.Password
-                                    color: Theme.text
-                                    font.pointSize: 9.5
-                                    onVisibleChanged: if (visible) forceActiveFocus()
-                                    onAccepted: join.clicked()
-                                    Text {
-                                        visible: !pass.text.length
-                                        anchors.verticalCenter: parent.verticalCenter
-                                        text: "Password"
-                                        color: Theme.dim; font.pointSize: 9.5
-                                    }
-                                }
-                            }
-                            PillButton {
-                                id: join
-                                text: "Join"
-                                onClicked: {
-                                    other.modelData.connectWithPsk(pass.text);
-                                    pass.text = "";
+                                onSubmitted: psk => {
+                                    other.modelData.connectWithPsk(psk);
                                     win.askingFor = "";
                                 }
                             }
+                            PillButton { text: "Join"; onTapped: pass.submit() }
                         }
                     }
                 }
@@ -444,27 +386,18 @@ FloatingWindow {
             SectionTitle { visible: win.wiredDev !== null; text: "Ethernet" }
             Group {
                 visible: win.wiredDev !== null
-                RowLayout {
-                    Layout.fillWidth: true
-                    Layout.margins: 12
-                    spacing: 10
-                    IconBadge { glyph: "ethernet"; tint: Sys.wiredUp ? "#30d158" : Theme.tint(0.18) }
-                    ColumnLayout {
-                        spacing: 1
-                        Text { text: "Ethernet"; color: Theme.text; font.pointSize: 10.5; font.weight: Font.DemiBold }
-                        Text {
-                            text: Sys.wiredUp ? "Connected" : "Cable unplugged"
-                            color: Theme.dim; font.pointSize: 9
-                        }
-                    }
-                    Item { Layout.fillWidth: true }
+                BadgeRow {
+                    glyph: "ethernet"
+                    tint: Sys.wiredUp ? "#30d158" : Theme.tint(0.18)
+                    title: "Ethernet"
+                    subtitle: Sys.wiredUp ? "Connected" : "Cable unplugged"
                 }
                 ColumnLayout {
                     visible: Sys.wiredUp
                     Layout.fillWidth: true
                     Layout.bottomMargin: 8
                     spacing: 0
-                    Divider {}
+                    RowDivider {}
                     InfoRow { label: "IP Address"; value: (win.wiredInfo["IP4.ADDRESS[1]"] ?? "").split("/")[0] }
                     InfoRow { label: "Router"; value: win.wiredInfo["IP4.GATEWAY"] ?? "" }
                     InfoRow { label: "Hardware Address"; value: win.wiredInfo["GENERAL.HWADDR"] ?? "" }
@@ -484,18 +417,12 @@ FloatingWindow {
                         readonly property bool active: win.activeUuids.includes(modelData.uuid)
                         Layout.fillWidth: true
                         spacing: 0
-                        Divider { visible: vpn.index > 0 }
-                        RowLayout {
-                            Layout.fillWidth: true
-                            Layout.margins: 12
-                            spacing: 10
-                            IconBadge { glyph: "lock"; tint: vpn.active ? Theme.accent : Theme.tint(0.18) }
-                            ColumnLayout {
-                                spacing: 1
-                                Text { text: vpn.modelData.name; color: Theme.text; font.pointSize: 10 }
-                                Text { text: vpn.active ? "Connected" : "Not connected"; color: Theme.dim; font.pointSize: 9 }
-                            }
-                            Item { Layout.fillWidth: true }
+                        RowDivider { visible: vpn.index > 0 }
+                        BadgeRow {
+                            glyph: "lock"
+                            tint: vpn.active ? Theme.accent : Theme.tint(0.18)
+                            title: vpn.modelData.name
+                            subtitle: vpn.active ? "Connected" : "Not connected"
                             Switch {
                                 on: vpn.active
                                 onToggled: win.nm(["connection", vpn.active ? "down" : "up", "uuid", vpn.modelData.uuid])

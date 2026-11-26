@@ -3,15 +3,12 @@
 // reloj); debajo del reloj aparece el calendario.
 import QtQuick
 import Quickshell
-import Quickshell.Wayland
 import qs
 import qs.components
 import qs.services
 
 Item {
     id: root
-
-    required property PanelWindow bar
 
     // Solo cuenta el reloj, así anchors.centerIn lo deja siempre en el centro
     implicitWidth: clockIcon.implicitWidth
@@ -39,7 +36,10 @@ Item {
             show: clockIcon.hovered
             onVisibleChanged: if (!visible) calendar.reset()
 
-            Calendar { id: calendar }
+            Calendar {
+                id: calendar
+                today: clock.date
+            }
         }
     }
 
@@ -52,7 +52,7 @@ Item {
             padding: 14
             color: NightLight.state === "on" ? Theme.yellow
                  : NightLight.state === "off" ? Theme.muted
-                 : Qt.alpha(Theme.muted, 0.5)
+                 : Theme.withAlpha(Theme.muted, 0.5)
             tooltip: NightLight.tooltip
             onClicked: NightLight.toggle()
             onScrolledUp: NightLight.cooler()
@@ -66,10 +66,5 @@ Item {
             tooltip: Idle.inhibited ? "Sin suspensión automática" : "Suspensión automática activa"
             onClicked: Idle.inhibited = !Idle.inhibited
         }
-    }
-
-    IdleInhibitor {
-        window: root.bar
-        enabled: Idle.inhibited
     }
 }

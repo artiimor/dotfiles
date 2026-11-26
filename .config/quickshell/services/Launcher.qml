@@ -29,9 +29,42 @@ Singleton {
     property bool password: false  // dmenu: ocultar lo que escribes
     property var items: []         // [{ text, icon, glyph, sub, data }]
 
-    // Tamaño y sitio de la ventana según el modo (como estaba en wofi)
-    readonly property int width: ({ apps: 360, clipboard: 640, emoji: 420, power: 220, themes: 420, backgrounds: 420, configs: 260, keys: 520 })[mode] ?? 320
-    readonly property bool centered: ["apps", "clipboard", "emoji", "power", "themes", "backgrounds", "configs", "keys"].includes(mode)
+    // Cada modo: ancho de la ventana (como estaba en wofi), título, de dónde salen
+    // las filas (`items`, una función que se queda enlazada, o `proc`, un proceso
+    // que las rellena al terminar), si va sin buscador (menús cortos) y si
+    // enseña la descripción corta (`sub`) a la derecha. Los que no tienen ancho
+    // propio (profiles, y dmenu, que no está) salen arriba a la derecha, junto a
+    // la barra, con 320 px; los demás, centrados.
+    readonly property var modes: ({
+        // Sin título: la lupa ya dice que es un buscador
+        apps: { width: 360, prompt: "", items: () => root.apps, showSub: true },
+        clipboard: { width: 640, prompt: "Portapapeles", proc: cliphist },
+        emoji: { width: 420, prompt: "Emoji", items: () => root.emojis },
+        power: { width: 220, prompt: "Energía", noSearch: true, items: () => [
+            { text: "Bloquear", glyph: "󰌾", data: "lock" },
+            { text: "Suspender", glyph: "󰤄", data: "suspend" },
+            { text: "Cerrar sesión", glyph: "󰍃", data: "logout" },
+            { text: "Reiniciar", glyph: "󰜉", data: "reboot" },
+            { text: "Apagar", glyph: "󰐥", data: "poweroff" }
+        ] },
+        themes: { width: 420, prompt: "Tema", noSearch: true, proc: themeList },
+        backgrounds: { width: 420, prompt: "Fondo", noSearch: true, proc: backgroundList },
+        configs: { width: 260, prompt: "Config", noSearch: true, proc: configList },
+        keys: { width: 520, prompt: "Atajos", proc: binds, showSub: true },
+        profiles: { prompt: "Perfil de energía", items: () => {
+            const mark = v => root.curMark(PowerProfiles.profile === v);
+            return [
+                { text: "Rendimiento" + mark(PowerProfile.Performance), glyph: "󰓅", data: "performance" },
+                { text: "Equilibrado" + mark(PowerProfile.Balanced), glyph: "󰾅", data: "balanced" },
+                { text: "Ahorro" + mark(PowerProfile.PowerSaver), glyph: "󰾆", data: "power-saver" }
+            ];
+        } }
+    })
+    readonly property var modeInfo: modes[mode] ?? {}
+    readonly property int width: modeInfo.width ?? 320
+    readonly property bool centered: !!modeInfo.width
+    readonly property bool noSearch: !!modeInfo.noSearch
+    readonly property bool showSub: !!modeInfo.showSub
 
     // Abre un modo, o lo cierra si ya estaba abierto (como `pkill wofi || wofi`)
     function toggle(m, float) {
@@ -49,50 +82,13 @@ Singleton {
         mode = m;
         floatLaunch = !!float;
         password = false;
-        if (m === "apps") {
-            prompt = ""; // sin texto: la lupa ya dice que es un buscador
-            items = Qt.binding(() => root.apps);
-        } else if (m === "power") {
-            prompt = "Energía";
-            items = [
-                { text: "Bloquear", glyph: "󰌾", data: "lock" },
-                { text: "Suspender", glyph: "󰤄", data: "suspend" },
-                { text: "Cerrar sesión", glyph: "󰍃", data: "logout" },
-                { text: "Reiniciar", glyph: "󰜉", data: "reboot" },
-                { text: "Apagar", glyph: "󰐥", data: "poweroff" }
-            ];
-        } else if (m === "profiles") {
-            prompt = "Perfil de energía";
-            const p = PowerProfiles.profile;
-            const mark = v => p === v ? "  󰄬" : "";
-            items = [
-                { text: "Rendimiento" + mark(PowerProfile.Performance), glyph: "󰓅", data: "performance" },
-                { text: "Equilibrado" + mark(PowerProfile.Balanced), glyph: "󰾅", data: "balanced" },
-                { text: "Ahorro" + mark(PowerProfile.PowerSaver), glyph: "󰾆", data: "power-saver" }
-            ];
-        } else if (m === "clipboard") {
-            prompt = "Portapapeles";
+        const d = modes[m];
+        prompt = d.prompt;
+        if (d.proc) {
             items = [];
-            cliphist.running = true;
-        } else if (m === "emoji") {
-            prompt = "Emoji";
-            items = emojis;
-        } else if (m === "themes") {
-            prompt = "Tema";
-            items = [];
-            themeList.running = true;
-        } else if (m === "backgrounds") {
-            prompt = "Fondo";
-            items = [];
-            backgroundList.running = true;
-        } else if (m === "configs") {
-            prompt = "Config";
-            items = [];
-            configList.running = true;
-        } else if (m === "keys") {
-            prompt = "Atajos";
-            items = [];
-            binds.running = true;
+            d.proc.running = true;
+        } else {
+            items = Qt.binding(d.items);
         }
         open = true;
     }
@@ -100,6 +96,18 @@ Singleton {
     function close() {
         cancelDmenu();
         open = false;
+    }
+
+    // Filas que llegan de un proceso o archivo: se descartan si mientras tanto
+    // se ha cerrado o cambiado de modo (si no, pisarían la lista del nuevo)
+    function loaded(m, list) {
+        if (open && mode === m)
+            items = list;
+    }
+
+    // Líneas no vacías de la salida de un comando
+    function lines(text) {
+        return text.split("\n").filter(l => l);
     }
 
     // Se llama al pulsar Enter o hacer clic. `typed` es lo escrito en el buscador.
@@ -124,7 +132,7 @@ Singleton {
                 // centrada y al 65% de la pantalla como en el modo escritorio (no maximizada)
                 const q = a => "'" + String(a).replace(/'/g, "'\\''") + "'";
                 const sh = ["uwsm-app", "--", ...cmd].map(q).join(" ");
-                Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.exec_cmd(${JSON.stringify(sh)}, { float = true, size = { "monitor_w*0.65", "monitor_h*0.65" }, center = true })`]);
+                Hypr.dispatch(`hl.dsp.exec_cmd(${JSON.stringify(sh)}, { float = true, size = { "monitor_w*0.65", "monitor_h*0.65" }, center = true })`);
             } else {
                 Quickshell.execDetached(["uwsm-app", "--", ...cmd]);
             }
@@ -180,13 +188,11 @@ Singleton {
         id: cliphist
         command: ["cliphist", "list"]
         stdout: StdioCollector {
-            onStreamFinished: {
-                // Cada línea: "<id>\t<vista previa>"
-                root.items = text.split("\n").filter(l => l).map(l => ({
-                    text: l.slice(l.indexOf("\t") + 1).replace(/\s+/g, " ").slice(0, 200),
-                    data: l
-                }));
-            }
+            // Cada línea: "<id>\t<vista previa>"
+            onStreamFinished: root.loaded("clipboard", root.lines(text).map(l => ({
+                text: l.slice(l.indexOf("\t") + 1).replace(/\s+/g, " ").slice(0, 200),
+                data: l
+            })))
         }
     }
 
@@ -231,10 +237,10 @@ Singleton {
                 try {
                     list = JSON.parse(text);
                 } catch (e) {}
-                root.items = list.filter(b => b.has_description).map(b => {
+                root.loaded("keys", list.filter(b => b.has_description).map(b => {
                     const combo = mods.filter(([bit]) => b.modmask & bit).map(([, n]) => n).concat(keyName(b.key)).join(" + ");
                     return { text: b.description, sub: combo, keywords: combo };
-                });
+                }));
             }
         }
     }
@@ -257,7 +263,7 @@ Singleton {
         command: [root.themesDir + "/theme-set", "--list"]
         stdout: StdioCollector {
             onStreamFinished: {
-                root.items = text.split("\n").filter(l => l).map(l => {
+                root.loaded("themes", root.lines(text).map(l => {
                     const t = JSON.parse(l);
                     return {
                         text: t.name + root.curMark(t.cur),
@@ -266,7 +272,7 @@ Singleton {
                         palette: { bg: t.bg, fg: t.fg, colors: t.colors },
                         data: t.dir
                     };
-                });
+                }));
             }
         }
     }
@@ -278,14 +284,14 @@ Singleton {
         command: [root.themesDir + "/background-set"]
         stdout: StdioCollector {
             onStreamFinished: {
-                root.items = text.split("\n").filter(l => l).map(l => {
+                root.loaded("backgrounds", root.lines(text).map(l => {
                     const [name, path, cur] = l.split("\t");
                     return {
                         text: (name === "pepes" ? "Pepes" : name.replace(/\.[^.]+$/, "")) + root.curMark(cur === "1"),
                         image: "file://" + path,
                         data: name
                     };
-                }).concat({ text: "＋ Añadir fondos…", data: "+" });
+                }).concat({ text: "＋ Añadir fondos…", data: "+" }));
             }
         }
     }
@@ -299,14 +305,14 @@ Singleton {
         command: [root.themesDir + "/config-set", "--list"]
         stdout: StdioCollector {
             onStreamFinished: {
-                root.items = text.split("\n").filter(l => l).map(l => {
+                root.loaded("configs", root.lines(text).map(l => {
                     const [id, name, cur] = l.split("\t");
                     return {
                         text: name + root.curMark(cur === "1"),
                         glyph: id === "mac" ? String.fromCodePoint(0xF0035) : String.fromCodePoint(0xF0379),
                         data: id
                     };
-                });
+                }));
             }
         }
     }
@@ -323,7 +329,6 @@ Singleton {
         prompt = p || "Elegir";
         password = pass;
         items = [];
-        dmenuItems.path = "";
         dmenuItems.path = dir + "/items";
         open = true;
     }
@@ -338,7 +343,7 @@ Singleton {
 
     FileView {
         id: dmenuItems
-        onLoaded: root.items = text().split("\n").filter(l => l).map(l => ({ text: l }))
+        onLoaded: root.loaded("dmenu", root.lines(text()).map(l => ({ text: l })))
     }
 
     IpcHandler {

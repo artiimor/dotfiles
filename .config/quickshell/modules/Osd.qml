@@ -3,7 +3,6 @@
 // la rueda en la barra...).
 import QtQuick
 import Quickshell
-import Quickshell.Hyprland
 import Quickshell.Wayland
 import Quickshell.Services.Pipewire
 import qs
@@ -13,7 +12,7 @@ import qs.services
 PanelWindow {
     id: osd
 
-    screen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name) ?? Quickshell.screens[0]
+    screen: Theme.focusedScreen
     visible: shown || box.opacity > 0
 
     anchors.top: true
@@ -61,19 +60,17 @@ PanelWindow {
     }
 
     // ── Qué lo dispara ────────────────────────────────────
-    readonly property PwNode sink: Pipewire.defaultAudioSink
+    // El micro (la salida ya la sigue Audio)
     readonly property PwNode source: Pipewire.defaultAudioSource
-    PwObjectTracker { objects: [osd.sink, osd.source] }
+    PwObjectTracker { objects: [osd.source] }
 
     function showVolume() {
-        const a = sink?.audio;
-        if (!a)
-            return;
-        show(a.muted ? "󰝟" : ["󰕿", "󰖀", "󰕾"][Math.min(2, Math.floor(a.volume * 3))], a.volume, a.muted);
+        show(Audio.icon, Audio.volume, Audio.muted);
     }
 
+    // Solo los cambios de la salida actual, no el cambio de salida
     Connections {
-        target: osd.sink?.audio ?? null
+        target: Audio.sink?.audio ?? null
         function onVolumeChanged() { osd.showVolume(); }
         function onMutedChanged() { osd.showVolume(); }
     }
@@ -90,8 +87,7 @@ PanelWindow {
         target: Brightness
         enabled: Brightness.available
         function onPercentChanged() {
-            const p = Brightness.percent;
-            osd.show(["󰃞", "󰃟", "󰃠"][Math.min(2, Math.floor(p / 34))], p / 100, false);
+            osd.show(Brightness.icon, Brightness.percent / 100, false);
         }
     }
 

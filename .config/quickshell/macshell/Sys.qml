@@ -8,19 +8,21 @@ import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
 import Quickshell.Services.UPower
 
-// Shared system state for the bar and its popups.
+// Estado del sistema compartido por la barra y sus popups.
 Singleton {
     id: sys
 
-    // ── network ──
+    // ── red ──
     readonly property var wifiDevice: Networking.devices.values.find(d => d.type === DeviceType.Wifi) ?? null
     readonly property var wiredDevice: Networking.devices.values.find(d => d.type === DeviceType.Wired) ?? null
     readonly property bool wiredUp: wiredDevice ? wiredDevice.connected : false
     readonly property var wifiNetwork: wifiDevice ? wifiDevice.networks.values.find(n => n.connected) ?? null : null
     readonly property bool wifiOn: Networking.wifiEnabled
-    readonly property int wifiLevel: wifiNetwork ? Math.max(1, Math.ceil(wifiNetwork.signalStrength * 3)) : 0
-    // Wi-Fi scanning stays on while anything showing the network list is open
-    // (Wi-Fi popup, Network window): each one adds 1 while it's shown
+    readonly property int wifiLevel: wifiNetwork ? wifiBars(wifiNetwork.signalStrength) : 0
+    // barras del icono Wi‑Fi (1–3) para una señal de 0 a 1
+    function wifiBars(s) { return Math.max(1, Math.ceil(s * 3)); }
+    // El escaneo Wi‑Fi sigue activo mientras haya abierto algo que muestre la lista
+    // de redes (popup Wi‑Fi, ventana Network): cada uno suma 1 mientras se ve
     property int scanUsers: 0
     Binding {
         when: sys.wifiDevice !== null
@@ -46,13 +48,13 @@ Singleton {
     }
     function toggleMute() { if (sink && sink.audio) sink.audio.muted = !sink.audio.muted; }
 
-    // ── media ──
+    // ── multimedia ──
     readonly property var player: {
         const ps = Mpris.players.values;
         return ps.find(p => p.isPlaying) ?? ps[0] ?? null;
     }
 
-    // ── battery ──
+    // ── batería ──
     readonly property var battery: UPower.displayDevice
     readonly property bool hasBattery: battery && battery.isLaptopBattery
     readonly property real batteryFraction: battery ? battery.percentage : 1
@@ -60,7 +62,7 @@ Singleton {
                                                 || battery.state === UPowerDeviceState.FullyCharged
                                                 || battery.state === UPowerDeviceState.PendingCharge)
 
-    // ── brightness (brightnessctl, goes through logind) ──
+    // ── brillo (brightnessctl, pasa por logind) ──
     // Solo con panel retroiluminado (portátil); en un sobremesa no hay
     // /sys/class/backlight y el Control Center esconde el slider.
     // -c backlight: sin él brightnessctl podría coger un LED del teclado.
@@ -94,9 +96,7 @@ Singleton {
     function refreshBrightness() { getProc.running = true; }
     Component.onCompleted: refreshBrightness()
 
-    // ── helpers ──
-    function run(cmd) { Quickshell.execDetached(cmd); }
-
+    // ── utilidades ──
     function duration(secs) {
         if (!secs || secs <= 0) return "";
         const h = Math.floor(secs / 3600), m = Math.round((secs % 3600) / 60);

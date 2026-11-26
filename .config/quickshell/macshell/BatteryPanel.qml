@@ -6,7 +6,6 @@ import Quickshell.Services.UPower
 
 ColumnLayout {
     id: bp
-    signal done()
     implicitWidth: 270
     spacing: 8
 
@@ -47,15 +46,12 @@ ColumnLayout {
         font.pointSize: 9
     }
 
-    Text {
+    SectionLabel {
         Layout.leftMargin: 4
         Layout.topMargin: 4
         text: "Energy Mode"
-        color: Theme.dim
-        font.pointSize: 8.5
-        font.weight: Font.DemiBold
     }
-    // segmented control
+    // control segmentado
     Rectangle {
         Layout.fillWidth: true
         implicitHeight: 28

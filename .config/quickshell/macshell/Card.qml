@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.Notifications
 
-// One macOS-style notification card.
+// Una tarjeta de notificación al estilo macOS.
 Item {
     id: card
 
@@ -18,8 +18,8 @@ Item {
     readonly property var actionList: notif ? notif.actions.filter(a => a.identifier !== "default") : []
     readonly property var defaultAction: notif ? notif.actions.find(a => a.identifier === "default") : null
 
-    // exposed so the window can blur exactly behind the card
-    property alias background: bg
+    // para que la ventana difumine justo detrás de la tarjeta (Theme.cardBlurs)
+    readonly property Region blur: Region { item: bg; radius: Theme.radius }
 
     implicitWidth: Theme.width
     implicitHeight: bg.height
@@ -27,9 +27,8 @@ Item {
     HoverHandler { id: hover }
 
     Timer {
-        id: life
         interval: Theme.popupTimeout
-        // hovering stops it and leaving starts it again from zero, like macOS
+        // al pasar el ratón se para y al salir vuelve a empezar de cero, como en macOS
         running: card.popup && !card.hovered && !card.critical
         onTriggered: card.timedOut()
     }
@@ -112,7 +111,7 @@ Item {
                     elide: Text.ElideRight
                 }
 
-                // action buttons appear on hover
+                // los botones de acción aparecen al pasar el ratón
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.topMargin: 6
@@ -120,28 +119,17 @@ Item {
                     spacing: 6
                     Repeater {
                         model: card.actionList
-                        delegate: Rectangle {
-                            id: actBtn
+                        delegate: PillButton {
                             required property var modelData
                             Layout.fillWidth: true
+                            Layout.preferredWidth: 1   // todos del mismo ancho
                             implicitHeight: 26
                             radius: 8
-                            color: btnHover.hovered ? Theme.buttonHover : Theme.button
-                            HoverHandler { id: btnHover }
-                            TapHandler {
-                                onTapped: {
-                                    actBtn.modelData.invoke();
-                                    if (card.popup) card.timedOut();
-                                }
-                            }
-                            Text {
-                                anchors.centerIn: parent
-                                width: parent.width - 12
-                                horizontalAlignment: Text.AlignHCenter
-                                elide: Text.ElideRight
-                                text: actBtn.modelData.text
-                                color: Theme.text
-                                font.pointSize: 9
+                            pointSize: 9
+                            text: modelData.text
+                            onTapped: {
+                                modelData.invoke();
+                                if (card.popup) card.timedOut();
                             }
                         }
                     }
@@ -150,7 +138,7 @@ Item {
         }
     }
 
-    // close button, top-left, only on hover
+    // botón de cerrar, arriba a la izquierda, solo al pasar el ratón
     Rectangle {
         x: -6; y: -6
         width: 20; height: 20; radius: 10
@@ -160,7 +148,7 @@ Item {
         visible: opacity > 0
         Behavior on opacity { NumberAnimation { duration: 120 } }
         HoverHandler { id: closeHover }
-        TapHandler { onTapped: card.notif.dismiss() }
+        TapHandler { gesturePolicy: TapHandler.ReleaseWithinBounds; onTapped: card.notif.dismiss() }
         Text {
             anchors.centerIn: parent
             text: "✕"

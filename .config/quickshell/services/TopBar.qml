@@ -16,6 +16,8 @@ Singleton {
     id: root
 
     property bool shown: true
+    // Margen de arriba de lo que sale debajo de la barra (lanzador, notificaciones)
+    readonly property int belowBar: shown ? Theme.barHeight + Theme.gap * 2 : Theme.gap
 
     IpcHandler {
         target: "bar"

@@ -11,7 +11,6 @@ Island {
     id: root
     spacing: 4
 
-
     visible: SystemTray.items.values.length > 0
 
     Repeater {

@@ -3,6 +3,7 @@
 //   BarIcon {
 //       icon: "󰕾"
 //       color: Theme.accent
+//       hoverColor: Theme.red        // opcional: color con el ratón encima
 //       tooltip: "Volumen 50%"
 //       onClicked: mouse => ...      // mouse.button dice qué botón
 //       onScrolledUp: ...
@@ -16,6 +17,7 @@ Item {
 
     property string icon
     property color color: Theme.fg
+    property color hoverColor: color
     property string tooltip
     property int pixelSize: Theme.iconSize
     property bool italic: false
@@ -34,7 +36,7 @@ Item {
         id: label
         anchors.centerIn: parent
         text: root.icon
-        color: root.color
+        color: root.hovered ? root.hoverColor : root.color
         font.family: Theme.font
         font.pixelSize: root.pixelSize
         font.bold: true

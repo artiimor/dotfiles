@@ -1,6 +1,6 @@
 import QtQuick
 
-// Round icon button that is blue when on (Control Center style) + title/subtitle.
+// Botón redondo con icono, azul si está activo (estilo Control Center), con título y subtítulo.
 Item {
     id: t
     property string icon: ""

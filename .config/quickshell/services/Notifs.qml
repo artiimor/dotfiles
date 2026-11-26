@@ -12,6 +12,7 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Notifications
 import qs
+import qs.components
 
 Singleton {
     id: root
@@ -26,7 +27,10 @@ Singleton {
     property bool dnd: false
     property bool centerOpen: false
 
-    // Hora de llegada de cada notificación (por id), para "hace 5 min"
+    // Hora de llegada de cada notificación (por id), para "hace 5 min". Se cambia
+    // sin avisar: se apunta antes de que exista la tarjeta que la lee. Al recargar
+    // qs las notificaciones siguen (keepOnReload) pero esto se pierde, y las que
+    // ya estaban no enseñan la hora hasta que llegan otras nuevas
     property var times: ({})
 
     // Reloj que avanza cada minuto para refrescar los "hace X min"
@@ -36,18 +40,16 @@ Singleton {
         precision: SystemClock.Minutes
     }
 
-    // Al hacer clic fuera del panel se cierra; si ese clic era en la campana,
-    // el toggle lo volvería a abrir. Esto lo evita.
-    property real _closedAt: 0
+    // Que el clic fuera del panel que lo cierra no lo reabra si era en la campana
+    ReopenGuard { id: guard }
     function togglePanel() {
-        if (!centerOpen && Date.now() - _closedAt < Theme.reopenDelay)
-            return;
-        centerOpen = !centerOpen;
+        if (centerOpen || guard.canOpen())
+            centerOpen = !centerOpen;
     }
     function closePanel() {
         if (centerOpen) {
             centerOpen = false;
-            _closedAt = Date.now();
+            guard.closed();
         }
     }
     onCenterOpenChanged: if (centerOpen) popups = []
@@ -75,7 +77,7 @@ Singleton {
     function clearGroup(notifs) { for (const n of notifs.slice()) n.dismiss(); }
 
     function toggleDnd() { dnd = !dnd; }
-    function clearAll() { for (const n of list.slice()) n.dismiss(); }
+    function clearAll() { clearGroup(list); }
     function hidePopup(n) { popups = popups.filter(p => p !== n); }
 
     function timeAgo(n) {
@@ -101,10 +103,14 @@ Singleton {
         imageSupported: true
 
         onNotification: n => {
+            // Antes de tracked: al entrar en el historial ya se crea su tarjeta
+            root.times[n.id] = new Date();
             // Sin esto la notificación se descarta en cuanto se cierra el popup
             n.tracked = true;
-            root.times[n.id] = new Date();
-            n.closed.connect(() => root.hidePopup(n));
+            n.closed.connect(() => {
+                root.hidePopup(n);
+                delete root.times[n.id];
+            });
 
             // Con "no molestar" solo salen las críticas
             const show = !root.centerOpen && (!root.dnd || n.urgency === NotificationUrgency.Critical);

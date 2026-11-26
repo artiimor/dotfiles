@@ -15,8 +15,9 @@ Singleton {
     readonly property var wired: devices.find(d => d.type === DeviceType.Wired && d.connected) ?? null
     readonly property var wifiNetwork: wifi?.networks.values.find(n => n.connected) ?? null
 
-    // Según el backend, la señal viene como 0–1 o 0–100
-    readonly property int signal: {
+    // Según el backend, la señal viene como 0–1 o 0–100. Es var y no int: al
+    // recargar, el Net viejo a medio destruir puede dar undefined y un int avisa
+    readonly property var signal: {
         const s = wifiNetwork?.signalStrength ?? 0;
         return Math.round(s > 1 ? s : s * 100);
     }
@@ -43,18 +44,33 @@ Singleton {
         ip = "";
         _last = null;
         down = up = 0;
+        // exec mata la lectura de la interfaz anterior, si sigue en marcha
         if (iface)
-            ipProc.running = true;
+            readIp();
+        else
+            ipProc.running = false;
     }
 
     // ── IP ────────────────────────────────────────────────
+    function readIp() {
+        ipProc.exec(["ip", "-4", "-br", "addr", "show", "dev", iface]);
+    }
+
     Process {
         id: ipProc
-        command: ["ip", "-4", "-br", "addr", "show", "dev", root.iface]
         stdout: StdioCollector {
             // "wlan0   UP   192.168.1.10/24"
             onStreamFinished: root.ip = text.trim().split(/\s+/)[2] ?? ""
         }
+    }
+
+    // La IP puede cambiar sin cambiar de interfaz (DHCP): se relee cada 30 s,
+    // o cada 2 s mientras no hay ninguna (recién conectado)
+    Timer {
+        interval: root.ip ? 30000 : 2000
+        running: root.iface !== ""
+        repeat: true
+        onTriggered: root.readIp()
     }
 
     // ── Velocidad ─────────────────────────────────────────
@@ -76,9 +92,6 @@ Singleton {
                 root.up = Math.max(0, (t - root._last.tx) / dt);
             }
             root._last = { time: now, rx: r, tx: t };
-            // La IP puede cambiar sin cambiar de interfaz (DHCP); se revisa de vez en cuando
-            if (!root.ip)
-                ipProc.running = true;
         }
     }
 

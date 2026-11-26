@@ -20,14 +20,27 @@ Singleton {
     function warmer() { run("down"); }
     function cooler() { run("up"); }
 
+    // Acciones en cola: con la rueda llegan pasos mientras el script aún corre,
+    // y lanzarlo otra vez se ignoraría. Se aplican en orden y luego se lee el estado
+    property var queue: []
+
     function run(action) {
-        action_.command = [script, action];
-        action_.running = true;
+        queue.push(action);
+        if (!action_.running)
+            next();
+    }
+
+    function next() {
+        const action = queue.shift();
+        if (action)
+            action_.exec([script, action]);
+        else
+            status.running = true;
     }
 
     Process {
         id: action_
-        onExited: status.running = true
+        onExited: root.next()
     }
 
     Process {

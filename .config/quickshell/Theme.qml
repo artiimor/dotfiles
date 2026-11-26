@@ -7,6 +7,7 @@ pragma Singleton
 
 import QtQuick
 import Quickshell
+import Quickshell.Hyprland
 import Quickshell.Io
 
 Singleton {
@@ -76,6 +77,17 @@ Singleton {
         return Qt.rgba(c.r, c.g, c.b, a);
     }
 
+    // Un paso de rueda en una barra de 0 a 1 (d: +0.05 por paso hacia arriba).
+    // El volumen puede pasar de 1 (Pipewire lo permite): por encima, subir no hace
+    // nada y bajar quita d sin saltar a 1
+    function wheelStep(v: real, d: real): real {
+        return d > 0 ? (v < 1 ? Math.min(1, v + d) : v) : Math.max(0, v + d);
+    }
+
+    // La pantalla con el foco (para las ventanas que solo salen en una)
+    readonly property ShellScreen focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
+        ?? Quickshell.screens[0]
+
     // mac / mac-light: los colores de macshell (macshell/Theme.qml)
     readonly property color bgSolid: macLight ? "#f5f5f7" : mac ? "#28282b" : ui.bg ?? "#0d0b12"
     readonly property color bg: withAlpha(bgSolid, mac ? 0.88 : 0.85) // translúcido
@@ -89,7 +101,6 @@ Singleton {
     readonly property color onAccent: mac ? "white" : bgSolid
     // Borde de las ventanas sueltas (OSD, polkit): fino y gris en mac
     readonly property color frame: mac ? border : accentDim
-    readonly property color ok: ui.ok ?? "#72f1b8"               // solo para estados (cargando...)
     readonly property color red: ui.red ?? "#fe4450"
     readonly property color yellow: ui.yellow ?? "#fede5d"
 
@@ -103,9 +114,6 @@ Singleton {
     // Fondo del lanzador y de su fila elegida
     readonly property color launcherBg: mac ? bg : ui.launcherBg ?? "#1c2030"
     readonly property color launcherSel: mac ? accent : ui.launcherSel ?? "#2a3045"
-
-    // Cada workspace tiene su color (el 6 vuelve a empezar)
-    readonly property var wsColors: [accent, pink, cyan, peach, butter, mint]
 
     // Borde fino de las islas
     readonly property color borderBase: ui.border ?? "#b893ce"
@@ -121,7 +129,7 @@ Singleton {
     readonly property int radius: mac ? 14 : 10
     readonly property int popupGap: 10 // separación entre la barra y sus popups y tooltips
 
-    // Fondo de pantalla (también se usa, desenfocado, en la pantalla de bloqueo)
+    // Fondo de pantalla (también se usa, nítido y apenas oscurecido, en la pantalla de bloqueo)
     readonly property string wallpaper: "file://" + Quickshell.env("HOME") + "/.config/backgrounds/wallpaper.jpg"
     // Solo el escritorio: el fondo del tema (Super+Ctrl+B, themes/background-set);
     // por defecto el prado con todos los pepes en color
@@ -137,7 +145,4 @@ Singleton {
 
     readonly property int anim: 250   // duración de las animaciones (ms)
     readonly property int drawerAnim: 400
-    // Tras cerrar un popup con un clic fuera, ese mismo clic en su icono no lo
-    // vuelve a abrir si llega antes de este tiempo (ms)
-    readonly property int reopenDelay: 300
 }

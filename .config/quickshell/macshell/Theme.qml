@@ -5,9 +5,9 @@ import Quickshell.Io
 
 Singleton {
     id: theme
-    // Light look for the "mac-light" desktop profile (~/.config/themes/config-set
-    // mac-light in the dotfiles), only on Hyprland. config-set restarts macshell when
-    // the profile changes, so reading it at startup is enough.
+    // Aspecto claro para el perfil de escritorio "mac-light" (~/.config/themes/config-set
+    // mac-light en los dotfiles), solo en Hyprland. config-set reinicia macshell al
+    // cambiar de perfil, así que basta con leerlo al arrancar.
     property FileView _profile: FileView {
         path: Quickshell.env("HOME") + "/.local/state/desktop-profile"
         blockLoading: true
@@ -23,10 +23,11 @@ Singleton {
     readonly property color button: tint(0.10)
     readonly property color buttonHover: tint(0.18)
     readonly property color accent: light ? "#007aff" : "#0a84ff"
-    // overlays: white on the dark look, black on the light one
+    // capas: blanco en el aspecto oscuro, negro en el claro. No es tint(): la píldora de
+    // BarButton anima la opacidad y en claro quiere la misma que en oscuro, sin el × 0.6
     readonly property color ink: light ? "black" : "white"
     function tint(a) { return light ? Qt.rgba(0, 0, 0, a * 0.6) : Qt.rgba(1, 1, 1, a); }
-    // top bar (Hyprland), Spotlight, Network window
+    // barra superior (Hyprland), Spotlight, ventana de Red
     readonly property color panel: light ? Qt.rgba(0.96, 0.96, 0.97, 0.78) : Qt.rgba(0x20 / 255, 0x23 / 255, 0x26 / 255, 0.8)
     readonly property color overlay: light ? Qt.rgba(0.97, 0.97, 0.98, 0.86) : Qt.rgba(0.13, 0.13, 0.14, 0.82)
     readonly property color window: light ? "#ececec" : "#1e1e1e"
@@ -37,10 +38,15 @@ Singleton {
     readonly property int radius: 16
     readonly property int width: 360
     readonly property int popupTimeout: 5000
+    readonly property var locale: Qt.locale("en_US")
 
-    // Wall clock shared by the bar clock, the calendar and "X min ago". It only
-    // changes once a minute, so bindings that use it re-evaluate once a minute.
+    // regiones de blur de las tarjetas (Card) de un ListView
+    function cardBlurs(view) { return view.contentItem.children.filter(c => c.blur).map(c => c.blur); }
+
+    // Reloj compartido por la barra, el calendario y el "X min ago". Solo cambia
+    // una vez por minuto, así que los bindings que lo usan se reevalúan una vez por minuto.
     property date now: new Date()
+    // hora de llegada de cada notificación, por id
     property var times: ({})
 
     function stamp(id) { times[id] = new Date(); }
@@ -54,11 +60,11 @@ Singleton {
         if (m < 60) return m + " min ago";
         const h = Math.floor(m / 60);
         if (h < 24) return h + " h ago";
-        return Qt.locale("en_US").toString(t, "MMM d HH:mm");
+        return locale.toString(t, "MMM d HH:mm");
     }
 
-    // Wakes up at the next minute boundary, but at least every 5 s: timers don't
-    // advance during suspend, so this keeps the clock from lagging after resume.
+    // Despierta al cambiar de minuto, pero como mucho cada 5 s: los timers no avanzan
+    // durante la suspensión, así el reloj no se queda atrasado al reanudar.
     property Timer _tick: Timer {
         interval: 1000; running: true; repeat: true
         onTriggered: {

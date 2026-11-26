@@ -1,9 +1,8 @@
-// Lo que se ve en cada pantalla al bloquear: el fondo desenfocado, la hora,
+// Lo que se ve en cada pantalla al bloquear: el fondo de noche, la hora,
 // la fecha, el usuario, el campo de contraseña y la batería (como hyprlock).
 import QtQuick
 import QtQuick.Effects
 import Quickshell
-import Quickshell.Services.UPower
 import qs
 import qs.services
 
@@ -33,6 +32,16 @@ Item {
     readonly property color wallFg: lightText ? "#f5f5f7" : Theme.fg
     readonly property color wallMuted: lightText ? "#d8d8de" : Theme.muted
 
+    // La sombra de esos textos (y de la hora, siempre)
+    Component {
+        id: shadow
+        MultiEffect {
+            shadowEnabled: true
+            shadowBlur: 0.6
+            shadowOpacity: 0.6
+        }
+    }
+
     SystemClock {
         id: clock
         precision: SystemClock.Seconds
@@ -49,11 +58,7 @@ Item {
         font.pixelSize: 110
         font.bold: true
         layer.enabled: true
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowBlur: 0.6
-            shadowOpacity: 0.6
-        }
+        layer.effect: shadow
     }
 
     // Fecha
@@ -61,16 +66,12 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: -105
-        text: clock.date.toLocaleDateString(Qt.locale(), "dddd, d 'de' MMMM")
+        text: clock.date.toLocaleDateString(Qt.locale("es_ES"), "dddd, d 'de' MMMM")
         color: root.wallMuted
         font.family: Theme.font
         font.pixelSize: 20
         layer.enabled: root.lightText
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowBlur: 0.6
-            shadowOpacity: 0.6
-        }
+        layer.effect: shadow
     }
 
     // Usuario
@@ -84,11 +85,7 @@ Item {
         font.pixelSize: 16
         font.bold: true
         layer.enabled: root.lightText
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowBlur: 0.6
-            shadowOpacity: 0.6
-        }
+        layer.effect: shadow
     }
 
     // ── Contraseña ────────────────────────────────────────
@@ -101,7 +98,7 @@ Item {
         height: 50
         radius: Theme.radius
 
-        // Borde: degradado verde; amarillo comprobando o con Bloq Mayús; rojo si falla
+        // Borde: degradado del acento; amarillo comprobando o con Bloq Mayús; rojo si falla
         readonly property color stateColor: Lock.failed ? Theme.red
             : Lock.checking || Lock.capsLock ? Theme.yellow
             : "transparent"
@@ -129,6 +126,7 @@ Item {
             anchors.fill: parent
             anchors.margins: 2
             radius: Theme.radius - 2
+            // Como Theme.bg, pero 0.85 también en Modo Mac (allí Theme.bg es 0.88)
             color: Theme.withAlpha(Theme.bgSolid, 0.85)
 
             // Puntos, uno por letra
@@ -198,20 +196,13 @@ Item {
         anchors.right: parent.right
         anchors.bottom: parent.bottom
         anchors.margins: 30
-        visible: UPower.displayDevice?.isLaptopBattery ?? false
-        text: {
-            const p = UPower.displayDevice?.percentage ?? 0;
-            return "󰁹  " + Math.round(p > 1 ? p : p * 100) + "%";
-        }
+        visible: Battery.present
+        text: "󰁹  " + Battery.percent + "%"
         color: root.wallMuted
         font.family: Theme.font
         font.pixelSize: 16
         font.bold: true
         layer.enabled: root.lightText
-        layer.effect: MultiEffect {
-            shadowEnabled: true
-            shadowBlur: 0.6
-            shadowOpacity: 0.6
-        }
+        layer.effect: shadow
     }
 }

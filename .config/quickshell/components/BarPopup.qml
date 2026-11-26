@@ -20,16 +20,14 @@ PopupWindow {
     required property Item target
     default property alias content: box.data
 
-    // Al hacer clic en el icono para cerrar, el clic fuera ya lo ha cerrado
-    // y el toggle lo volvería a abrir. Esto lo evita.
-    property real _closedAt: 0
+    ReopenGuard { id: guard }
     function open() {
-        if (Date.now() - _closedAt >= Theme.reopenDelay)
+        if (guard.canOpen())
             visible = true;
     }
     function close() {
         visible = false;
-        _closedAt = Date.now();
+        guard.closed();
     }
     function toggle() {
         visible ? close() : open();
@@ -44,7 +42,9 @@ PopupWindow {
     color: "transparent"
 
     // Clic fuera = cerrar. Además le da el teclado al popup (para Escape).
-    // Con `visible` el grab se pide antes de que exista la superficie y no llega a activarse.
+    // Con `visible` no llega a activarse: la ventana de un PopupWindow se crea al mostrarlo,
+    // y el grab se pediría sin ella. Las PanelWindow (lanzador, panel de notificaciones)
+    // ya la tienen creada aunque estén ocultas, así que a ellas les vale `visible`.
     HyprlandFocusGrab {
         windows: [root]
         active: root.backingWindowVisible

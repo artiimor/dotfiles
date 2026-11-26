@@ -22,7 +22,6 @@ Rectangle {
         : n.urgency === NotificationUrgency.Low ? Theme.muted
         : Theme.accent
 
-    implicitWidth: 400
     implicitHeight: content.implicitHeight + 20
     radius: Theme.radius
     color: accent
@@ -39,8 +38,8 @@ Rectangle {
         onTriggered: Notifs.hidePopup(root.n)
     }
 
-    // Entrada deslizando desde la derecha
-    x: popup ? 420 : 0
+    // Entrada deslizando desde la derecha (desde fuera de la ventana)
+    x: popup ? width : 0
     Component.onCompleted: x = 0
     Behavior on x {
         NumberAnimation { duration: 200; easing.type: Easing.OutCubic }
@@ -138,7 +137,8 @@ Rectangle {
                     implicitHeight: 20
                     padding: 4
                     icon: "󰅖"
-                    color: hovered ? Theme.red : Theme.muted
+                    color: Theme.muted
+                    hoverColor: Theme.red
                     onClicked: root.n.dismiss()
                 }
             }
@@ -168,32 +168,13 @@ Rectangle {
                     id: actionRepeater
                     model: root.n.actions.filter(a => a.identifier !== "default")
 
-                    Rectangle {
+                    TextButton {
                         required property NotificationAction modelData
-                        implicitWidth: actionLabel.implicitWidth + 20
                         implicitHeight: 26
-                        radius: 7
-                        color: actionMouse.containsMouse ? Theme.accentDim : Theme.surface
-
-                        Text {
-                            id: actionLabel
-                            anchors.centerIn: parent
-                            text: parent.modelData.text
-                            color: Theme.fg
-                            font.family: Theme.font
-                            font.pixelSize: 12
-                            font.bold: true
-                        }
-
-                        MouseArea {
-                            id: actionMouse
-                            anchors.fill: parent
-                            hoverEnabled: true
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: {
-                                parent.modelData.invoke();
-                                Notifs.hidePopup(root.n);
-                            }
+                        text: modelData.text
+                        onClicked: {
+                            modelData.invoke();
+                            Notifs.hidePopup(root.n);
                         }
                     }
                 }

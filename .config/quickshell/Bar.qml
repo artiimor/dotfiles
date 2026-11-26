@@ -54,7 +54,6 @@ PanelWindow {
         // Centro
         Center {
             anchors.centerIn: parent
-            bar: bar
         }
 
         // Derecha

@@ -1,7 +1,6 @@
 pragma ComponentBehavior: Bound
 
 import QtQuick
-import QtQuick.Controls
 import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
@@ -12,26 +11,37 @@ import Quickshell.Services.SystemTray
 ShellRoot {
     id: root
 
-    // ── shared state ──
-    property var popups: []          // notifications currently shown as banners
+    // ── estado compartido ──
+    property var popups: []          // notificaciones que se ven ahora como banners
     property bool centerOpen: false
     property bool dnd: false
-    property string popupKind: ""    // "", "cc", "wifi", "battery", "tray"
-    property var popupItem: null     // SystemTrayItem for "tray"
-    property real popupRight: 6      // distance from screen right edge
+    property string popupKind: ""    // "", "cc", "wifi", "battery", "clip", "tray"
+    property var popupItem: null     // SystemTrayItem para "tray"
+    property real popupRight: 6      // distancia de popWin al borde derecho de la pantalla
+    readonly property int popupMargin: 8   // margen transparente de popWin alrededor de la tarjeta
+
+    onCenterOpenChanged: if (centerOpen) popups = []
 
     function hidePopup(n) { popups = popups.filter(p => p && p !== n); }
 
-    function togglePopup(kind, button, item) {
+    // sin botón (desde IPC) se pega a la derecha de la pantalla
+    function openPopup(kind, button, item) {
         centerOpen = false;
-        if (popupKind === kind && popupItem === (item ?? null)) { closeAll(); return; }
         popupItem = item ?? null;
-        popupRight = Math.max(6, button.rightDistance() - 14);
+        // el borde derecho de la tarjeta queda a popupRight + popupMargin de la pantalla:
+        // así sobresale 6 px a la derecha del botón
+        popupRight = button ? Math.max(6, button.rightDistance() - popupMargin - 6) : 6;
         popupKind = kind;
     }
+    function togglePopup(kind, button, item) {
+        if (popupKind === kind && popupItem === (item ?? null)) closeAll();
+        else openPopup(kind, button, item);
+    }
     function closeAll() { popupKind = ""; popupItem = null; centerOpen = false; }
+    function toggleCenter() { popupKind = ""; popupItem = null; centerOpen = !centerOpen; }
+    function clearNotifications() { server.trackedNotifications.values.slice().forEach(n => n.dismiss()); }
 
-    // ───────────── notifications ─────────────
+    // ───────────── notificaciones ─────────────
     NotificationServer {
         id: server
         keepOnReload: true
@@ -55,22 +65,20 @@ ShellRoot {
 
     IpcHandler {
         target: "center"
-        function toggle(): void { root.popupKind = ""; root.centerOpen = !root.centerOpen; }
+        function toggle(): void { root.toggleCenter(); }
         function open(): void { root.centerOpen = true; }
         function close(): void { root.centerOpen = false; }
-        function clear(): void { server.trackedNotifications.values.slice().forEach(n => n.dismiss()); }
+        function clear(): void { root.clearNotifications(); }
     }
 
     IpcHandler {
         target: "bar"
-        // qs -p ~/.config/quickshell/macshell ipc call bar open cc|wifi|battery
-        function open(kind: string): void { root.centerOpen = false; root.popupItem = null; root.popupRight = 6; root.popupKind = kind; }
-        function close(): void { root.closeAll(); }
-        function debug(): string {
-            return "popups=" + root.popups.length + " centerOpen=" + root.centerOpen + " dnd=" + root.dnd
-                + " bannerVisible=" + bannerWin.visible + " count=" + bannerList.count
-                + " tracked=" + server.trackedNotifications.values.length;
+        // qs -p ~/.config/quickshell/macshell ipc call bar open cc|wifi|battery|clip
+        // ("tray" necesita un SystemTrayItem, así que no se acepta)
+        function open(kind: string): void {
+            if (["cc", "wifi", "battery", "clip"].includes(kind)) root.openPopup(kind);
         }
+        function close(): void { root.closeAll(); }
     }
 
     IpcHandler {
@@ -98,18 +106,16 @@ ShellRoot {
         function close(): void { if (netLoader.item) netLoader.item.visible = false; }
     }
 
-    // Network window (rarely opened): built on first use
+    // ventana de Red (se abre poco): se construye la primera vez
     LazyLoader { id: netLoader; NetworkSettings {} }
     function openNetwork() { netLoader.active = true; netLoader.item.show(); }
 
-    onCenterOpenChanged: if (centerOpen) popups = []
-
-    // ───────────── top bar ─────────────
+    // ───────────── barra superior ─────────────
     PanelWindow {
         id: bar
         anchors { top: true; right: true; left: true }
         exclusionMode: ExclusionMode.Auto
-        // Top so fullscreen windows cover it
+        // capa Top para que las ventanas a pantalla completa la tapen
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.namespace: "macshell-bar"
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
@@ -117,13 +123,13 @@ ShellRoot {
         implicitHeight: 26
         implicitWidth: barRow.implicitWidth + 16
 
-        // ── panel background + left half ──
+        // ── fondo del panel + mitad izquierda ──
         BackgroundEffect.blurRegion: barBlur
         Region { id: barBlur; item: barBg }
         Rectangle {
             id: barBg
             anchors.fill: parent
-            color: Theme.panel   // Sur-Oscuro translucent panel (light in mac-light)
+            color: Theme.panel   // panel translúcido de Sur-Oscuro (claro en mac-light)
             MouseArea { anchors.fill: parent; onClicked: root.closeAll() }
         }
 
@@ -137,7 +143,7 @@ ShellRoot {
             anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
             spacing: 4
 
-            // app tray icons (StatusNotifierItems)
+            // iconos de bandeja de las apps (StatusNotifierItems)
             Repeater {
                 model: SystemTray.items
                 delegate: BarButton {
@@ -215,20 +221,20 @@ ShellRoot {
             BarButton {
                 active: root.centerOpen
                 Text {
-                    text: Qt.locale("en_US").toString(Theme.now, "ddd MMM d   HH:mm")
+                    text: Theme.locale.toString(Theme.now, "ddd MMM d   HH:mm")
                     color: Theme.text
                     font.pointSize: 9.5
                 }
-                onClicked: { root.popupKind = ""; root.centerOpen = !root.centerOpen; }
+                onClicked: root.toggleCenter()
             }
         }
     }
 
-    // ───────────── click-outside catcher ─────────────
+    // ───────────── captura de clics fuera ─────────────
     PanelWindow {
         visible: root.centerOpen || root.popupKind !== ""
         anchors { top: true; bottom: true; left: true; right: true }
-        // leave the bar uncovered so its buttons keep working
+        // deja la barra al descubierto para que sus botones sigan funcionando
         exclusionMode: ExclusionMode.Normal
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.namespace: "macshell-catcher"
@@ -236,7 +242,7 @@ ShellRoot {
         MouseArea { anchors.fill: parent; onClicked: root.closeAll() }
     }
 
-    // ───────────── bar popups ─────────────
+    // ───────────── popups de la barra ─────────────
     PanelWindow {
         id: popWin
         visible: root.popupKind !== ""
@@ -247,14 +253,14 @@ ShellRoot {
         WlrLayershell.namespace: "macshell-popup"
         WlrLayershell.keyboardFocus: root.popupKind === "wifi" ? WlrKeyboardFocus.OnDemand : WlrKeyboardFocus.None
         color: "transparent"
-        implicitWidth: popSurface.width + 16
-        implicitHeight: popSurface.height + 16
+        implicitWidth: popSurface.width + 2 * root.popupMargin
+        implicitHeight: popSurface.height + 2 * root.popupMargin
 
         BackgroundEffect.blurRegion: Region { item: popSurface; radius: Theme.radius }
 
         Rectangle {
             id: popSurface
-            x: 8; y: 8
+            x: root.popupMargin; y: root.popupMargin
             width: popLoader.width + 20
             height: popLoader.height + 20
             radius: Theme.radius
@@ -291,14 +297,13 @@ ShellRoot {
             }
         }
         Component { id: wifiComp; WifiPanel { onDone: root.closeAll(); onOpenSettings: root.openNetwork() } }
-        Component { id: batComp; BatteryPanel { onDone: root.closeAll() } }
+        Component { id: batComp; BatteryPanel {} }
         Component { id: clipComp; ClipboardPanel { onDone: root.closeAll() } }
         Component { id: trayComp; TrayMenu { item: root.popupItem; onDone: root.closeAll() } }
     }
 
-    // ───────────── banners (top-right) ─────────────
+    // ───────────── banners (arriba a la derecha) ─────────────
     PanelWindow {
-        id: bannerWin
         visible: true
         anchors { top: true; right: true }
         margins { top: 6; right: 6 }
@@ -311,9 +316,7 @@ ShellRoot {
         implicitHeight: Math.max(1, bannerList.contentHeight + 16)
 
         mask: Region { item: bannerList }
-        BackgroundEffect.blurRegion: Region {
-            regions: bannerList.contentItem.children.filter(c => c.blur).map(c => c.blur)
-        }
+        BackgroundEffect.blurRegion: Region { regions: Theme.cardBlurs(bannerList) }
 
         ListView {
             id: bannerList
@@ -325,12 +328,10 @@ ShellRoot {
             model: ScriptModel { values: root.popups.filter(p => p) }
 
             delegate: Card {
-                id: banner
                 required property var modelData
                 notif: modelData
                 popup: true
                 onTimedOut: root.hidePopup(modelData)
-                property Region blur: Region { item: banner.background; radius: Theme.radius }
             }
 
             add: Transition {
@@ -351,171 +352,11 @@ ShellRoot {
         }
     }
 
-    // ───────────── notification center ─────────────
-    PanelWindow {
-        id: centerWin
-        visible: root.centerOpen
-        anchors { top: true; right: true; bottom: true }
-        margins { top: 4; right: 6; bottom: 6 }
-        exclusiveZone: 0
-        WlrLayershell.layer: WlrLayer.Overlay
-        WlrLayershell.namespace: "macshell-center"
-        WlrLayershell.keyboardFocus: WlrKeyboardFocus.OnDemand
-        color: "transparent"
-        implicitWidth: Theme.width + 16
-
-        BackgroundEffect.blurRegion: Region {
-            regions: centerLoader.item ? centerLoader.item.blurRegions : []
-        }
-
-        // the calendar and the notification cards only exist while it's open
-        Loader {
-            id: centerLoader
-            anchors.fill: parent
-            anchors.margins: 8
-            active: root.centerOpen
-            focus: true
-            sourceComponent: centerComp
-        }
-
-        Component {
-            id: centerComp
-            Item {
-                focus: true
-                Keys.onEscapePressed: root.centerOpen = false
-
-                readonly property var blurRegions: [calRegion].concat(centerList.contentItem.children.filter(c => c.blur).map(c => c.blur))
-                Region { id: calRegion; item: calCard; radius: Theme.radius }
-
-                ColumnLayout {
-                    anchors.fill: parent
-                    spacing: 10
-
-                    Rectangle {
-                        id: calCard
-                        Layout.fillWidth: true
-                        implicitHeight: calCol.implicitHeight + 24
-                        radius: Theme.radius
-                        color: Theme.card
-                        border.color: Theme.border
-
-                        ColumnLayout {
-                            id: calCol
-                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-                            spacing: 6
-                            Text {
-                                text: Qt.locale("en_US").toString(Theme.now, "dddd").toUpperCase()
-                                color: "#ff453a"
-                                font.pointSize: 8.5
-                                font.weight: Font.DemiBold
-                            }
-                            Text {
-                                text: Qt.locale("en_US").toString(Theme.now, "MMMM d")
-                                color: Theme.text
-                                font.pointSize: 15
-                                font.weight: Font.DemiBold
-                            }
-                            DayOfWeekRow {
-                                Layout.fillWidth: true
-                                locale: Qt.locale("en_US")
-                                delegate: Text {
-                                    required property string shortName
-                                    text: shortName.charAt(0).toUpperCase()
-                                    horizontalAlignment: Text.AlignHCenter
-                                    color: Theme.dim
-                                    font.pointSize: 8
-                                }
-                            }
-                            MonthGrid {
-                                Layout.fillWidth: true
-                                Layout.preferredHeight: 6 * 26
-                                month: Theme.now.getMonth()
-                                year: Theme.now.getFullYear()
-                                locale: Qt.locale("en_US")
-                                delegate: Item {
-                                    required property var model
-                                    implicitHeight: 26
-                                    implicitWidth: 30
-                                    readonly property bool today: model.today
-                                    Rectangle {
-                                        anchors.centerIn: parent
-                                        width: 22; height: 22; radius: 11
-                                        color: parent.today ? "#ff453a" : "transparent"
-                                    }
-                                    Text {
-                                        anchors.centerIn: parent
-                                        text: parent.model.day
-                                        color: parent.today ? "white" : Theme.text
-                                        opacity: parent.model.month === Theme.now.getMonth() ? 1 : 0.3
-                                        font.pointSize: 9
-                                        font.bold: parent.today
-                                    }
-                                }
-                            }
-                        }
-                    }
-
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Layout.leftMargin: 4
-                        Layout.rightMargin: 4
-                        Text {
-                            Layout.fillWidth: true
-                            text: "Notifications"
-                            color: Theme.text
-                            font.pointSize: 10
-                            font.weight: Font.DemiBold
-                        }
-                        Rectangle {
-                            visible: centerList.count > 0
-                            implicitWidth: clearTxt.implicitWidth + 16
-                            implicitHeight: 22
-                            radius: 11
-                            color: clearHover.hovered ? Theme.buttonHover : Theme.button
-                            HoverHandler { id: clearHover }
-                            TapHandler { onTapped: server.trackedNotifications.values.slice().forEach(n => n.dismiss()) }
-                            Text {
-                                id: clearTxt
-                                anchors.centerIn: parent
-                                text: "Clear All"
-                                color: Theme.text
-                                font.pointSize: 8.5
-                            }
-                        }
-                    }
-
-                    ListView {
-                        id: centerList
-                        Layout.fillWidth: true
-                        Layout.fillHeight: true
-                        spacing: 8
-                        topMargin: 6
-                        model: ScriptModel { values: server.trackedNotifications.values.slice().reverse() }
-                        delegate: Card {
-                            id: entry
-                            required property var modelData
-                            notif: modelData
-                            popup: false
-                            property Region blur: Region { item: entry.background; radius: Theme.radius }
-                        }
-                        remove: Transition {
-                            NumberAnimation { property: "opacity"; to: 0; duration: 180 }
-                        }
-                        displaced: Transition {
-                            NumberAnimation { properties: "y"; duration: 200; easing.type: Easing.OutCubic }
-                        }
-
-                        Text {
-                            anchors.horizontalCenter: parent.horizontalCenter
-                            y: 24
-                            visible: centerList.count === 0
-                            text: "No Notifications"
-                            color: Theme.dim
-                            font.pointSize: 10
-                        }
-                    }
-                }
-            }
-        }
+    // ───────────── centro de notificaciones ─────────────
+    NotificationCenter {
+        open: root.centerOpen
+        notifications: server.trackedNotifications.values
+        onCloseRequested: root.centerOpen = false
+        onClearRequested: root.clearNotifications()
     }
 }
