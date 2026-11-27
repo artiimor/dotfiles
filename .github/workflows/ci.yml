@@ -1,0 +1,21 @@
+# Linters y tests (tests/run.sh) en cada push y PR, en un contenedor Arch
+name: CI
+on: [push, pull_request]
+permissions:
+  contents: read
+
+jobs:
+  tests:
+    runs-on: ubuntu-latest
+    container: archlinux:latest
+    steps:
+      - name: Paquetes
+        run: pacman -Syu --noconfirm --needed git python python-pytest shellcheck qt6-declarative lua luajit luacheck neovim
+      - uses: actions/checkout@v7
+      # mini.nvim para los tests de Neovim (tests/test_nvim.py lo busca en MINI_PATH)
+      - name: mini.nvim
+        run: |
+          git clone --depth 1 https://github.com/nvim-mini/mini.nvim "$RUNNER_TEMP/mini.nvim"
+          echo "MINI_PATH=$RUNNER_TEMP/mini.nvim" >> "$GITHUB_ENV"
+      - name: Tests
+        run: tests/run.sh
