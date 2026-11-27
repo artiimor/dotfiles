@@ -150,7 +150,7 @@ When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 | **3. Dotfiles** | Copies `.config/` → `~/.config/`, `.local/share/applications/` (web apps) → `~/.local/share/applications/`, `.local/share/icons/` (Sur icons) → `~/.local/share/icons/`, and `.bashrc`, `.bash_profile`, `.profile` → `~`. Details below. |
 | **3b. Shell** | If your login shell isn't bash (CachyOS defaults to fish), offers `chsh -s /bin/bash`. |
 | **4. Theme and profile** | Runs `theme-set <theme>` (your current theme if you already had one, otherwise **grafito**) and `config-set --reapply` (keeps your profile; Mac mode on a fresh install). |
-| **5. hyprbars** | Clones `hyprwm/hyprland-plugins` at the tag matching your installed Hyprland (falls back to `vX.Y.0`), applies the three patches in `.config/hypr/`, builds it and copies `hyprbars.so` to `~/.local/lib/hyprland/`. Then offers to remove the apps' own window buttons (GTK `button-layout`, and Brave's "use system title bar", only if Brave is closed). |
+| **5. hyprbars** | Clones `hyprwm/hyprland-plugins` at the tag matching your installed Hyprland (falls back to `vX.Y.0`), applies the four patches in `.config/hypr/`, builds it and copies `hyprbars.so` to `~/.local/lib/hyprland/`. Then offers to remove the apps' own window buttons (GTK `button-layout`, and Brave's "use system title bar", only if Brave is closed). |
 | **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname and the clock's locale and date format to the system's date locale (`LC_TIME`, or else `LANG`, from `localectl`), disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group. The default answer depends on the hardware: yes if a ThinkPad is detected via DMI, no otherwise, and `--yes` follows that default); **automatic time zone** (installs the NetworkManager dispatcher script `system/etc/NetworkManager/dispatcher.d/90-timezone` and enables `NetworkManager-dispatcher`: on each connection it sends your public IP to ipinfo.io and sets the time zone it returns; it does nothing while a VPN is active); **password attempts** (installs `system/etc/security/faillock.conf` with `deny = 10`: 10 failed passwords lock the account for 10 minutes, instead of 3; it affects sudo and the lock screen); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
 
 Details of step 3:
@@ -364,9 +364,9 @@ is gone), the first one in the list is used.
 
 Code: `.config/hypr/config/desktopmode.lua` and `.config/quickshell/modules/Dock.qml`.
 
-The titlebars come from `hyprbars` built with the three local patches
+The titlebars come from `hyprbars` built with the four local patches
 (`hyprbars-on-drag-end.patch` adds the drag hooks used by snapping, `hyprbars-hover-icon.patch` shows the button
-symbol on hover, `hyprbars-resize-top-edge.patch` lets the top edge of the bar resize the window). `install.sh` builds it;
+symbol on hover, `hyprbars-resize-top-edge.patch` lets the top edge of the bar resize the window, `hyprbars-separator.patch` adds `col.separator`, the line under the bar used by Increase contrast). `install.sh` builds it;
 the manual steps are also in a comment at the end of `desktopmode.lua`.
 Without the plugin everything else still works, just without titlebars.
 

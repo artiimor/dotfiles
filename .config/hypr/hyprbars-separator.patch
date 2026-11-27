@@ -1,0 +1,53 @@
+diff --git a/hyprbars/barDeco.cpp b/hyprbars/barDeco.cpp
+index 2aa47cd..d520580 100644
+--- a/hyprbars/barDeco.cpp
++++ b/hyprbars/barDeco.cpp
+@@ -740,6 +740,15 @@ void CHyprBar::renderPass(Render::CRenderContext& ctx, PHLMONITOR pMonitor, cons
+ 
+     renderBarButtonsText(ctx, &textBox, pMonitor->m_scale, a);
+ 
++    // line between the bar and the window
++    CHyprColor separator = configColor(g_pGlobalState->config.separatorColor->value());
++    if (separator.a > 0) {
++        separator.a *= a;
++        const double lineH = std::max(1.0, sc<double>(std::round(pMonitor->m_scale)));
++        CBox         lineBox = {titleBarBox.x, titleBarBox.y + std::round(BARBUF.y) - lineH, titleBarBox.w, lineH};
++        g_pHyprOpenGL->renderRect(ctx, lineBox, separator, {});
++    }
++
+     m_bWindowSizeChanged = false;
+     m_bTitleColorChanged = false;
+ 
+diff --git a/hyprbars/globals.hpp b/hyprbars/globals.hpp
+index 9c05a50..30e9292 100644
+--- a/hyprbars/globals.hpp
++++ b/hyprbars/globals.hpp
+@@ -37,7 +37,7 @@ struct SGlobalState {
+     uint32_t                  titleColorRuleIdx = 0;
+ 
+     struct {
+-        SP<Config::Values::CColorValue>      barColor, textColor, inactiveButtonColor;
++        SP<Config::Values::CColorValue>      barColor, textColor, inactiveButtonColor, separatorColor;
+         SP<Config::Values::CIntValue>        barHeight;
+         SP<Config::Values::CIntValue>        barTextSize;
+         SP<Config::Values::CFontWeightValue> barTextWeight;
+diff --git a/hyprbars/main.cpp b/hyprbars/main.cpp
+index 07a086d..28641a5 100644
+--- a/hyprbars/main.cpp
++++ b/hyprbars/main.cpp
+@@ -188,6 +188,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
+ 
+     g_pGlobalState->config.barColor            = makeShared<Config::Values::CColorValue>("plugin:hyprbars:bar_color", "Change the bar color", 0x88333333);
+     g_pGlobalState->config.textColor           = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.text", "Change the text color", 0xffffffff);
++    g_pGlobalState->config.separatorColor      = makeShared<Config::Values::CColorValue>("plugin:hyprbars:col.separator", "Line between the bar and the window (transparent = none)", 0x00000000);
+     g_pGlobalState->config.inactiveButtonColor = makeShared<Config::Values::CColorValue>(
+         "plugin:hyprbars:inactive_button_color", "Change the inactive button's color. 0x00000000 means unset", 0x00000000);
+     g_pGlobalState->config.barHeight       = makeShared<Config::Values::CIntValue>("plugin:hyprbars:bar_height", "Change the bar's height", 15);
+@@ -216,6 +217,7 @@ APICALL EXPORT PLUGIN_DESCRIPTION_INFO PLUGIN_INIT(HANDLE handle) {
+ 
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barColor);
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.textColor);
++    HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.separatorColor);
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.inactiveButtonColor);
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barHeight);
+     HyprlandAPI::addConfigValueV2(PHANDLE, g_pGlobalState->config.barTextSize);

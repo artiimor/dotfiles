@@ -344,10 +344,11 @@ end, { release = true, non_consuming = true, transparent = true, ignore_mods = t
 -- actualizar Hyprland sale "version mismatch", recompílalo con el mismo tag:
 --   git clone https://github.com/hyprwm/hyprland-plugins && cd hyprland-plugins
 --   git checkout v<versión> && git apply ~/.config/hypr/hyprbars-on-drag-end.patch ~/.config/hypr/hyprbars-hover-icon.patch \
---     ~/.config/hypr/hyprbars-resize-top-edge.patch
+--     ~/.config/hypr/hyprbars-resize-top-edge.patch ~/.config/hypr/hyprbars-separator.patch
 --   make -C hyprbars all   (los parches añaden on_drag_end y on_drag_start_eval, que usa el snap,
 --                           hover_icon en add_button: el símbolo cambia al pasar el ratón,
---                           y bar_resize_edge: el borde de arriba de la barra redimensiona)
+--                           bar_resize_edge: el borde de arriba de la barra redimensiona
+--                           y col.separator: línea entre la barra y la ventana)
 --   cp --remove-destination hyprbars/hyprbars.so ~/.local/lib/hyprland/   (inodo nuevo: el viejo está cargado)
 local HYPRBARS = util.HOME .. "/.local/lib/hyprland/hyprbars.so"
 local MAXIMIZE = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })']]
@@ -368,6 +369,8 @@ local function barFont()
 end
 
 if hl.plugin.hyprbars then
+	local BAR_TEXT = CONTRAST and (PROFILE_LIGHT and "rgba(000000ff)" or PROFILE_MAC and "rgba(ffffffff)")
+		or PROFILE_LIGHT and "rgba(3c3c43ff)" or PROFILE_MAC and "rgba(e1e1e1ff)" or THEME_FG or "rgba(d9d6e6ff)"
 	hl.config({
 		plugin = {
 			hyprbars = {
@@ -376,10 +379,11 @@ if hl.plugin.hyprbars then
 				-- default: el fondo y el texto del tema de colores y la fuente de font-set
 				-- mac-light: gris claro de macOS con texto oscuro
 				bar_color = PROFILE_LIGHT and "rgba(ececedff)" or PROFILE_MAC and "rgba(2d2d2dff)" or THEME_BG,
-				-- Con CONTRAST (aumentar contraste) el texto es negro o blanco puro
+				-- Con CONTRAST (aumentar contraste) el texto es negro o blanco puro y hay una
+				-- línea del color del texto entre la barra y la ventana (col.separator, parche local)
 				col = {
-					text = CONTRAST and (PROFILE_LIGHT and "rgba(000000ff)" or PROFILE_MAC and "rgba(ffffffff)")
-						or PROFILE_LIGHT and "rgba(3c3c43ff)" or PROFILE_MAC and "rgba(e1e1e1ff)" or THEME_FG or "rgba(d9d6e6ff)",
+					text = BAR_TEXT,
+					separator = CONTRAST and BAR_TEXT:gsub("%x%x%)$", "73)") or "rgba(00000000)",
 				},
 				bar_text_font = PROFILE_MAC and "Noto Sans" or barFont(),
 				bar_text_size = PROFILE_MAC and 10 or 11,
