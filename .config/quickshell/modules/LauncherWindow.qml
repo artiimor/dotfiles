@@ -10,7 +10,8 @@
 //
 // Teclas: escribir filtra · ↑/↓ o Ctrl+K/J o Tab moverse · Enter elegir · Esc cerrar
 // Clic fuera también cierra. Con pestañas (temas: Oscuros / Claros / Fuente), Tab, Shift+Tab
-// y ←/→ cambian de pestaña (ese menú no tiene buscador) y ↑/↓ se mueven.
+// y ←/→ cambian de pestaña y ↑/↓ se mueven. Cada pestaña tiene su búsqueda: al
+// volver a una sigue lo que escribiste en ella.
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -57,11 +58,24 @@ PanelWindow {
     Connections {
         target: Launcher
         function onShown() {
+            win.queries = [];
+            win.queryTab = Launcher.tab;
             search.text = "";
             list.currentIndex = 0;
             search.forceActiveFocus();
         }
+        // Al cambiar de pestaña se guarda lo escrito y se pone lo de la nueva
+        function onTabChanged() {
+            win.queries[win.queryTab] = search.text;
+            win.queryTab = Launcher.tab;
+            search.text = win.queries[Launcher.tab] ?? "";
+        }
     }
+
+    // Búsqueda de cada pestaña (índice = pestaña) y la pestaña a la que
+    // pertenece lo que hay ahora en el buscador
+    property var queries: []
+    property int queryTab: 0
 
     // ── Filtrado ──────────────────────────────────────────
     // Primero lo que contiene el texto tal cual (antes cuanto más al
@@ -79,9 +93,11 @@ PanelWindow {
             if (i >= 0)
                 score = 1000 - i;
             else {
+                // Sin espacios: "fira code" también encuentra "FiraCode"
+                const letters = q.replace(/\s+/g, "");
                 let j = 0;
-                for (const c of hay) if (c === q[j]) j++;
-                if (j === q.length)
+                for (const c of hay) if (c === letters[j]) j++;
+                if (j === letters.length)
                     score = 1;
             }
             if (score >= 0)
@@ -89,8 +105,13 @@ PanelWindow {
         }
         return scored.sort((a, b) => b.score - a.score).map(s => s.it);
     }
-    // Elegida la primera fila, o la actual (`cur`, el tema activo) si está en la lista
-    onFilteredChanged: list.currentIndex = Math.max(0, filtered.findIndex(it => it.cur))
+    // Elegida la primera fila, o sin buscar nada, la actual (`cur`, el tema activo)
+    // si está en la lista. Con callLater: si no, el ListView, que aún no ha
+    // cogido la lista nueva, la vuelve a poner en la primera fila al cogerla
+    onFilteredChanged: Qt.callLater(selectDefault)
+    function selectDefault() {
+        list.currentIndex = search.text.trim() ? 0 : Math.max(0, filtered.findIndex(it => it.cur));
+    }
 
     function accept() {
         Launcher.choose(filtered[list.currentIndex] ?? null, search.text);
@@ -160,7 +181,7 @@ PanelWindow {
 
                     Text {
                         visible: !search.text
-                        text: Launcher.prompt || "Buscar…"
+                        text: Launcher.tabPrompt || Launcher.prompt || "Buscar…"
                         color: Theme.muted
                         font: search.font
                     }

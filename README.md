@@ -245,7 +245,7 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 ## Color themes
 
 **Super+T** opens the theme menu, split into two tabs, **Oscuros** (dark) and **Claros** (light), plus a third, **Fuente**
-([font](#font)); it opens on the active theme's tab with that theme selected. Switch tabs by clicking, with Tab / Shift+Tab or with ←/→. From a terminal:
+([font](#font)); it opens on the active theme's tab with that theme selected. Switch tabs by clicking, with Tab / Shift+Tab or with ←/→. Each tab has its own search (just type; it is kept per tab), and fonts also match their original name (e.g. "Cascadia" finds CaskaydiaCove). From a terminal:
 
 ```sh
 ~/.config/themes/theme-set              # list themes (* = active)

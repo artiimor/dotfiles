@@ -72,7 +72,9 @@ En el menú de temas (Super+T) cada fila lleva su paleta (fondo y texto del
 terminal, acento y 6 colores) y un sol o una luna según sea claro u oscuro. Los
 temas van en dos pestañas, **Oscuros** y **Claros** (la tercera, **Fuente**, es la de
 font-set); se abre en la del tema activo,
-con él elegido. Se cambia de pestaña con clic, Tab / Shift+Tab o ←/→.
+con él elegido. Se cambia de pestaña con clic, Tab / Shift+Tab o ←/→. Cada pestaña tiene su buscador
+(escribir filtra; al volver a una pestaña sigue lo que escribiste en ella), y en Fuente
+se encuentran también por el nombre original (p. ej. "Cascadia" → CaskaydiaCove).
 
 ## Neovim
 

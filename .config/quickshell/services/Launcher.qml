@@ -34,7 +34,8 @@ Singleton {
     // las filas (`items`, una función que se queda enlazada, o `proc`, un proceso
     // que las rellena al terminar), si va sin buscador (menús cortos), si
     // enseña la descripción corta (`sub`) a la derecha y sus pestañas (`tabs`:
-    // cada fila dice en cuál va con `tab`, su índice). Los que no tienen ancho
+    // cada fila dice en cuál va con `tab`, su índice; cada pestaña tiene su
+    // búsqueda y su texto de ayuda en `tabPrompts`). Los que no tienen ancho
     // propio (profiles, y dmenu sin -c) salen arriba a la derecha, junto a la
     // barra, con 320 px; los demás, centrados.
     readonly property var modes: ({
@@ -49,7 +50,8 @@ Singleton {
             { text: "Reiniciar", glyph: "󰜉", data: "reboot" },
             { text: "Apagar", glyph: "󰐥", data: "poweroff" }
         ] },
-        themes: { width: 420, prompt: "Tema", noSearch: true, proc: themeList, tabs: ["Oscuros", "Claros", "Fuente"] },
+        themes: { width: 420, prompt: "Tema", proc: themeList, tabs: ["Oscuros", "Claros", "Fuente"],
+                  tabPrompts: ["Buscar tema oscuro…", "Buscar tema claro…", "Buscar fuente…"] },
         backgrounds: { width: 420, prompt: "Fondo", noSearch: true, proc: backgroundList },
         configs: { width: 260, prompt: "Config", noSearch: true, proc: configList },
         keys: { width: 520, prompt: "Atajos", proc: binds, showSub: true },
@@ -68,6 +70,7 @@ Singleton {
     readonly property bool noSearch: !!modeInfo.noSearch
     readonly property bool showSub: !!modeInfo.showSub
     readonly property var tabs: modeInfo.tabs ?? []
+    readonly property string tabPrompt: (modeInfo.tabPrompts ?? [])[tab] ?? ""
     property int tab: 0  // pestaña visible (índice en `tabs`)
 
     // Abre un modo, o lo cierra si ya estaba abierto (como `pkill wofi || wofi`)
@@ -258,8 +261,23 @@ Singleton {
     // verla antes de elegir, y un sol o una luna según sea claro u oscuro. Van en
     // dos pestañas, oscuros y claros; se abre en la del tema activo. La tercera,
     // Fuente, es la fuente monoespaciada (terminales, hyprbars...), aparte del
-    // tema: la pone font-set, y cada fila se escribe con su fuente.
+    // tema: la pone font-set, y cada fila se escribe con su fuente. Cada pestaña
+    // tiene su propia búsqueda (ver LauncherWindow.qml).
     readonly property string themesDir: Quickshell.env("HOME") + "/.config/themes"
+
+    // Nerd Fonts cuyo nombre no es el de la fuente original (licencia): para
+    // encontrarlas también buscando el original
+    readonly property var fontAliases: ({
+        BlexMono: "IBM Plex Mono",
+        CaskaydiaCove: "Cascadia Code",
+        CaskaydiaMono: "Cascadia Mono",
+        SauceCodePro: "Source Code Pro",
+        MonaspiceAr: "Monaspace Argon", MonaspiceKr: "Monaspace Krypton",
+        MonaspiceNe: "Monaspace Neon", MonaspiceRn: "Monaspace Radon",
+        MonaspiceXe: "Monaspace Xenon",
+        LiterationMono: "Liberation Mono",
+        Hurmit: "Hermit"
+    })
 
     // Marca del elemento actual en temas, fondos y configs
     function curMark(isCur) {
@@ -275,15 +293,18 @@ Singleton {
             onStreamFinished: {
                 const list = root.lines(text).map(l => {
                     const t = JSON.parse(l);
-                    if (t.font)
+                    if (t.font) {
+                        const name = t.font.replace(" Nerd Font", "");
                         return {
-                            text: t.font.replace(" Nerd Font", "") + root.curMark(t.cur),
+                            text: name + root.curMark(t.cur),
+                            keywords: root.fontAliases[name] ?? "",
                             glyph: String.fromCodePoint(0xF06D6), // nf-md-format_font
                             font: t.font,
                             tab: 2,
                             cur: t.cur,
                             data: t.font
                         };
+                    }
                     return {
                         text: t.name + root.curMark(t.cur),
                         // Sol (claro) o luna (oscuro)
@@ -291,6 +312,7 @@ Singleton {
                         palette: { bg: t.bg, fg: t.fg, colors: t.colors },
                         tab: t.light ? 1 : 0,
                         cur: t.cur, // la ventana la deja elegida al abrir
+                        keywords: t.dir,
                         data: t.dir
                     };
                 });
