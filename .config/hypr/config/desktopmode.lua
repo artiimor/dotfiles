@@ -378,7 +378,11 @@ if hl.plugin.hyprbars then
 				-- default: el fondo y el texto del tema de colores y la fuente de font-set
 				-- mac-light: gris claro de macOS con texto oscuro
 				bar_color = PROFILE_LIGHT and "rgba(ececedff)" or PROFILE_MAC and "rgba(2d2d2dff)" or THEME_BG,
-				col = { text = PROFILE_LIGHT and "rgba(3c3c43ff)" or PROFILE_MAC and "rgba(e1e1e1ff)" or THEME_FG or "rgba(d9d6e6ff)" },
+				-- Con CONTRAST (aumentar contraste) el texto es negro o blanco puro
+				col = {
+					text = CONTRAST and (PROFILE_LIGHT and "rgba(000000ff)" or PROFILE_MAC and "rgba(ffffffff)")
+						or PROFILE_LIGHT and "rgba(3c3c43ff)" or PROFILE_MAC and "rgba(e1e1e1ff)" or THEME_FG or "rgba(d9d6e6ff)",
+				},
 				bar_text_font = PROFILE_MAC and "Noto Sans" or barFont(),
 				bar_text_size = PROFILE_MAC and 10 or 11,
 				bar_text_align = "center",
@@ -388,7 +392,8 @@ if hl.plugin.hyprbars then
 				-- todos grises (más apagados en las ventanas sin foco)
 				bar_buttons_alignment = "left",
 				icon_on_hover = true,
-				inactive_button_color = PROFILE_LIGHT and "rgba(c7c7cc88)" or "rgba(8e8e9355)",
+				inactive_button_color = PROFILE_LIGHT and (CONTRAST and "rgba(c7c7ccdd)" or "rgba(c7c7cc88)")
+					or (CONTRAST and "rgba(8e8e93bb)" or "rgba(8e8e9355)"),
 				bar_part_of_window = true,
 				bar_precedence_over_border = true,
 				-- Parche local: los 6 px de arriba de la barra y lo que sobresale por encima

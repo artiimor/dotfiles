@@ -93,6 +93,19 @@ ColumnLayout {
         }
     }
 
+    // Aumentar contraste (accesibilidad): fondos opacos y bordes marcados
+    Tile {
+        Layout.fillWidth: true
+        Toggle {
+            Layout.fillWidth: true
+            icon: "contrast"
+            on: Theme.contrast
+            title: I18n.tr("Increase Contrast")
+            subtitle: Theme.contrast ? I18n.tr("On") : I18n.tr("Off")
+            onToggled: Sys.toggleContrast()
+        }
+    }
+
     // Brillo: solo si hay panel retroiluminado (portátil)
     Tile {
         visible: Sys.hasBacklight

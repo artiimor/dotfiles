@@ -1,0 +1,55 @@
+#!/usr/bin/env python3
+# Aumentar contraste (como "Increase contrast" de Accesibilidad en macOS): sin
+# transparencias ni blur, bordes de ventana más gruesos y opacos, texto secundario
+# y bordes de la barra más marcados, y el alto contraste de GTK/libadwaita.
+#
+#   contrast-set            dice si está activo ("on" u "off")
+#   contrast-set on|off     lo activa o lo quita
+#   contrast-set toggle     lo cambia (botón de la barra y tile del Control Center)
+#
+# Funciona con los dos perfiles (Modo Mac y Modo normal) y con cualquier tema.
+# El estado se guarda en ~/.local/state/increased-contrast ("1" o "0") y lo leen:
+#
+#   Hyprland     hypr/config/profile.lua → CONTRAST (bordes,      (hyprctl reload)
+#                blur y hyprbars en decorations.lua y desktopmode.lua)
+#   Quickshell   Theme.qml y macshell/Theme.qml                   (vigilan el archivo)
+#
+# Además pone org.gnome.desktop.a11y.interface high-contrast, que el portal
+# (xdg-desktop-portal-gtk) publica como org.freedesktop.appearance contrast: las
+# apps GTK4/libadwaita cambian al momento. Las Qt no cambian.
+
+import os
+import sys
+
+sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
+from themelib import HOME, notify, read_state, run_quiet, tr, write_atomic
+
+STATE = f"{HOME}/.local/state/increased-contrast"
+
+
+def enabled():
+    return read_state(STATE) == "1"
+
+
+def apply(on):
+    write_atomic(STATE, "1\n" if on else "0\n")
+    run_quiet(["gsettings", "set", "org.gnome.desktop.a11y.interface", "high-contrast",
+               "true" if on else "false"])
+    if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        run_quiet(["hyprctl", "reload"])
+    notify(tr("Increase contrast"), tr("Increase contrast"), tr("On") if on else tr("Off"))
+
+
+def main():
+    arg = sys.argv[1] if len(sys.argv) > 1 else None
+    if arg is None:
+        print("on" if enabled() else "off")
+    elif arg in ("on", "off", "toggle"):
+        apply(not enabled() if arg == "toggle" else arg == "on")
+    else:
+        print(tr("Usage: contrast-set [on|off|toggle]"), file=sys.stderr)
+        sys.exit(1)
+
+
+if __name__ == "__main__":
+    main()

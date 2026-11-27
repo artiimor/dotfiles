@@ -187,6 +187,15 @@ Singleton {
     }
     Timer { interval: 30000; running: true; repeat: true; triggeredOnStart: true; onTriggered: sys.refreshNight() }
 
+    // ── aumentar contraste ──
+    // contrast-set (scripts de temas) guarda el estado en un archivo que Theme vigila:
+    // aquí solo se lanza, el estado es Theme.contrast
+    function toggleContrast() {
+        if (!contrastAct.running)
+            contrastAct.exec([Quickshell.env("HOME") + "/.config/themes/contrast-set", "toggle"]);
+    }
+    Process { id: contrastAct }
+
     // ── cafeína (sin suspensión automática) ──
     // El inhibidor lo tiene la config raíz (services/Idle.qml, que sigue en marcha en el
     // Modo Mac): aquí no se crea otro. Se cambia con `qs ipc call idle toggle` y el estado

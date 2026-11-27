@@ -66,3 +66,20 @@ if PROFILE_MAC then
         },
     })
 end
+
+-- Aumentar contraste (CONTRAST, ver profile.lua y themes/contrast-set): borde más
+-- grueso, el activo del color del texto del tema y el inactivo opaco, y sin blur
+if CONTRAST then
+    hl.config({
+        general = {
+            border_size = 2,
+            col = {
+                active_border = THEME_FG,
+                inactive_border = THEME_INACTIVE:gsub("%x%x%)$", "ff)"),
+            },
+        },
+        decoration = {
+            blur = { enabled = false },
+        },
+    })
+end

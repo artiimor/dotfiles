@@ -175,6 +175,11 @@ Canvas {
             }
             c.beginPath(); c.moveTo(1, 13.5); c.lineTo(15, 13.5); c.stroke();
             break;
+        case "contrast":    // aumentar contraste: círculo con la mitad derecha rellena
+            c.lineWidth = 1.5;
+            c.beginPath(); c.arc(8, 8, 6, 0, Math.PI * 2); c.stroke();
+            c.beginPath(); c.arc(8, 8, 6, -Math.PI / 2, Math.PI / 2); c.closePath(); c.fill();
+            break;
         case "bolt":
             c.beginPath();
             c.moveTo(9.5, 1); c.lineTo(3.5, 9); c.lineTo(7.5, 9); c.lineTo(6.5, 15);

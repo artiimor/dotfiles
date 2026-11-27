@@ -14,18 +14,29 @@
 -- Sin archivo de estado: "mac" si está macshell, si no "default". Y "mac"/"mac-light"
 -- sin macshell instalado se comportan como "default".
 -- Lo usan autostart.lua, binds.lua, decorations.lua y desktopmode.lua
+--
+-- CONTRAST: "Aumentar contraste" (`~/.config/themes/contrast-set on|off|toggle`, que lo
+-- guarda en ~/.local/state/increased-contrast como "1" o "0" y hace `hyprctl reload`).
+-- decorations.lua lo usa para bordes más gruesos y opacos sin blur, y desktopmode.lua
+-- para el texto y los botones de hyprbars
 
 local util = require("config.util")
 local HOME = util.HOME
 local MACSHELL = HOME .. "/.config/quickshell/macshell/shell.qml"
 local exists = util.exists
 
-local profile
-local f = io.open(HOME .. "/.local/state/desktop-profile")
-if f then
-	profile = (f:read("*l") or ""):match("^%s*(%S+)")
+-- Primera palabra de un archivo de ~/.local/state, o nil si no existe
+local function readState(name)
+	local f = io.open(HOME .. "/.local/state/" .. name)
+	if not f then
+		return nil
+	end
+	local value = (f:read("*l") or ""):match("^%s*(%S+)")
 	f:close()
+	return value
 end
+
+local profile = readState("desktop-profile")
 if profile ~= "mac" and profile ~= "mac-light" and profile ~= "default" then
 	profile = exists(MACSHELL) and "mac" or "default"
 end
@@ -33,3 +44,4 @@ end
 PROFILE = profile
 PROFILE_MAC = (profile == "mac" or profile == "mac-light") and exists(MACSHELL)
 PROFILE_LIGHT = PROFILE_MAC and profile == "mac-light"
+CONTRAST = readState("increased-contrast") == "1"

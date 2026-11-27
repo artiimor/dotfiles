@@ -103,6 +103,7 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 - **Color theme switcher** (**Super+T**, `theme-set`): one `theme.json` per theme recolors Hyprland, Quickshell, hyprlock,
   Ghostty, kitty, btop, fzf, GTK, Qt/KDE, fastfetch and running Neovim instances at once. 18 themes, 4 of them light.
 - **Monospace font picker** (**Super+T**, "Font" tab, `font-set`) for kitty, Ghostty and the Normal mode titlebars.
+- **Increase contrast** (`contrast-set`, Control Center tile in Mac mode, bar button in Normal mode): opaque, thicker borders, no blur, purer text and GTK high contrast.
 - **Per-theme backgrounds** (**Super+Ctrl+B**, `background-set`), remembered per theme.
 - **Terminal setup**: Ghostty, bash + starship, a minimal Neovim built on mini.nvim (colors generated from the theme with
   mini.hues; LazyVim, available as `lazyvim`, shares the same colors and keeps `miami` and `basalt` colorschemes),
@@ -306,6 +307,15 @@ its font) or with `~/.config/themes/font-set "<family>"` (no argument lists the 
 to kitty, Ghostty and the hyprbars titlebars in Normal mode, and is saved in `~/.local/state/font`. The Quickshell UI
 (Inter, or Noto Sans in Mac mode) keeps its own font. Details in [`.config/themes/README.md`](.config/themes/README.md#fuente).
 
+### Increase contrast
+
+Like macOS's *Increase contrast*: thicker, opaque window borders, no blur, pure black/white titlebar text, more marked
+secondary text and bar borders in Quickshell, and GTK/libadwaita high contrast. It works with any theme and both profiles.
+Toggle it from the **Increase Contrast** tile of the Control Center (Mac mode), the contrast button in the bar next to
+Night light and Keep awake (Normal mode), or with `~/.config/themes/contrast-set on|off|toggle` (no argument prints
+`on`/`off`). It's saved in `~/.local/state/increased-contrast`. Details in
+[`.config/themes/README.md`](.config/themes/README.md#increase-contrast).
+
 ## Backgrounds
 
 Like in Omarchy, every theme can ship its own wallpapers in `~/.config/themes/<theme>/backgrounds/`
@@ -482,7 +492,7 @@ dotfiles/
 │   │   ├── hyprbars-*.patch      local patches for the hyprbars plugin
 │   │   └── hypridle.conf  hyprlock.conf  hyprsunset.conf  xdph.conf
 │   ├── quickshell/               shell.qml, Bar.qml, Theme.qml, modules/, services/, components/, scripts/
-│   ├── themes/                   one folder per theme + theme-set, config-set, background-set, font-set
+│   ├── themes/                   one folder per theme + theme-set, config-set, background-set, font-set, contrast-set
 │   ├── backgrounds/              default wallpapers (Pepes) and the script that made them
 │   ├── uwsm/env                  session environment (Qt, cursor, Electron); install.sh adds env.d/gpu (NVIDIA)
 │   ├── ghostty/ kitty/ nvim/ nvim-lazyvim/ btop/ fastfetch/ starship.toml micro/

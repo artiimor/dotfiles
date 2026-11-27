@@ -327,7 +327,7 @@ if ask "$(t "Copy them?")"; then
 	# -c: como copy_tree, pero solo se guarda copia si el contenido cambia (no por la fecha)
 	rsync -ac --backup --backup-dir="$BACKUP" "$REPO"/{.bashrc,.bash_profile,.profile} "$HOME/"
 	fix_home
-	chmod +x "$HOME/.config/themes/theme-set" "$HOME/.config/themes/config-set" "$HOME/.config/themes/background-set" "$HOME/.config/themes/font-set" "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
+	chmod +x "$HOME/.config/themes/theme-set" "$HOME/.config/themes/config-set" "$HOME/.config/themes/background-set" "$HOME/.config/themes/font-set" "$HOME/.config/themes/contrast-set" "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
 	# Cursor: la flecha negra de macOS (apple_cursor, no está en los repos de Arch).
 	# Si no se puede descargar se queda Adwaita. ~/.icons/default es para apps X11
 	cursor=Adwaita

@@ -1,6 +1,6 @@
-// Centro: reloj con la fecha. Al pasar el ratón se despliegan luz nocturna y
-// cafeína a su derecha (sin moverlo: el cajón cuelga por fuera del ancho del
-// reloj); debajo del reloj aparece el calendario.
+// Centro: reloj con la fecha. Al pasar el ratón se despliegan luz nocturna,
+// cafeína y aumentar contraste a su derecha (sin moverlo: el cajón cuelga por
+// fuera del ancho del reloj); debajo del reloj aparece el calendario.
 import QtQuick
 import Quickshell
 import qs
@@ -65,6 +65,15 @@ Item {
             color: Idle.inhibited ? Theme.yellow : Theme.muted
             tooltip: Idle.inhibited ? I18n.tr("Automatic suspend off") : I18n.tr("Automatic suspend on")
             onClicked: Idle.inhibited = !Idle.inhibited
+        }
+
+        // Aumentar contraste: Theme.contrast se actualiza solo al cambiar el archivo
+        BarIcon {
+            icon: "󰆗"
+            padding: 14
+            color: Theme.contrast ? Theme.yellow : Theme.muted
+            tooltip: Theme.contrast ? I18n.tr("Increase contrast: on") : I18n.tr("Increase contrast: off")
+            onClicked: Quickshell.execDetached([Quickshell.env("HOME") + "/.config/themes/contrast-set", "toggle"])
         }
     }
 }

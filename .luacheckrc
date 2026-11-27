@@ -7,7 +7,7 @@ files[".config/hypr"] = {
 	globals = {
 		"hl", "MONITOR1", "PRIMARY_MONITOR", "NUM_WPM", "UWSM",
 		"TERMINAL", "FILE_MANAGER", "EDITOR", "CALCULATOR",
-		"PROFILE", "PROFILE_MAC", "PROFILE_LIGHT", "DesktopSnap", "DesktopUnsnap",
+		"PROFILE", "PROFILE_MAC", "PROFILE_LIGHT", "CONTRAST", "DesktopSnap", "DesktopUnsnap",
 		"THEME_BORDER", "THEME_INACTIVE", "THEME_GROUP", "THEME_ACCENT", "THEME_BG", "THEME_FG",
 	},
 }

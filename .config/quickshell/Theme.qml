@@ -64,6 +64,19 @@ Singleton {
     readonly property bool mac: macshellFile.loaded && profile !== "default"
     readonly property bool macLight: mac && profile === "mac-light"
 
+    // Aumentar contraste ("1" en ~/.local/state/increased-contrast; lo cambia
+    // themes/contrast-set): fondos opacos, bordes marcados y texto apagado más claro.
+    // El script escribe el archivo con rename: FileView vigila la carpeta
+    FileView {
+        id: contrastFile
+        path: Quickshell.env("HOME") + "/.local/state/increased-contrast"
+        blockLoading: true
+        printErrors: false
+        watchChanges: true
+        onFileChanged: reload()
+    }
+    readonly property bool contrast: contrastFile.loaded && contrastFile.text().trim() === "1"
+
     IpcHandler {
         target: "theme"
         function reload(): void {
@@ -90,17 +103,19 @@ Singleton {
 
     // mac / mac-light: los colores de macshell (macshell/Theme.qml)
     readonly property color bgSolid: macLight ? "#f5f5f7" : mac ? "#28282b" : ui.bg ?? "#0d0b12"
-    readonly property color bg: withAlpha(bgSolid, mac ? 0.88 : 0.85) // translúcido
+    readonly property color bg: withAlpha(bgSolid, contrast ? 1 : mac ? 0.88 : 0.85) // translúcido
     readonly property color surface: macLight ? Qt.rgba(0, 0, 0, 0.07) : mac ? Qt.rgba(1, 1, 1, 0.10) : ui.surface ?? "#1c1826"
     readonly property color fg: macLight ? "#1d1d1f" : mac ? "#f5f5f7" : ui.fg ?? "#f0eff1"
-    readonly property color muted: macLight ? "#86868b" : mac ? "#98989d" : ui.muted ?? "#5d6088"
+    // Con contraste, a medio camino hacia fg
+    readonly property color muted: Qt.tint(macLight ? "#86868b" : mac ? "#98989d" : ui.muted ?? "#5d6088",
+        withAlpha(fg, contrast ? 0.5 : 0))
     readonly property color accent: macLight ? "#007aff" : mac ? "#0a84ff" : ui.accent ?? "#848bbd"
     readonly property color accent2: mac ? accent : ui.accent2 ?? "#36f9f6"
     readonly property color accentDim: mac ? Qt.darker(accent, 1.35) : ui.accentDim ?? "#6b6789" // para bordes y degradados
     // Texto y símbolos sobre la fila elegida / botón principal
     readonly property color onAccent: mac ? "white" : bgSolid
     // Borde de las ventanas sueltas (OSD, polkit): fino y gris en mac
-    readonly property color frame: mac ? border : accentDim
+    readonly property color frame: contrast ? withAlpha(fg, 0.75) : mac ? border : accentDim
     readonly property color red: ui.red ?? "#fe4450"
     readonly property color yellow: ui.yellow ?? "#fede5d"
 
@@ -117,7 +132,7 @@ Singleton {
 
     // Borde fino de las islas
     readonly property color borderBase: ui.border ?? "#b893ce"
-    readonly property color border: macLight ? Qt.rgba(0, 0, 0, 0.12) : mac ? Qt.rgba(1, 1, 1, 0.12)
+    readonly property color border: contrast ? withAlpha(fg, 0.5) : macLight ? Qt.rgba(0, 0, 0, 0.12) : mac ? Qt.rgba(1, 1, 1, 0.12)
         : withAlpha(borderBase, 0.25)
 
     readonly property string font: mac ? "Noto Sans" : "Inter"

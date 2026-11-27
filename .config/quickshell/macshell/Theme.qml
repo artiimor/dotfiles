@@ -15,11 +15,25 @@ Singleton {
     }
     readonly property bool light: _profile.loaded && _profile.text().trim() === "mac-light"
 
-    readonly property color card: light ? Qt.rgba(0.96, 0.96, 0.97, 0.86) : Qt.rgba(0.16, 0.16, 0.17, 0.80)
-    readonly property color cardHover: light ? Qt.rgba(0.91, 0.91, 0.92, 0.90) : Qt.rgba(0.20, 0.20, 0.21, 0.86)
-    readonly property color border: light ? Qt.rgba(0, 0, 0, 0.10) : Qt.rgba(1, 1, 1, 0.10)
+    // "Aumentar contraste" (como la accesibilidad de macOS): ~/.config/themes/contrast-set
+    // escribe "1" o "0" en el archivo de estado (con renombrado atómico; si no existe, apagado).
+    // Con él, los fondos translúcidos se vuelven opacos y bordes, texto tenue y capas se marcan más.
+    property FileView _contrast: FileView {
+        path: Quickshell.env("HOME") + "/.local/state/increased-contrast"
+        blockLoading: true
+        watchChanges: true
+        printErrors: false
+        onFileChanged: reload()
+    }
+    readonly property bool contrast: _contrast.loaded && _contrast.text().trim() === "1"
+    // quita la transparencia con contraste alto
+    function solid(c) { return contrast ? Qt.rgba(c.r, c.g, c.b, 1) : c; }
+
+    readonly property color card: solid(light ? Qt.rgba(0.96, 0.96, 0.97, 0.86) : Qt.rgba(0.16, 0.16, 0.17, 0.80))
+    readonly property color cardHover: solid(light ? Qt.rgba(0.91, 0.91, 0.92, 0.90) : Qt.rgba(0.20, 0.20, 0.21, 0.86))
+    readonly property color border: light ? Qt.rgba(0, 0, 0, contrast ? 0.35 : 0.10) : Qt.rgba(1, 1, 1, contrast ? 0.35 : 0.10)
     readonly property color text: light ? "#1d1d1f" : "#f5f5f7"
-    readonly property color dim: light ? Qt.rgba(0.11, 0.11, 0.12, 0.55) : Qt.rgba(0.92, 0.92, 0.96, 0.55)
+    readonly property color dim: light ? Qt.rgba(0.11, 0.11, 0.12, contrast ? 0.85 : 0.55) : Qt.rgba(0.92, 0.92, 0.96, contrast ? 0.85 : 0.55)
     readonly property color button: tint(0.10)
     readonly property color buttonHover: tint(0.18)
     readonly property color accent: light ? "#007aff" : "#0a84ff"
@@ -27,14 +41,17 @@ Singleton {
     // capas: blanco en el aspecto oscuro, negro en el claro. No es tint(): la píldora de
     // BarButton anima la opacidad y en claro quiere la misma que en oscuro, sin el × 0.6
     readonly property color ink: light ? "black" : "white"
-    function tint(a) { return light ? Qt.rgba(0, 0, 0, a * 0.6) : Qt.rgba(1, 1, 1, a); }
+    function tint(a) {
+        const k = contrast ? 1.6 : 1;
+        return light ? Qt.rgba(0, 0, 0, a * 0.6 * k) : Qt.rgba(1, 1, 1, a * k);
+    }
     // barra superior (Hyprland), Spotlight, ventana de Red
-    readonly property color panel: light ? Qt.rgba(0.96, 0.96, 0.97, 0.78) : Qt.rgba(0x20 / 255, 0x23 / 255, 0x26 / 255, 0.8)
-    readonly property color overlay: light ? Qt.rgba(0.97, 0.97, 0.98, 0.86) : Qt.rgba(0.13, 0.13, 0.14, 0.82)
+    readonly property color panel: solid(light ? Qt.rgba(0.96, 0.96, 0.97, 0.78) : Qt.rgba(0x20 / 255, 0x23 / 255, 0x26 / 255, 0.8))
+    readonly property color overlay: solid(light ? Qt.rgba(0.97, 0.97, 0.98, 0.86) : Qt.rgba(0.13, 0.13, 0.14, 0.82))
     readonly property color window: light ? "#ececec" : "#1e1e1e"
     readonly property color wsActive: light ? "#007aff" : "#3080aa"
     readonly property color sliderFill: light ? "white" : "#f5f5f7"
-    readonly property color closeButton: light ? Qt.rgba(0.88, 0.88, 0.90, 0.96) : Qt.rgba(0.28, 0.28, 0.30, 0.96)
+    readonly property color closeButton: solid(light ? Qt.rgba(0.88, 0.88, 0.90, 0.96) : Qt.rgba(0.28, 0.28, 0.30, 0.96))
     readonly property color closeButtonHover: light ? Qt.rgba(0.80, 0.80, 0.82, 1) : Qt.rgba(0.40, 0.40, 0.42, 1)
     readonly property int radius: 16
     readonly property int width: 360

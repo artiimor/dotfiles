@@ -1,5 +1,5 @@
 # Tests de los scripts de .config/themes (theme-set, config-set, font-set,
-# background-set). Cada test copia el .config del repo a un HOME temporal y
+# background-set, contrast-set). Cada test copia el .config del repo a un HOME temporal y
 # ejecuta los scripts ahí con THEMES_NO_RELOAD=1. En PATH van delante unos stubs
 # (qs, hyprctl, gsettings...) que solo apuntan su llamada: al terminar cada test
 # se comprueba que no se ha avisado a nada de fuera. Si el interruptor fallara,
@@ -210,6 +210,26 @@ def test_font_set(home):
     assert read(home, ".config/hypr/font.conf").endswith("\nFoo Nerd Font Propo\n")
     assert json.loads(run(home, "font-set", "--list").stdout) == {"font": "Foo Nerd Font", "cur": True}
     assert run(home, "font-set", "Bar Sans", check=False).returncode != 0
+
+
+# ── contrast-set ─────────────────────────────────────────────
+
+def test_contrast_set(home):
+    state = ".local/state/increased-contrast"
+    assert run(home, "contrast-set").stdout == "off\n"  # sin archivo de estado
+    run(home, "contrast-set", "on")
+    assert read(home, state) == "1\n" and run(home, "contrast-set").stdout == "on\n"
+    run(home, "contrast-set", "toggle")
+    assert read(home, state) == "0\n" and run(home, "contrast-set").stdout == "off\n"
+    run(home, "contrast-set", "toggle")
+    assert read(home, state) == "1\n"
+    run(home, "contrast-set", "off")
+    assert read(home, state) == "0\n"
+    assert run(home, "contrast-set", "no-existe", check=False).returncode != 0
+    # Sin el interruptor: alto contraste de GTK, hyprctl reload y aviso
+    run(home, "contrast-set", "on", reload=True)
+    assert calls(home) == {"gsettings", "hyprctl", "notify-send"}
+    (home / "calls.log").unlink()
 
 
 # ── background-set ───────────────────────────────────────────

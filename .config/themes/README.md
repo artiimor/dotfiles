@@ -58,6 +58,19 @@ none chosen, each program keeps its own: GeistMono in kitty, Ghostty's default
 and JetBrains Mono in hyprbars. The Quickshell interface, hyprlock and
 Mac mode keep theirs.
 
+## Increase contrast
+
+Like macOS's Accessibility > Increase contrast, for any theme and both profiles:
+thicker, opaque window borders (the active one in the theme's text color), no blur,
+pure black/white hyprbars text, more marked secondary text and bar borders in
+Quickshell, and GTK/libadwaita high contrast (`org.gnome.desktop.a11y.interface
+high-contrast`, which the portal passes on to GTK4 apps). Qt apps don't change.
+Toggle it from the **Increase Contrast** tile of the Control Center (Mac mode), the
+contrast button of the bar next to Night light and Keep awake (Normal mode), or with
+`contrast-set on|off|toggle` (`contrast-set` alone prints `on` or `off`). It's saved in
+`~/.local/state/increased-contrast`: Hyprland reads it on `hyprctl reload` (the
+script does it) and Quickshell watches the file.
+
 ## Light themes
 
 `catppuccin-latte`, `rose-pine-dawn`, `snow` and `terminal-clasico` are light (`"light": true`), with the 16

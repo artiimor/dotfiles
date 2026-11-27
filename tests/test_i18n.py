@@ -60,7 +60,8 @@ def bind_texts():
 def python_texts():
     # tr("...") con un literal como primer argumento en los scripts de themes
     out = set()
-    for name in ["theme-set", "config-set", "background-set", "font-set", "themelib.py"]:
+    for name in ["theme-set", "config-set", "background-set", "font-set", "contrast-set",
+                 "themelib.py"]:
         for node in ast.walk(ast.parse((THEMES_DIR / name).read_text())):
             if (isinstance(node, ast.Call) and getattr(node.func, "id", None) == "tr"
                     and node.args and isinstance(node.args[0], ast.Constant)):
