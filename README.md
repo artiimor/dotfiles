@@ -2,7 +2,7 @@
 
 My **Hyprland** desktop for **CachyOS / Arch Linux**: Hyprland with a Lua config, and **Quickshell** for everything else
 (bar, launcher, menus, notifications, OSD, wallpaper, lock screen, polkit dialog and dock).
-Two looks, switchable live: a tiling **Normal mode** and a floating, macOS-style **Mac mode**, with 13 color themes on top.
+Two looks, switchable live: a tiling **Normal mode** and a floating, macOS-style **Mac mode**, with 18 color themes on top.
 
 ![Mac mode with floating windows, the macshell top bar and the dock](screenshots/mac.png)
 
@@ -100,7 +100,7 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 - **Per-workspace desktop mode** (**Super+Alt+D**): floating windows, minimize, a dock and macOS-style edge snapping.
 - **macOS-style titlebars** (close / minimize / maximize) on floating windows, using a patched `hyprbars` plugin.
 - **Color theme switcher** (**Super+T**, `theme-set`): one `theme.json` per theme recolors Hyprland, Quickshell, hyprlock,
-  Ghostty, kitty, btop, fzf, GTK, Qt/KDE, fastfetch and running Neovim instances at once. 13 themes, 2 of them light.
+  Ghostty, kitty, btop, fzf, GTK, Qt/KDE, fastfetch and running Neovim instances at once. 18 themes, 4 of them light.
 - **Monospace font picker** (**Super+T**, "Font" tab, `font-set`) for kitty, Ghostty and the Normal mode titlebars.
 - **Per-theme backgrounds** (**Super+Ctrl+B**, `background-set`), remembered per theme.
 - **Terminal setup**: Ghostty, bash + starship, a minimal Neovim built on mini.nvim (colors generated from the theme with
