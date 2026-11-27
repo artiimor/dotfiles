@@ -66,6 +66,13 @@ thicker, opaque window borders (the active one in the theme's text color), no bl
 pure black/white hyprbars text, more marked secondary text and bar borders in
 Quickshell, and GTK/libadwaita high contrast (`org.gnome.desktop.a11y.interface
 high-contrast`, which the portal passes on to GTK4 apps). Qt apps don't change.
+Terminals (kitty, Ghostty, btop, fzf) and Neovim get slightly stronger colors:
+the background moves 30 % towards black (white in light themes), the text towards
+white (black), and every ANSI, syntax and UI text color that reads below 4.5:1
+against that background is nudged just enough to reach it (`boost_contrast()` in
+`themelib.py`). theme-set writes the boosted theme to
+`~/.local/state/increased-contrast.json`, which Neovim reads instead of the theme's
+`theme.json`. kitty, Ghostty and open Neovims change at once; btop and fzf when reopened.
 Toggle it from the **Increase Contrast** tile of the Control Center (Mac mode), the
 contrast button of the bar next to Night light and Keep awake (Normal mode), or with
 `contrast-set on|off|toggle` (`contrast-set` alone prints `on` or `off`). It's saved in
@@ -102,11 +109,11 @@ transparent. If a background color matches the terminal's (`term.background`),
 the next distinguishable one is used.
 
 `nvimColors.ui` (optional) overrides any of these keys: `panel` (menus,
-floats, statusline), `sel`, `cursorline`, `visual`, `linenr` (default =
-`nontext`), `nontext` and `special` (default `ui.muted`), `whitespace` (default
-`ui.accentDim`), `border`, `dim`, `accent`, `accent2`, `muted`, `red`, `yellow`, `ok`,
+floats, statusline), `sel`, `cursorline`, `visual`, `nontext` and `special` (default
+`ui.muted`), `whitespace` (default `ui.accentDim`), `border`, `dim`, `accent`, `accent2`, `muted`, `red`, `yellow`, `ok`,
 `info`, `hint`. To try a theme without switching the active one:
-`TEMA_THEME_JSON=~/.config/themes/snow/theme.json nvim`.
+`TEMA_THEME_JSON=~/.config/themes/snow/theme.json nvim`. Line numbers are always
+black in light themes and white in dark ones.
 
 ## Configs: Mac mode / Normal mode
 

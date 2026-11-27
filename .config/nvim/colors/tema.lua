@@ -70,7 +70,7 @@ end
 
 -- interfaz: los grises y acentos salen de la paleta del tema, no de mini.hues.
 -- nvimColors.ui (opcional) pisa cualquiera de estas claves: panel (menús, flotantes,
--- statusline), sel (fila elegida), cursorline, visual, linenr, nontext, whitespace,
+-- statusline), sel (fila elegida), cursorline, visual, nontext, whitespace,
 -- special, border (por defecto ui.border al 25 %), dim, accent, accent2, muted, red, yellow, ok, info, hint.
 -- Lo que falte en el tema sale de la paleta de mini.hues (p).
 if t.ui then
@@ -111,7 +111,8 @@ if t.ui then
   }) do
     c[k] = o[k] or v
   end
-  c.linenr = o.linenr or c.nontext
+  -- números de línea: siempre negro en los temas claros y blanco en los oscuros
+  c.linenr = t.light and "#000000" or "#ffffff"
   -- borde de los flotantes: ui.border al 25 % sobre el panel, como las islas de Quickshell
   c.border = o.border or (ui.border and blend(ui.border, c.panel, 0.25)) or p.bg_mid2
   local mode = function(bg) return { fg = c.bg, bg = bg, bold = true } end

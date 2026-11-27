@@ -14,6 +14,11 @@
 #                blur y hyprbars en decorations.lua y desktopmode.lua)
 #   Quickshell   Theme.qml y macshell/Theme.qml                   (vigilan el archivo)
 #
+# Las terminales (kitty, Ghostty, btop, fzf) y Neovim suben el contraste de sus colores:
+# theme-set los regenera con themelib.boost_contrast() y Neovim lo aplica él solo al
+# leer el tema (nvim/lua/tema/theme.lua). kitty, Ghostty y Neovim, al momento; btop y
+# fzf, al abrirlos.
+#
 # Además pone org.gnome.desktop.a11y.interface high-contrast, que el portal
 # (xdg-desktop-portal-gtk) publica como org.freedesktop.appearance contrast: las
 # apps GTK4/libadwaita cambian al momento. Las Qt no cambian.
@@ -22,9 +27,8 @@ import os
 import sys
 
 sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
-from themelib import HOME, notify, read_state, run_quiet, tr, write_atomic
-
-STATE = f"{HOME}/.local/state/increased-contrast"
+from themelib import (CONTRAST_STATE as STATE, current_theme, load_script, load_theme,
+                      notify, read_state, reload_terminals, run_quiet, tr, write_atomic)
 
 
 def enabled():
@@ -35,6 +39,13 @@ def apply(on):
     write_atomic(STATE, "1\n" if on else "0\n")
     run_quiet(["gsettings", "set", "org.gnome.desktop.a11y.interface", "high-contrast",
                "true" if on else "false"])
+    name = current_theme()
+    if name:
+        theme_set = load_script("theme-set")
+        t = load_theme(name)
+        theme_set.gen_terminals(name, t)
+        reload_terminals()
+        theme_set.reload_nvim(t)
     if os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
         run_quiet(["hyprctl", "reload"])
     notify(tr("Increase contrast"), tr("Increase contrast"), tr("On") if on else tr("Off"))

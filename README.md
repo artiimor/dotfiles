@@ -105,7 +105,7 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 - **Color theme switcher** (**Super+T**, `theme-set`): one `theme.json` per theme recolors Hyprland, Quickshell, hyprlock,
   Ghostty, kitty, btop, fzf, GTK, Qt/KDE, fastfetch and running Neovim instances at once. 18 themes, 4 of them light.
 - **Monospace font picker** (**Super+T**, "Font" tab, `font-set`) for kitty, Ghostty and the Normal mode titlebars.
-- **Increase contrast** (`contrast-set`, Control Center tile in Mac mode, bar button in Normal mode): opaque, thicker borders, no blur, purer text and GTK high contrast.
+- **Increase contrast** (`contrast-set`, Control Center tile in Mac mode, bar button in Normal mode): opaque, thicker borders, no blur, purer text, GTK high contrast and stronger terminal/Neovim colors.
 - **Per-theme backgrounds** (**Super+Ctrl+B**, `background-set`), remembered per theme.
 - **Main menu** (**Super+M**), like Omarchy's. For now it has *Style*: theme, font, background, profile and increase
   contrast in one place; in Mac mode Super+M opens macshell's Appearance window directly. Navigate with the arrows or hjkl:
@@ -315,7 +315,8 @@ to kitty, Ghostty and the hyprbars titlebars in Normal mode, and is saved in `~/
 ### Increase contrast
 
 Like macOS's *Increase contrast*: thicker, opaque window borders, no blur, pure black/white titlebar text, more marked
-secondary text and bar borders in Quickshell, and GTK/libadwaita high contrast. It works with any theme and both profiles.
+secondary text and bar borders in Quickshell, GTK/libadwaita high contrast, and slightly stronger colors in the
+terminals and Neovim. It works with any theme and both profiles.
 Toggle it from the **Increase Contrast** tile of the Control Center (Mac mode), the contrast button in the bar next to
 Night light and Keep awake (Normal mode), or with `~/.config/themes/contrast-set on|off|toggle` (no argument prints
 `on`/`off`). It's saved in `~/.local/state/increased-contrast`. Details in

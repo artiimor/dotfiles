@@ -25,6 +25,8 @@
 #                acento (los originales los genera fastfetch/pepe.py)
 #   Neovim       nvim y lazyvim: colorscheme "tema" (nvim/colors/tema.lua, mini.hues
 #                con ui.bg/ui.fg y nvimColors.syn); los abiertos, por su socket
+#   Contraste    con contrast-set activo, las terminales y Neovim llevan los colores
+#                con más contraste (themelib.boost_contrast)
 #   Fondo        Quickshell lo pide a background-set al recargar  (al momento)
 #
 # Temas claros: "light": true en theme.json (sin él, oscuro). Al cambiar de tema
@@ -45,16 +47,12 @@ import subprocess
 import sys
 
 sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
-from themelib import (CONF, CURRENT, HOME, NO_RELOAD, QUIET, THEMES, current_theme,
-                      list_themes, load_script, load_theme, notify, qs_theme_reload,
-                      reload_terminals, run_quiet, saved_profile, tr, write)
+from themelib import (CONF, CONTRAST_THEME, CURRENT, HOME, NO_RELOAD, QUIET, THEMES,
+                      boost_contrast, contrast_on, current_theme, list_themes, load_script,
+                      load_theme, mix, notify, qs_theme_reload, reload_terminals, rgb,
+                      run_quiet, saved_profile, tr, write, write_atomic)
 
 HEADER = "Generado por theme-set a partir de themes/{}/theme.json: no editar"
-
-
-def rgb(hexcolor):
-    h = hexcolor.lstrip("#")
-    return tuple(int(h[i:i + 2], 16) for i in (0, 2, 4))
 
 
 def hypr(hexcolor):
@@ -216,11 +214,6 @@ selection-foreground = {term["selection_foreground"]}
 """)
 
 
-def mix(a, b, k):
-    # Color entre a y b (k = 0 → a, k = 1 → b)
-    return "#" + "".join(f"{round(x + (y - x) * k):02x}" for x, y in zip(rgb(a), rgb(b)))
-
-
 def gen_qt(name, t):
     g, ui, c = t["gtk"], t["ui"], t["term"]["colors"]
     fg, dim = g["fg"], c[8]
@@ -303,7 +296,22 @@ def gen_fastfetch(name, t):
                                              lambda m: "\x1b[" + tint(m), text))
 
 
-GENERATORS = [gen_hyprland, gen_hyprlock, gen_kitty, gen_ghostty, gen_btop, gen_fzf, gen_gtk, gen_qt, gen_fastfetch]
+GENERATORS = [gen_hyprland, gen_hyprlock, gen_gtk, gen_qt, gen_fastfetch]
+# Los de las terminales van por gen_terminals(): con "Aumentar contraste" reciben el
+# tema pasado por boost_contrast() (contrast-set los vuelve a llamar al cambiarlo)
+TERMINAL_GENERATORS = [gen_kitty, gen_ghostty, gen_btop, gen_fzf]
+
+
+def gen_terminals(name, t):
+    # Sin el modo, se borra CONTRAST_THEME y Neovim vuelve a themes/current/theme.json
+    tt = t
+    if contrast_on():
+        tt = boost_contrast(t)
+        write_atomic(CONTRAST_THEME, json.dumps(tt, indent=2) + "\n")
+    elif os.path.exists(CONTRAST_THEME):
+        os.remove(CONTRAST_THEME)
+    for gen in TERMINAL_GENERATORS:
+        gen(name, tt)
 
 
 # ── Avisar a los programas que ya están abiertos ─────────────
@@ -351,6 +359,7 @@ def apply(name):
     os.replace(tmp, CURRENT)
     for gen in GENERATORS:
         gen(name, t)
+    gen_terminals(name, t)
     reload_terminals()
     reload_nvim(t)
     sync_profile()  # antes de recargar: Hyprland lee el perfil nuevo

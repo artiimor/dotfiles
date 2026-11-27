@@ -259,10 +259,26 @@ def test_contrast_set(home):
     run(home, "contrast-set", "off")
     assert read(home, state) == "0\n"
     assert run(home, "contrast-set", "no-existe", check=False).returncode != 0
-    # Sin el interruptor: alto contraste de GTK, hyprctl reload y aviso
+    # Sin el interruptor: alto contraste de GTK, terminales, Neovim, hyprctl reload y aviso
     run(home, "contrast-set", "on", reload=True)
-    assert calls(home) == {"gsettings", "hyprctl", "notify-send"}
+    assert calls(home) == {"gsettings", "pkill", "nvim", "hyprctl", "notify-send"}
     (home / "calls.log").unlink()
+
+
+@pytest.mark.parametrize("theme", ["grafito", "terminal-clasico"])
+def test_contrast_terminals(home, theme):
+    # Con el modo, las terminales llevan más contraste y Neovim tiene su tema aparte;
+    # al quitarlo, todo vuelve a lo del theme.json
+    kitty, nv = ".config/kitty/themes/current.conf", home / ".local/state/increased-contrast.json"
+    run(home, "theme-set", theme)
+    before = read(home, kitty)
+    run(home, "contrast-set", "on")
+    boosted = json.loads(nv.read_text())
+    assert boosted["term"]["background"] in read(home, kitty)
+    run(home, "theme-set", "--reapply")  # cambiar de tema con el modo puesto lo mantiene
+    assert boosted["term"]["background"] in read(home, kitty)
+    run(home, "contrast-set", "off")
+    assert read(home, kitty) == before and not nv.exists()
 
 
 # ── background-set ───────────────────────────────────────────

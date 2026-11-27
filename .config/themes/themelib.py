@@ -84,6 +84,84 @@ def theme_light():
         return False
 
 
+# ── Aumentar contraste (contrast-set) ────────────────────────
+# Con el modo activo, theme-set escribe los colores de las terminales (kitty, Ghostty,
+# btop, fzf) pasados por boost_contrast() y deja el tema entero así en CONTRAST_THEME,
+# que Neovim lee en vez de themes/current/theme.json (nvim/lua/tema/theme.lua).
+
+CONTRAST_STATE = f"{HOME}/.local/state/increased-contrast"
+CONTRAST_THEME = f"{HOME}/.local/state/increased-contrast.json"
+CONTRAST_MIN = 4.5   # contraste mínimo de cada color contra el fondo (WCAG AA)
+CONTRAST_BG = 0.3    # cuánto se acerca el fondo al negro (al blanco en los claros)
+CONTRAST_FG = 0.5    # cuánto se acerca el texto al blanco (al negro en los claros)
+
+
+def contrast_on():
+    return read_state(CONTRAST_STATE) == "1"
+
+
+def rgb(hexcolor):
+    h = hexcolor.lstrip("#")
+    return [int(h[i:i + 2], 16) for i in (0, 2, 4)]
+
+
+def mix(a, b, k):
+    # Color entre a y b (k = 0 → a, k = 1 → b); conserva el alfa de a si lo tiene
+    out = "#" + "".join(f"{round(x + (y - x) * k):02x}" for x, y in zip(rgb(a), rgb(b)))
+    return out + a.lstrip("#")[6:8]
+
+
+def _lum(h):
+    def ch(v):
+        v /= 255
+        return v / 12.92 if v <= 0.03928 else ((v + 0.055) / 1.055) ** 2.4
+    r, g, b = (ch(v) for v in rgb(h))
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b
+
+
+def _ratio(a, b):
+    la, lb = sorted((_lum(a), _lum(b)), reverse=True)
+    return (la + 0.05) / (lb + 0.05)
+
+
+def _legible(c, bg, ink):
+    # Acerca c a ink (blanco o negro) lo justo para llegar a CONTRAST_MIN contra bg
+    k = 0.0
+    while _ratio(mix(c, ink, k), bg) < CONTRAST_MIN and k < 1:
+        k = min(1.0, k + 0.05)
+    return mix(c, ink, k)
+
+
+def boost_contrast(t):
+    # Copia del tema con el fondo de la terminal más oscuro (más claro en los temas
+    # claros), el texto más marcado y cada color ANSI, de sintaxis de Neovim y de texto
+    # de ui con contraste mínimo contra ese fondo. Los que ya se leen bien no cambian.
+    # No se tocan colors[0], [7] ni [15]: el negro y los blancos ANSI de cada paleta
+    # (en los claros, alguno es del color del fondo a propósito).
+    t = json.loads(json.dumps(t))
+    light = bool(t.get("light"))
+    edge, ink = ("#ffffff", "#000000") if light else ("#000000", "#ffffff")
+    term = t["term"]
+    bg = term["background"] = mix(term["background"], edge, CONTRAST_BG)
+    term["foreground"] = mix(term["foreground"], ink, CONTRAST_FG)
+    term["colors"] = [c if i in (0, 7, 15) else _legible(c, bg, ink) for i, c in enumerate(term["colors"])]
+    ui = t.get("ui", {})
+    if "fg" in ui:
+        ui["fg"] = mix(ui["fg"], ink, CONTRAST_FG)
+    for k in ("muted", "accent", "accent2", "ok", "red", "yellow", "cyan"):
+        if k in ui:
+            ui[k] = _legible(ui[k], bg, ink)
+    # De nvimColors.ui solo las de texto (panel, sel, visual... son fondos)
+    nv = t.get("nvimColors", {})
+    text = ("nontext", "special", "muted", "accent", "accent2", "red", "yellow",
+            "ok", "info", "hint")
+    for group, keys in ((nv.get("syn", {}), None), (nv.get("ui", {}), text)):
+        for k, c in group.items():
+            if keys is None or k in keys:
+                group[k] = _legible(c, bg, ink)
+    return t
+
+
 def saved_profile():
     # Lo que hay en ~/.local/state/desktop-profile, o None si no hay archivo
     return read_state(PROFILE_STATE)

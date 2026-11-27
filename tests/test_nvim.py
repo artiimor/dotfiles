@@ -78,7 +78,7 @@ def expected(t):
     o = nc.get("ui", {})
     exp = {(g, "fg"): nc.get("syn", {}).get(k) for k, g in SYN_GROUPS.items()}
     exp[("Normal", "fg")] = ui.get("fg")
-    exp[("LineNr", "fg")] = o.get("linenr") or o.get("nontext") or ui.get("muted")
+    exp[("LineNr", "fg")] = "#000000" if t.get("light") else "#ffffff"
     exp[("NonText", "fg")] = o.get("nontext") or ui.get("muted")
     exp[("Whitespace", "fg")] = o.get("whitespace") or ui.get("accentDim")
     exp[("SpecialKey", "fg")] = o.get("special") or ui.get("muted")
