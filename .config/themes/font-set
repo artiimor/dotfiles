@@ -40,7 +40,8 @@ def installed():
     fams = {}
     for line in out.splitlines():
         fam, _, spacing = line.partition("\t")
-        fams[fam] = fams.get(fam, False) or spacing == "100"
+        # 100 = mono, 90 = dual (mono con glifos dobles: Iosevka, Zed Mono)
+        fams[fam] = fams.get(fam, False) or spacing in ("90", "100")
     return fams
 
 

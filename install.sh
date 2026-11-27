@@ -51,6 +51,11 @@ TERMINAL=(
 )
 FONTS=(
 	ttf-jetbrains-mono-nerd otf-geist-mono-nerd inter-font cantarell-fonts
+	# Más Nerd Fonts monoespaciadas para font-set (Super+T, Fuente)
+	ttf-firacode-nerd ttf-hack-nerd ttf-cascadia-code-nerd ttf-iosevka-nerd
+	ttf-meslo-nerd ttf-sourcecodepro-nerd ttf-ubuntu-mono-nerd ttf-victor-mono-nerd
+	otf-commit-mono-nerd ttf-mononoki-nerd ttf-zed-mono-nerd ttf-ibmplex-mono-nerd
+	otf-monaspace-nerd ttf-0xproto-nerd ttf-martian-mono-nerd ttf-roboto-mono-nerd
 	noto-fonts noto-fonts-emoji noto-fonts-cjk
 )
 # Login y arranque
