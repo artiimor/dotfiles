@@ -198,6 +198,26 @@ def test_mac_light_sin_reiniciar(home):
     (home / "calls.log").unlink()
 
 
+def test_cambio_de_perfil_reinicia(home):
+    # Al cambiar de perfil de verdad sí se reinicia Quickshell desde Hyprland (con
+    # macshell en Modo Mac). El qs falso no lista instancias, así que no hay qs kill.
+    run(home, "theme-set", DARK[0])
+    run(home, "config-set", "mac")
+    run(home, "config-set", "default", reload=True)
+    assert profile(home) == "default"
+    log = read(home, "calls.log")
+    assert "hyprctl reload" in log and "hyprctl dispatch hl.dsp.exec_cmd('qs')" in log
+    assert "macshell')" not in log
+    (home / "calls.log").unlink()
+
+    run(home, "config-set", "mac", reload=True)
+    assert profile(home) == "mac"
+    log = read(home, "calls.log")
+    assert "hyprctl reload" in log and "hyprctl dispatch hl.dsp.exec_cmd('qs')" in log
+    assert f"hyprctl dispatch hl.dsp.exec_cmd('qs -p {home}/.config/quickshell/macshell')" in log
+    (home / "calls.log").unlink()
+
+
 def test_config_set_default(home):
     run(home, "theme-set", DARK[0])
     run(home, "config-set", "mac")
