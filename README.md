@@ -271,6 +271,7 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 | `rose-pine` | Rosé Pine | dark | rose-pine |
 | `rose-pine-dawn` | Rosé Pine Dawn | **light** | rose-pine-dawn |
 | `snow` | Snow (greyscale) | **light** | default |
+| `terminal-clasico` | Terminal Clásico (macOS Terminal "Basic" + classic Vim syntax) | **light** | vim |
 | `tokyo-night` | Tokyo Night | dark | tokyonight |
 
 `~/.config/themes/current` is a symlink to the active theme. What `theme-set` writes and when each app picks it up:

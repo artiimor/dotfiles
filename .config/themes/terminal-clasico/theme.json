@@ -1,0 +1,93 @@
+{
+  "name": "Terminal Clásico",
+  "light": true,
+  "ui": {
+    "bg": "#ececec",
+    "surface": "#ffffff",
+    "fg": "#000000",
+    "muted": "#7f7f7f",
+    "accent": "#0000b2",
+    "accent2": "#b200b2",
+    "accentDim": "#c8c8c8",
+    "ok": "#00a600",
+    "red": "#990000",
+    "yellow": "#999900",
+    "pink": "#b200b2",
+    "cyan": "#00a6b2",
+    "peach": "#c46a00",
+    "butter": "#999900",
+    "mint": "#00a600",
+    "border": "#7f7f7f",
+    "launcherBg": "#f5f5f5",
+    "launcherSel": "#d6d6e8"
+  },
+  "hypr": {
+    "border": [
+      "#0000b2",
+      "#b200b2"
+    ],
+    "inactive": "#c8c8c888",
+    "group": "#00a6b2"
+  },
+  "term": {
+    "background": "#ffffff",
+    "foreground": "#000000",
+    "cursor": "#7f7f7f",
+    "selection_background": "#b4d5fe",
+    "selection_foreground": "#000000",
+    "colors": [
+      "#000000",
+      "#990000",
+      "#00a600",
+      "#999900",
+      "#0000b2",
+      "#b200b2",
+      "#00a6b2",
+      "#bfbfbf",
+      "#666666",
+      "#e50000",
+      "#00d900",
+      "#e5e500",
+      "#0000ff",
+      "#e500e5",
+      "#00e5e5",
+      "#e5e5e5"
+    ]
+  },
+  "gtk": {
+    "accent": "#0000b2",
+    "accentBg": "#0000b2",
+    "accentFg": "#ffffff",
+    "window": "#ececec",
+    "fg": "#000000",
+    "view": "#ffffff",
+    "headerbar": "#e3e3e3",
+    "card": "#f5f5f5"
+  },
+  "nvim": "vim",
+  "nvimColors": {
+    "syn": {
+      "string": "#990000",
+      "number": "#990000",
+      "constant": "#990000",
+      "identifier": "#00a6b2",
+      "parameter": "#000000",
+      "fun": "#000000",
+      "statement": "#999900",
+      "keyword": "#999900",
+      "operator": "#000000",
+      "preproc": "#b200b2",
+      "type": "#00a600",
+      "regex": "#990000",
+      "punct": "#000000",
+      "comment": "#0000b2",
+      "special1": "#b200b2",
+      "special2": "#b200b2",
+      "special3": "#b200b2"
+    },
+    "ui": {
+      "linenr": "#999900",
+      "nontext": "#0000ff"
+    }
+  }
+}
