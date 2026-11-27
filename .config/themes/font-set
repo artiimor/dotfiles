@@ -46,8 +46,10 @@ def installed():
 
 
 def families(fams):
-    # Las Nerd Fonts monoespaciadas, sin las variantes "... Nerd Font Mono/Propo"
-    return sorted(f for f, mono in fams.items() if mono and f.endswith(" Nerd Font"))
+    # Las Nerd Fonts monoespaciadas, sin las variantes "... Nerd Font Mono/Propo".
+    # Alguna (Monaco parcheada) no declara spacing: vale si su variante Mono es mono
+    return sorted(f for f, mono in fams.items()
+                  if f.endswith(" Nerd Font") and (mono or fams.get(f"{f} Mono")))
 
 
 def apply(fam, fams):
