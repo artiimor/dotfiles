@@ -118,6 +118,8 @@ KEEP=(hypr/config/monitors.lua hypr/config/variables.lua hypr/config/inputs.lua 
 backup_sys() {
 	local f
 	for f; do
+		# sudo solo para leer: la copia es del usuario
+		# shellcheck disable=SC2024
 		[[ -e "$f" ]] && mkdir -p "$BACKUP/system${f%/*}" && sudo cat "$f" >"$BACKUP/system$f"
 	done
 	return 0

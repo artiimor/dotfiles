@@ -30,6 +30,7 @@ git clone https://github.com/artiimor/dotfiles.git ~/dotfiles && ~/dotfiles/inst
 - [Languages](#languages)
 - [Updating and re-applying](#updating-and-re-applying)
 - [Uninstalling / reverting](#uninstalling--reverting)
+- [Tests](#tests)
 - [Troubleshooting](#troubleshooting)
 - [Credits and third-party assets](#credits-and-third-party-assets)
 
@@ -494,6 +495,7 @@ dotfiles/
 │   ├── etc/NetworkManager/       dispatcher script for the automatic time zone
 │   ├── etc/security/faillock.conf  10 password attempts before lockout
 │   └── usr/share/                greeter background, Plymouth "sobrio" theme
+├── tests/                        pytest tests + run.sh (linters); CI in .github/workflows/ci.yml
 └── screenshots/                  the images in this README
 ```
 
@@ -573,6 +575,18 @@ There's no uninstall script. To go back:
    - Automatic time zone: `sudo rm /etc/NetworkManager/dispatcher.d/90-timezone`.
    - Password attempts: restore `/etc/security/faillock.conf` from the backup (or set `deny = 3` again).
 4. Remove the state files in `~/.local/state/` listed in [Repository structure](#repository-structure).
+
+## Tests
+
+`tests/run.sh` runs the linters and the `pytest` tests in `tests/`; CI (`.github/workflows/ci.yml`)
+runs it in an Arch container on every push and pull request.
+
+- `shellcheck` (`-S warning`, options in `.shellcheckrc`): `install.sh`, `.bashrc` and the shell scripts.
+- `luac -p` (Hyprland) and `luajit -bl` (Neovim) for syntax, plus `luacheck` for undefined globals (`.luacheckrc`).
+- `qmllint`: QML syntax only, since it can't resolve Quickshell's types and `import qs`.
+
+Missing tools are skipped with a notice locally, and fail with `CI=true`.
+The Neovim tests need mini.nvim (the vim.pack copy or a checkout in `MINI_PATH`); without it they are skipped.
 
 ## Troubleshooting
 

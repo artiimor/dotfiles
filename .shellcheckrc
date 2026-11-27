@@ -1,0 +1,7 @@
+# shellcheck: tests/run.sh lo lanza con -S warning (sin avisos de estilo).
+# .bashrc, .profile y los archivos de entorno no llevan shebang
+shell=bash
+# Los source de rutas variables (~/.cargo/env, temas...) no se pueden seguir
+disable=SC1090,SC1091
+# Textos visibles con comillas tipográficas y "~/..." a propósito
+disable=SC1111,SC2088
