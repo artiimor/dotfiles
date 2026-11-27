@@ -85,6 +85,8 @@ for _, m in ipairs(floatApps) do hl.window_rule({ match = m, float = true }) end
 hl.window_rule({ match = { class = "^(org.pulseaudio.pavucontrol)$" }, float = true, size = { 640, 420 }, move = { "monitor_w - 650", 50 } })
 -- "Network Settings…" from the macshell wifi panel (macOS-style window)
 hl.window_rule({ match = { class = "^(org\\.quickshell)$", title = "^(Network)$" }, float = true, size = { 560, 660 }, center = true })
+-- "Appearance" window from macshell (Super+M → Style in Mac mode)
+hl.window_rule({ match = { class = "^(org\\.quickshell)$", title = "^(Appearance)$" }, float = true, size = { 720, 560 }, center = true })
 
 -- Float Common Modals
 local modalMatches = {

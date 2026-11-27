@@ -8,6 +8,7 @@ import Quickshell.Networking
 ColumnLayout {
     id: cc
     signal openWifi()
+    signal openAppearance()
     property bool dnd: false
     signal toggleDnd()
 
@@ -190,5 +191,13 @@ ColumnLayout {
                 }
             }
         }
+    }
+
+    Divider {}
+
+    MenuRow {
+        Layout.fillWidth: true
+        text: I18n.tr("Appearance Settings…")
+        onTriggered: cc.openAppearance()
     }
 }

@@ -52,7 +52,7 @@ double-click an empty spot on it to toggle a solid background (remembered across
 
 ![Desktop mode in Normal mode: floating windows with macOS-style titlebars and the dock](screenshots/desktop-mode.png)
 
-**Super+Alt+D** turns the current workspace into a floating desktop: macOS-style titlebars, minimize (**Super+M**),
+**Super+Alt+D** turns the current workspace into a floating desktop: macOS-style titlebars, minimize,
 edge snapping and an auto-hiding dock at the bottom. The workspace number gets a box in the bar.
 [Details](#desktop-mode-floating-workspaces).
 
@@ -107,6 +107,9 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 - **Monospace font picker** (**Super+T**, "Font" tab, `font-set`) for kitty, Ghostty and the Normal mode titlebars.
 - **Increase contrast** (`contrast-set`, Control Center tile in Mac mode, bar button in Normal mode): opaque, thicker borders, no blur, purer text and GTK high contrast.
 - **Per-theme backgrounds** (**Super+Ctrl+B**, `background-set`), remembered per theme.
+- **Main menu** (**Super+M**), like Omarchy's. For now it has *Style*: theme, font, background, profile and increase
+  contrast in one place; in Mac mode Super+M opens macshell's Appearance window directly. Navigate with the arrows or hjkl:
+  Right / l opens a submenu, Left / h goes back.
 - **Terminal setup**: Ghostty, bash + starship, a minimal Neovim built on mini.nvim (colors generated from the theme with
   mini.hues; LazyVim, available as `lazyvim`, shares the same colors and keeps `miami` and `basalt` colorschemes),
   btop, eza/bat/fzf aliases, fastfetch with an ASCII Pepe tinted with the theme accent.
@@ -348,7 +351,7 @@ is gone), the first one in the list is used.
   Super+Alt+D makes it floating; in Mac mode every numbered workspace starts floating and Super+Alt+D makes it tiling.
   Desktop-mode workspaces have their number inside a box in the bar.
 - New windows open floating, centered, at 65% of the screen.
-- **Super+M** (or the middle titlebar button) minimizes the window to `special:minimized`.
+- The middle titlebar button minimizes the window to `special:minimized`.
 - **Dock** (auto-hides, hover the bottom edge): click a window to bring it to the front, click the active one to
   minimize it, click a minimized one to restore it.
 - **Snapping**: drop a window against the left or right edge for half the screen, or against the top to maximize.
@@ -393,6 +396,7 @@ left **Alt** key (see [keyd](#keyboard-remapping-keyd)).
 | Super+Shift+T | Profile menu (Mac mode / Normal mode) |
 | Super+Ctrl+B | Background picker |
 | Super+Ctrl+Shift+B | Next background |
+| Super+M | Main menu (Style: theme, font, background, profile, contrast); Appearance window in Mac mode |
 | Super+/ | Keybinding cheatsheet |
 | Super+Shift+P | Screenshot of a region (hyprshot) |
 | Super+Ctrl+L | Lock screen |
@@ -410,7 +414,6 @@ left **Alt** key (see [keyd](#keyboard-remapping-keyd)).
 | Super+Shift+M | Maximize (toggle) |
 | Super+Ctrl+J | Toggle split direction |
 | Super+Alt+D | Toggle desktop mode on this workspace |
-| Super+M | Minimize |
 | Alt+Tab | Next window (brings it to the front) |
 | Super+Left drag | Move window |
 | Super+Right drag | Resize window |

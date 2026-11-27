@@ -37,6 +37,7 @@
 #   Hyprland     hypr/config/profile.lua (decoración, hyprbars,     (hyprctl reload)
 #                atajos y autostart)
 #   Quickshell   shell.qml (su barra/notificaciones o las de macshell) (se reinicia qs)
+#                y Theme.qml de la raíz y de macshell (claro u oscuro)  (al momento)
 #
 # y este script escribe además (al abrir cada app):
 #
@@ -318,29 +319,24 @@ def apply(name, notify=True):
 def sync_theme():
     # La llama theme-set después de escribir los archivos del nuevo tema (ya con
     # el enlace current cambiado). En Modo Mac pasa a mac-light o a mac si cambia
-    # la claridad: reinicia Quickshell y hace hyprctl reload (sin aviso: ya avisa
-    # theme-set). Si no, y siempre en Modo normal, vuelve a poner GTK (color-scheme
-    # incluido), Qt e iconos claros u oscuros. Devuelve True si ha reiniciado Quickshell.
+    # la claridad, sin reiniciar Quickshell: macshell y el Theme.qml de la raíz
+    # vigilan el archivo del perfil, y Hyprland y Quickshell los recarga theme-set.
+    # Si no, y siempre en Modo normal, vuelve a poner GTK (color-scheme incluido),
+    # Qt e iconos claros u oscuros.
     _lock = lock()
     cur = current()
     if cur in MAC_PROFILES:
         want = resolve("mac")
         changed = want != cur or saved() is None
-        if has_macshell() and changed:
-            apply(want, notify=False)
-            return True
-        # Misma claridad, o sin macshell (Mac se ve como Modo normal en Hyprland y
-        # Quickshell): no hace falta reiniciar nada, solo guardar el perfil y poner
-        # GTK/Qt/iconos. El gtk.css solo si cambia el perfil: si no, ya está bien
-        # (el del tema lo ha escrito theme-set; el claro fijo de mac-light no cambia)
+        # El gtk.css solo si cambia el perfil: si no, ya está bien (el del tema lo
+        # ha escrito theme-set; el claro fijo de mac-light no cambia)
         if changed:
             write_state(want)
         write_files(want, css=changed)
-        return False
+        return
     if saved() is None:
         write_state(cur)
     write_files(cur, css=False)  # el gtk.css del tema ya lo ha escrito theme-set
-    return False
 
 
 def main():

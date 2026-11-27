@@ -134,6 +134,9 @@ hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("qs ipc call launcher configs
 hl.bind(mainMod .. " + CTRL + B", hl.dsp.exec_cmd("qs ipc call launcher backgrounds"), { description = "Wallpaper" })
 hl.bind(mainMod .. " + CTRL + SHIFT + B", hl.dsp.exec_cmd("~/.config/themes/background-set --next"), { description = "Next wallpaper" })
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("qs ipc call launcher keys"), { description = "Shortcut cheat sheet" })
+-- Menú principal, como el de Omarchy (Estilo → tema, fuente, fondo...); en el Modo Mac
+-- abre directamente la ventana Appearance de macshell
+hl.bind(mainMod .. " + M", hl.dsp.exec_cmd(shellCmd("appearance open", "qs ipc call launcher menu")), { description = PROFILE_MAC and "Appearance" or "Menu" })
 
 ---------------------------
 ---- HARDWARE CONTROLS ----

@@ -23,7 +23,8 @@ ShellRoot {
     //              macshell (./macshell; lo arranca autostart.lua / config-set)
     //   "default"  la barra y las notificaciones de aquí
     // Sin archivo: "mac" si está macshell. "mac" sin macshell = "default".
-    // config-set reinicia qs al cambiar de perfil, así que basta leerlo al arrancar.
+    // config-set reinicia qs al pasar de Modo Mac a normal o al revés: Theme.mac es el
+    // del arranque (de mac a mac-light solo cambian los colores, sin reiniciar).
     // Lo lee Theme (Theme.profile, Theme.mac). Hasta que acabe la comprobación
     // (Theme.profileReady) no se crea la barra ni las notificaciones de aquí
     // (si no, se quedarían con el servidor de notificaciones)

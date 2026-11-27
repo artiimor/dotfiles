@@ -11,6 +11,10 @@
 //   backgrounds fondo de pantalla del tema actual (Super+Ctrl+B)
 //   configs     perfil del escritorio: Modo Mac / Modo normal  (Super+Shift+T)
 //   keys        chuleta de atajos de Hyprland     (Super+?)
+//   menu        menú principal, como el de Omarchy (Super+M)
+//   style       estilo: tema, fuente, fondo, config y contraste (desde menu)
+//   themeTypes  temas oscuros o claros (desde style)
+//               (los submenús se abren en la misma ventana; ←/h vuelve al anterior)
 //   dmenu       menú genérico para scripts: lo usa scripts/dmenu-qs
 //               (wifi con networkmanager_dmenu, bluetooth con bzmenu, webapp)
 pragma Singleton
@@ -56,6 +60,26 @@ Singleton {
         backgrounds: { width: 420, prompt: I18n.tr("Background"), noSearch: true, proc: backgroundList },
         configs: { width: 260, prompt: "Config", noSearch: true, proc: configList },
         keys: { width: 520, prompt: I18n.tr("Shortcuts"), proc: binds, showSub: true },
+        // Menú principal, estilo y tipos de tema: cada fila abre el menú `data`
+        // (con `openTab`, solo esa pestaña, sin buscador ni barra de pestañas)
+        // salvo Estilo en Modo Mac, que abre la ventana Appearance de macshell,
+        // y el contraste, que se cambia con contrast-set
+        menu: { width: 260, prompt: I18n.tr("Menu"), noSearch: true, showSub: true, items: () => [
+            { text: I18n.tr("Style"), glyph: String.fromCodePoint(0xF00E3), sub: "›", data: Theme.mac ? "appearance" : "style" }
+        ] },
+        style: { width: 300, prompt: I18n.tr("Style"), noSearch: true, showSub: true, items: () => [
+            { text: I18n.tr("Theme"), glyph: String.fromCodePoint(0xF03D8), sub: "›", data: "themeTypes" },
+            { text: I18n.tr("Font"), glyph: String.fromCodePoint(0xF06D6), sub: "›", data: "themes", openTab: 2 },
+            { text: I18n.tr("Background"), glyph: String.fromCodePoint(0xF02E9), sub: "›", data: "backgrounds" },
+            { text: I18n.tr("Mode"), glyph: String.fromCodePoint(Theme.mac ? 0xF0035 : 0xF0379),
+              sub: (Theme.mac ? I18n.tr("Mac mode") : I18n.tr("Normal mode")) + "  ›", data: "configs" },
+            { text: I18n.tr("Increase contrast"), glyph: String.fromCodePoint(0xF0197),
+              sub: Theme.contrast ? I18n.tr("On") : I18n.tr("Off"), data: "contrast" }
+        ] },
+        themeTypes: { width: 260, prompt: I18n.tr("Theme"), noSearch: true, showSub: true, items: () => [
+            { text: I18n.tr("Dark"), glyph: String.fromCodePoint(0xF0594), sub: "›", data: "themes", openTab: 0 },
+            { text: I18n.tr("Light"), glyph: String.fromCodePoint(0xF0599), sub: "›", data: "themes", openTab: 1 }
+        ] },
         profiles: { prompt: I18n.tr("Power profile"), items: () => {
             const mark = v => root.curMark(PowerProfiles.profile === v);
             return [
@@ -68,29 +92,41 @@ Singleton {
     readonly property var modeInfo: (mode === "dmenu" ? dmenuInfo : modes[mode]) ?? {}
     readonly property int width: modeInfo.width ?? 320
     readonly property bool centered: !!modeInfo.width
-    readonly property bool noSearch: !!modeInfo.noSearch
+    readonly property bool noSearch: !!modeInfo.noSearch || fixedTab
     readonly property bool showSub: !!modeInfo.showSub
     readonly property var tabs: modeInfo.tabs ?? []
     readonly property string tabPrompt: (modeInfo.tabPrompts ?? [])[tab] ?? ""
     property int tab: 0  // pestaña visible (índice en `tabs`)
+    property int openTab: -1  // pestaña pedida al abrir (menú de estilo); -1, la de siempre
+    readonly property bool fixedTab: openTab >= 0  // solo esa pestaña: sin buscador ni barra de pestañas
+    property int startIndex: 0  // fila elegida al abrir; al volver, la de la que se salió
 
-    // Abre un modo, o lo cierra si ya estaba abierto (como `pkill wofi || wofi`)
+    // Menús de los que se ha venido ({ mode, index }), para volver con ←/h.
+    // Se vacía al abrir un modo con toggle (atajo o IPC) o llegar un dmenu
+    property var history: []
+
+    // Abre un modo, o lo cierra si ya estaba abierto (como `pkill wofi || wofi`).
+    // El menú principal también se cierra si está abierto uno de sus submenús
     function toggle(m, float) {
-        if (open && mode === m && floatLaunch === !!float)
+        if (open && floatLaunch === !!float && (mode === m || (m === "menu" && history.length))) {
             close();
-        else
+        } else {
+            history = [];
             show(m, float);
+        }
     }
 
     // Modo "apps" con floatLaunch (Super+Alt+Espacio): la app elegida se abre flotante
     property bool floatLaunch: false
 
-    function show(m, float) {
+    function show(m, float, t) {
         cancelDmenu();
         mode = m;
         floatLaunch = !!float;
         password = false;
-        tab = 0;
+        openTab = t ?? -1;
+        tab = Math.max(0, openTab);
+        startIndex = 0;
         const d = modes[m];
         prompt = d.prompt;
         if (d.proc) {
@@ -106,6 +142,19 @@ Singleton {
     function close() {
         cancelDmenu();
         open = false;
+    }
+
+    // Si la fila abre un submenú en la misma ventana (menú, estilo y tipos de tema)
+    function opensMenu(item) {
+        return ["menu", "style", "themeTypes"].includes(mode) && !!item && !!modes[item.data];
+    }
+
+    // Vuelve al menú anterior, en la fila de la que se salió
+    function back() {
+        const h = history[history.length - 1];
+        history = history.slice(0, -1);
+        show(h.mode);
+        startIndex = h.index;
     }
 
     // Filas que llegan de un proceso o archivo: se descartan si mientras tanto
@@ -131,6 +180,12 @@ Singleton {
         }
         if (!item)
             return;
+        // Menú, estilo y tipos de tema: el submenú se abre en la misma ventana, sin cerrarla
+        if (opensMenu(item)) {
+            history = history.concat({ mode: m, index: items.indexOf(item) });
+            show(item.data, false, item.openTab);
+            return;
+        }
         open = false;
         // keys: solo es para mirar, elegir una fila cierra la chuleta
 
@@ -162,8 +217,8 @@ Singleton {
         } else if (m === "emoji") {
             copyAndPaste(`printf '%s' "$1" | wl-copy`, item.glyph);
         } else if (m === "themes") {
-            // theme-set puede reiniciar Quickshell (Modo Mac al pasar de tema claro a
-            // oscuro, ver config-set): setsid para que no muera con él
+            // theme-set no reinicia Quickshell (tampoco en Modo Mac entre tema claro y
+            // oscuro): setsid solo lo separa de este proceso
             Quickshell.execDetached(["setsid", "-f", root.themesDir + (item.font ? "/font-set" : "/theme-set"), item.data]);
         } else if (m === "backgrounds") {
             // "+": abre en Dolphin la carpeta de fondos del tema (current es un enlace al tema)
@@ -173,6 +228,10 @@ Singleton {
         } else if (m === "configs") {
             // config-set reinicia Quickshell (este proceso incluido): setsid para que no muera con él
             Quickshell.execDetached(["setsid", "-f", root.themesDir + "/config-set", item.data]);
+        } else if (m === "menu") {
+            Quickshell.execDetached(["qs", "-p", Quickshell.shellDir + "/macshell", "ipc", "call", "appearance", "open"]);
+        } else if (m === "style") {
+            Quickshell.execDetached([root.themesDir + "/contrast-set", "toggle"]);
         }
     }
 
@@ -263,7 +322,8 @@ Singleton {
     // dos pestañas, oscuros y claros; se abre en la del tema activo. La tercera,
     // Fuente, es la fuente monoespaciada (terminales, hyprbars...), aparte del
     // tema: la pone font-set, y cada fila se escribe con su fuente. Cada pestaña
-    // tiene su propia búsqueda (ver LauncherWindow.qml).
+    // tiene su propia búsqueda (ver LauncherWindow.qml). Desde el menú de estilo
+    // se abre en una sola pestaña fija, sin buscador ni pestañas (`fixedTab`).
     readonly property string themesDir: Quickshell.env("HOME") + "/.config/themes"
 
     // Nerd Fonts cuyo nombre no es el de la fuente original (licencia): para
@@ -317,7 +377,9 @@ Singleton {
                         data: t.dir
                     };
                 });
-                root.tab = list.find(i => i.cur && !i.font)?.tab ?? 0;
+                // Solo si sigue abierto el menú de temas (con ←/h se puede haber vuelto ya al de estilo)
+                if (root.open && root.mode === "themes")
+                    root.tab = root.openTab >= 0 ? root.openTab : list.find(i => i.cur && !i.font)?.tab ?? 0;
                 root.loaded("themes", list);
             }
         }
@@ -374,6 +436,7 @@ Singleton {
         cancelDmenu();
         dmenuDir = dir;
         dmenuInfo = center ? { width: 420 } : {};
+        history = [];
         mode = "dmenu";
         prompt = p || I18n.tr("Choose");
         password = pass;
@@ -408,6 +471,8 @@ Singleton {
         function backgrounds(): void { root.toggle("backgrounds"); }
         function configs(): void { root.toggle("configs"); }
         function keys(): void { root.toggle("keys"); }
+        function menu(): void { root.toggle("menu"); }
+        function style(): void { root.toggle("style"); }
         function close(): void { root.close(); }
         function dmenu(dir: string, prompt: string, password: bool, center: bool): void { root.showDmenu(dir, prompt, password, center); }
     }

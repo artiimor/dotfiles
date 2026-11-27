@@ -11,7 +11,10 @@
 // Teclas: escribir filtra · ↑/↓ o Ctrl+K/J o Tab moverse · Enter elegir · Esc cerrar
 // Clic fuera también cierra. Con pestañas (temas: Oscuros / Claros / Fuente), Tab, Shift+Tab
 // y ←/→ cambian de pestaña y ↑/↓ se mueven. Cada pestaña tiene su búsqueda: al
-// volver a una sigue lo que escribiste en ella.
+// volver a una sigue lo que escribiste en ella. En los submenús del menú principal,
+// → entra en la fila si abre otro menú y ← vuelve al anterior (con pestañas, desde la
+// primera). En los menús sin buscador, h j k l hacen de flechas. Con una pestaña fija
+// (temas desde el menú de estilo) solo se ve la lista: ni buscador ni pestañas.
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -109,8 +112,10 @@ PanelWindow {
     // si está en la lista. Con callLater: si no, el ListView, que aún no ha
     // cogido la lista nueva, la vuelve a poner en la primera fila al cogerla
     onFilteredChanged: Qt.callLater(selectDefault)
+    // (si no hay actual, la de Launcher.startIndex: al volver a un menú, la de la que se salió)
     function selectDefault() {
-        list.currentIndex = search.text.trim() ? 0 : Math.max(0, filtered.findIndex(it => it.cur));
+        const cur = filtered.findIndex(it => it.cur);
+        list.currentIndex = search.text.trim() ? 0 : cur >= 0 ? cur : Launcher.startIndex;
     }
 
     function accept() {
@@ -188,22 +193,32 @@ PanelWindow {
 
                     Keys.onPressed: e => {
                         const ctrl = e.modifiers & Qt.ControlModifier;
-                        const n = Launcher.tabs.length;
-                        if (n && (e.key === Qt.Key_Tab || e.key === Qt.Key_Right))
+                        const n = Launcher.fixedTab ? 0 : Launcher.tabs.length;
+                        // Sin buscador, h j k l son ← ↓ ↑ →
+                        const key = Launcher.noSearch && !ctrl
+                            ? ({ [Qt.Key_H]: Qt.Key_Left, [Qt.Key_J]: Qt.Key_Down, [Qt.Key_K]: Qt.Key_Up, [Qt.Key_L]: Qt.Key_Right })[e.key] ?? e.key
+                            : e.key;
+                        // ← en la primera pestaña (o sin pestañas) vuelve al menú anterior
+                        const back = key === Qt.Key_Left && Launcher.history.length > 0 && (!n || Launcher.tab === 0);
+                        if (n && (key === Qt.Key_Tab || key === Qt.Key_Right))
                             Launcher.tab = (Launcher.tab + 1) % n;
-                        else if (n && (e.key === Qt.Key_Backtab || e.key === Qt.Key_Left))
+                        else if (back)
+                            Launcher.back();
+                        else if (n && (key === Qt.Key_Backtab || key === Qt.Key_Left))
                             Launcher.tab = (Launcher.tab + n - 1) % n;
-                        else if (e.key === Qt.Key_Escape)
-                            Launcher.close();
-                        else if (e.key === Qt.Key_Return || e.key === Qt.Key_Enter)
+                        else if (key === Qt.Key_Right && Launcher.opensMenu(win.filtered[list.currentIndex]))
                             win.accept();
-                        else if (e.key === Qt.Key_Down || e.key === Qt.Key_Tab || (ctrl && e.key === Qt.Key_J))
+                        else if (key === Qt.Key_Escape)
+                            Launcher.close();
+                        else if (key === Qt.Key_Return || key === Qt.Key_Enter)
+                            win.accept();
+                        else if (key === Qt.Key_Down || key === Qt.Key_Tab || (ctrl && key === Qt.Key_J))
                             list.incrementCurrentIndex();
-                        else if (e.key === Qt.Key_Up || e.key === Qt.Key_Backtab || (ctrl && e.key === Qt.Key_K))
+                        else if (key === Qt.Key_Up || key === Qt.Key_Backtab || (ctrl && key === Qt.Key_K))
                             list.decrementCurrentIndex();
-                        else if (e.key === Qt.Key_PageDown)
+                        else if (key === Qt.Key_PageDown)
                             list.currentIndex = Math.min(list.count - 1, list.currentIndex + win.maxRows);
-                        else if (e.key === Qt.Key_PageUp)
+                        else if (key === Qt.Key_PageUp)
                             list.currentIndex = Math.max(0, list.currentIndex - win.maxRows);
                         else
                             return;
@@ -216,7 +231,7 @@ PanelWindow {
             // La elegida, en negrita con una raya del acento debajo; en mac, una
             // píldora gris como los controles segmentados de macOS
             RowLayout {
-                visible: Launcher.tabs.length > 0
+                visible: Launcher.tabs.length > 0 && !Launcher.fixedTab
                 Layout.fillWidth: true
                 Layout.bottomMargin: 8
                 spacing: 4
@@ -269,8 +284,10 @@ PanelWindow {
             ListView {
                 id: list
                 Layout.fillWidth: true
-                // Alto fijo según los items del modo (sin filtrar): no encoge al escribir
-                implicitHeight: Math.min(Launcher.items.length, win.maxRows) * win.rowHeight
+                // Alto fijo según los items del modo (sin filtrar): no encoge al escribir.
+                // Con una pestaña fija (sin buscador), los de esa pestaña (mínimo una fila,
+                // para que quepa el "nada por aquí")
+                implicitHeight: Math.min(Launcher.fixedTab ? Math.max(1, win.filtered.length) : Launcher.items.length, win.maxRows) * win.rowHeight
                 visible: Launcher.items.length > 0
                 clip: true
                 model: win.filtered
@@ -292,6 +309,7 @@ PanelWindow {
                         radius: Theme.mac ? 8 : 0
                         color: row.selected ? Theme.launcherSel : mouse.containsMouse ? Theme.withAlpha(Theme.launcherSel, 0.5) : "transparent"
                     }
+
 
                     RowLayout {
                         anchors.fill: parent

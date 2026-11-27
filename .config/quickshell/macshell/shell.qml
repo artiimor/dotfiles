@@ -110,6 +110,17 @@ ShellRoot {
     LazyLoader { id: netLoader; NetworkSettings {} }
     function openNetwork() { netLoader.active = true; netLoader.item.show(); }
 
+    // qs -p ~/.config/quickshell/macshell ipc call appearance open (Super+M → Estilo)
+    IpcHandler {
+        target: "appearance"
+        function open(): void { root.openAppearance(); }
+        function close(): void { if (appearanceLoader.item) appearanceLoader.item.visible = false; }
+    }
+
+    // ventana de Apariencia, igual que la de Red
+    LazyLoader { id: appearanceLoader; AppearanceSettings {} }
+    function openAppearance() { closeAll(); appearanceLoader.active = true; appearanceLoader.item.show(); }
+
     // ───────────── barra superior ─────────────
     PanelWindow {
         id: bar
@@ -393,6 +404,7 @@ ShellRoot {
                 dnd: root.dnd
                 onToggleDnd: root.dnd = !root.dnd
                 onOpenWifi: root.popupKind = "wifi"
+                onOpenAppearance: root.openAppearance()
             }
         }
         Component { id: wifiComp; WifiPanel { onDone: root.closeAll(); onOpenSettings: root.openNetwork() } }

@@ -29,8 +29,8 @@
 #
 # Temas claros: "light": true en theme.json (sin él, oscuro). Al cambiar de tema
 # se llama a sync_theme() de config-set: en Modo Mac pasa a Mac claro u oscuro
-# (reinicia Quickshell) y en Modo normal pone GTK e iconos claros u oscuros.
-# Desde el menú (Super+T) se lanza con setsid, para que ese reinicio no lo mate.
+# (al momento, sin reiniciar Quickshell) y en Modo normal pone GTK e iconos claros
+# u oscuros.
 #
 # Los archivos generados empiezan con "Generado por theme-set": no los edites,
 # cambia el theme.json del tema y ejecuta `theme-set --reapply`.
@@ -43,7 +43,6 @@ import re
 import os
 import subprocess
 import sys
-import time
 
 sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
 from themelib import (CONF, CURRENT, HOME, NO_RELOAD, QUIET, THEMES, current_theme,
@@ -310,18 +309,14 @@ GENERATORS = [gen_hyprland, gen_hyprlock, gen_kitty, gen_ghostty, gen_btop, gen_
 # ── Avisar a los programas que ya están abiertos ─────────────
 
 def sync_profile():
-    # config-set ajusta el perfil a la claridad del tema (ver su sync_theme).
-    # True si ha reiniciado Quickshell y recargado Hyprland
-    path = f"{THEMES}/config-set"
-    if not os.path.isfile(path):
-        return False
-    return load_script("config-set").sync_theme()
+    # config-set ajusta el perfil a la claridad del tema (ver su sync_theme)
+    if os.path.isfile(f"{THEMES}/config-set"):
+        load_script("config-set").sync_theme()
 
 
-def reload_all(restarted=False):
-    if not restarted:  # si config-set ha reiniciado qs y Hyprland, ya leen el tema nuevo
-        qs_theme_reload()
-        run_quiet(["hyprctl", "reload"])
+def reload_all():
+    qs_theme_reload()
+    run_quiet(["hyprctl", "reload"])  # también hyprbars y sombras de mac/mac-light
 
 
 def reload_nvim(t):
@@ -356,14 +351,10 @@ def apply(name):
     os.replace(tmp, CURRENT)
     for gen in GENERATORS:
         gen(name, t)
-    # Lo primero tras escribir los archivos: así las terminales cambian a la vez que
-    # el resto y no esperan al reinicio de Quickshell de sync_profile
     reload_terminals()
     reload_nvim(t)
-    restarted = sync_profile()
-    reload_all(restarted)
-    if restarted and not NO_RELOAD:
-        time.sleep(1.5)  # que el Quickshell nuevo tenga ya el servidor de notificaciones
+    sync_profile()  # antes de recargar: Hyprland lee el perfil nuevo
+    reload_all()
     notify(tr("Theme"), tr("Color theme"), t.get("name", name))
 
 

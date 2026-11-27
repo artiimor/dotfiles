@@ -6,12 +6,14 @@ import Quickshell.Io
 Singleton {
     id: theme
     // Aspecto claro para el perfil de escritorio "mac-light" (~/.config/themes/config-set
-    // mac-light en los dotfiles), solo en Hyprland. config-set reinicia macshell al
-    // cambiar de perfil, así que basta con leerlo al arrancar.
+    // mac-light en los dotfiles), solo en Hyprland. theme-set pasa de mac a mac-light y al
+    // revés sin reiniciar macshell (con renombrado atómico): se vigila el archivo.
     property FileView _profile: FileView {
         path: Quickshell.env("HOME") + "/.local/state/desktop-profile"
         blockLoading: true
+        watchChanges: true
         printErrors: false
+        onFileChanged: reload()
     }
     readonly property bool light: _profile.loaded && _profile.text().trim() === "mac-light"
 

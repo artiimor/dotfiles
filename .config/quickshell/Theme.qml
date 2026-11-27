@@ -33,17 +33,28 @@ Singleton {
         }
     }
 
-    // Perfil del escritorio (lo escribe config-set, que reinicia qs al cambiarlo):
-    // en "mac" y "mac-light" (Modo Mac con un tema oscuro o claro; con macshell
-    // instalado) las ventanas de aquí que se siguen usando (lanzador y sus menús,
-    // OSD, polkit, dock) copian el aspecto de macshell en vez del tema de colores
+    // Perfil del escritorio (lo escribe config-set): en "mac" y "mac-light" (Modo Mac
+    // con un tema oscuro o claro; con macshell instalado) las ventanas de aquí que se
+    // siguen usando (lanzador y sus menús, OSD, polkit, dock) copian el aspecto de
+    // macshell en vez del tema de colores.
     // Sin archivo: "mac" si está macshell. "mac" sin macshell = "default".
+    // Se vigila porque theme-set pasa de "mac" a "mac-light" y al revés sin reiniciar qs
+    // (macLight cambia al momento). Pero mac (qué barra y qué notificaciones hay) se
+    // queda con el valor del arranque: de Modo Mac a normal o al revés config-set
+    // reinicia qs, y si cambiara antes la barra y el servidor de notificaciones de aquí
+    // aparecerían mientras macshell sigue viva
     FileView {
         id: profileFile
         path: Quickshell.env("HOME") + "/.local/state/desktop-profile"
         blockLoading: true
         printErrors: false
-        onLoaded: root.profileChecked = true
+        watchChanges: true
+        onFileChanged: reload()
+        onLoaded: {
+            if (!root.profileChecked)
+                root.startProfile = text().trim();
+            root.profileChecked = true;
+        }
         onLoadFailed: root.profileChecked = true
     }
     FileView {
@@ -61,7 +72,8 @@ Singleton {
     property bool macChecked: false
     readonly property bool profileReady: profileChecked && macChecked
     readonly property string profile: profileFile.loaded ? profileFile.text().trim() : ""
-    readonly property bool mac: macshellFile.loaded && profile !== "default"
+    property string startProfile: ""  // el perfil al arrancar ("" sin archivo)
+    readonly property bool mac: macshellFile.loaded && startProfile !== "default"
     readonly property bool macLight: mac && profile === "mac-light"
 
     // Aumentar contraste ("1" en ~/.local/state/increased-contrast; lo cambia

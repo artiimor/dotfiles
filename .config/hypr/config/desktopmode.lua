@@ -1,7 +1,7 @@
 -- Modo escritorio por workspace: las ventanas flotan,
 -- se pueden minimizar y Quickshell enseña un dock abajo.
 --   Super+Alt+D   activar/desactivar en el workspace actual
---   Super+M       minimizar (va a special:minimized; se recupera desde el dock)
+--   minimizar con el botón de hyprbars (va a special:minimized; se recupera desde el dock)
 --
 -- Qué workspaces flotan depende del perfil (profile.lua):
 --   mac / mac-light  todos los numerados flotan; Super+Alt+D pasa uno a tiling
@@ -16,7 +16,7 @@ local stateFile = STATE .. "desktop-workspaces"
 local exceptionsFile = STATE .. (PROFILE_MAC and "desktop-exceptions-mac" or "desktop-workspaces-default")
 local appliedFile = STATE .. "desktop-applied-profile"
 local MAX_WS = 99 -- workspaces numerados que se apuntan como flotantes en mac (monitor*10 + n)
--- Minimizar = mover a este special sin seguirla (Super+M y el botón de hyprbars)
+-- Minimizar = mover a este special sin seguirla (botón de hyprbars)
 local MINIMIZED = "special:minimized"
 
 local function readLines(path)
@@ -208,8 +208,6 @@ if not readLines(appliedFile)[family] then
 	end
 	writeLines(appliedFile, { family })
 end
-
-hl.bind("SUPER + M", hl.dsp.window.move({ workspace = MINIMIZED, follow = false }), { description = "Minimize" })
 
 -- Snap como macOS: al soltar una ventana arrastrada con el cursor pegado al borde
 --   izquierda/derecha → media pantalla   arriba → maximizar (igual que el botón □)

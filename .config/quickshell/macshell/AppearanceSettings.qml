@@ -1,0 +1,362 @@
+pragma ComponentBehavior: Bound
+
+import QtQuick
+import QtQuick.Layouts
+import Quickshell
+import Quickshell.Io
+
+// Ventana "Appearance" al estilo de Ajustes del Sistema de macOS: modo (Mac o normal),
+// tema de colores, fondo de pantalla, fuente y aumentar contraste. Se abre desde
+// "Appearance Settings…" del Centro de control y con `ipc call appearance open`.
+// Los datos y los cambios van por los scripts de ~/.config/themes.
+FloatingWindow {
+    id: win
+    title: "Appearance" // sin traducir: lo busca una regla de hypr/config/windowrules.lua
+    visible: false
+    color: Theme.window
+    implicitWidth: 720
+    implicitHeight: 560
+    minimumSize: Qt.size(520, 420)
+
+    readonly property string themesDir: Quickshell.env("HOME") + "/.config/themes"
+
+    // Si ya está abierta (quizá en otro workspace) se recrea para que aparezca donde estás
+    function show() {
+        if (visible) { visible = false; Qt.callLater(() => { win.visible = true; }); }
+        else visible = true;
+        syncFilter = true;
+        refresh();
+    }
+    onClosed: visible = false
+
+    // ── datos de los scripts ──
+    property var profiles: []     // [{ key, name, cur }]
+    property var themes: []       // [{ dir, name, cur, light, bg, fg, colors }]
+    property var backgrounds: []  // [{ name, path, cur }]
+    property var fonts: []        // [{ font, cur }]
+    property bool showLight: false
+    property bool syncFilter: false   // al abrir, el filtro va a la claridad del tema actual
+    property bool fontsOpen: false
+    readonly property string curFont: (fonts.find(f => f.cur) ?? { font: "" }).font
+
+    function refresh() {
+        profileProc.running = true;
+        themeProc.running = true;
+        bgProc.running = true;
+        fontProc.running = true;
+    }
+    function lines(text) { return text.split("\n").filter(l => l); }
+
+    // config-set reinicia macshell al pasar a Modo normal: setsid para que no muera con
+    // él. Lo demás (también el cambio entre Mac claro y oscuro) no la cierra: se relee todo
+    // sin tocar el filtro Dark/Light ni el desplazamiento. Con `list` y `key` (p. ej.
+    // "themes", "dir") la marca de elegido pasa al momento a esa fila, sin esperar a releer
+    function run(script, arg, list, key) {
+        Quickshell.execDetached(["setsid", "-f", themesDir + "/" + script, arg]);
+        if (list) win[list] = win[list].map(x => Object.assign({}, x, { cur: x[key] === arg }));
+        refreshSoon.restart();
+    }
+    Timer { id: refreshSoon; interval: 2000; onTriggered: win.refresh() }
+
+    // `config-set --list`: "<perfil>\t<nombre>\t<1 si es el actual>"
+    Process {
+        id: profileProc
+        command: [win.themesDir + "/config-set", "--list"]
+        stdout: StdioCollector {
+            onStreamFinished: win.profiles = win.lines(text).map(l => {
+                const f = l.split("\t");
+                return { key: f[0], name: f[1], cur: f[2] === "1" };
+            })
+        }
+    }
+    // `theme-set --list`: un JSON por línea
+    Process {
+        id: themeProc
+        command: [win.themesDir + "/theme-set", "--list"]
+        stdout: StdioCollector {
+            onStreamFinished: {
+                win.themes = win.lines(text).map(l => JSON.parse(l));
+                const cur = win.themes.find(t => t.cur);
+                if (win.syncFilter && cur) win.showLight = cur.light;
+                win.syncFilter = false;
+            }
+        }
+    }
+    // `background-set`: "<fondo>\t<ruta>\t<1 si es el actual>"
+    Process {
+        id: bgProc
+        command: [win.themesDir + "/background-set"]
+        stdout: StdioCollector {
+            onStreamFinished: win.backgrounds = win.lines(text).map(l => {
+                const f = l.split("\t");
+                return { name: f[0], path: f[1], cur: f[2] === "1" };
+            })
+        }
+    }
+    // `font-set --list`: un JSON { font, cur } por línea
+    Process {
+        id: fontProc
+        command: [win.themesDir + "/font-set", "--list"]
+        stdout: StdioCollector { onStreamFinished: win.fonts = win.lines(text).map(l => JSON.parse(l)) }
+    }
+
+    // ── piezas ──
+    component SectionTitle: SectionLabel {
+        Layout.topMargin: 14
+        Layout.leftMargin: 4
+        font.pointSize: 9
+    }
+
+    // caja redondeada que agrupa filas, como en Ajustes del Sistema
+    component Group: Tile { Layout.fillWidth: true; padding: 0; spacing: 0 }
+
+    // fila con el nombre a la izquierda y los hijos a la derecha
+    component LabelRow: RowLayout {
+        property string label: ""
+        Layout.fillWidth: true
+        Layout.margins: 12
+        spacing: 10
+        Text { Layout.fillWidth: true; text: parent.label; color: Theme.text; font.pointSize: 10 }
+    }
+
+    // control segmentado de macOS: [{ key, label }], resalta el de current
+    component Segmented: Rectangle {
+        id: seg
+        property var options: []
+        property string current: ""
+        signal picked(string key)
+        implicitWidth: segRow.implicitWidth + 4
+        implicitHeight: 26
+        radius: 7
+        color: Theme.tint(0.08)
+        border.width: Theme.outlineWidth
+        border.color: Theme.separator
+        Row {
+            id: segRow
+            x: 2; y: 2
+            Repeater {
+                model: seg.options
+                delegate: Rectangle {
+                    id: opt
+                    required property var modelData
+                    readonly property bool sel: modelData.key === seg.current
+                    implicitWidth: optText.implicitWidth + 24
+                    implicitHeight: 22
+                    radius: 5
+                    color: sel ? Theme.tint(0.22) : "transparent"
+                    Text {
+                        id: optText
+                        anchors.centerIn: parent
+                        text: opt.modelData.label
+                        color: Theme.text
+                        font.pointSize: 9.5
+                        font.weight: opt.sel ? Font.DemiBold : Font.Normal
+                    }
+                    MouseArea { anchors.fill: parent; onClicked: if (!opt.sel) seg.picked(opt.modelData.key) }
+                }
+            }
+        }
+    }
+
+    // rejilla que reparte el ancho en columnas de al menos minWidth
+    component CardGrid: Flow {
+        property real minWidth: 140
+        readonly property int cols: Math.max(1, Math.floor((width + spacing) / (minWidth + spacing)))
+        readonly property real cellWidth: (width - (cols - 1) * spacing) / cols
+        Layout.fillWidth: true
+        Layout.margins: 12
+        spacing: 12
+    }
+
+    // ── contenido ──
+    Flickable {
+        anchors.fill: parent
+        contentHeight: content.implicitHeight + 40
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+
+        ColumnLayout {
+            id: content
+            x: 20; y: 16
+            width: parent.width - 40
+            spacing: 6
+
+            Text {
+                text: I18n.tr("Appearance")
+                color: Theme.text
+                font.pointSize: 15
+                font.weight: Font.Bold
+                Layout.bottomMargin: 4
+            }
+
+            // ── modo y fuente ──
+            Group {
+                LabelRow {
+                    label: I18n.tr("Mode")
+                    Segmented {
+                        options: win.profiles.map(p => ({ key: p.key, label: p.name }))
+                        current: (win.profiles.find(p => p.cur) ?? { key: "" }).key
+                        onPicked: key => win.run("config-set", key)
+                    }
+                }
+                Divider { Layout.leftMargin: 12; Layout.rightMargin: 12 }
+                // menú desplegable de fuentes
+                LabelRow {
+                    label: I18n.tr("Font")
+                    PillButton {
+                        text: win.curFont + "  ▾"
+                        onTapped: win.fontsOpen = !win.fontsOpen
+                    }
+                }
+                ListView {
+                    visible: win.fontsOpen
+                    Layout.fillWidth: true
+                    Layout.leftMargin: 8; Layout.rightMargin: 8; Layout.bottomMargin: 8
+                    implicitHeight: Math.min(contentHeight, 26 * 8)
+                    clip: true
+                    boundsBehavior: Flickable.StopAtBounds
+                    model: win.fonts
+                    // al desplegarse, a la vista la fuente actual
+                    onVisibleChanged: if (visible) positionViewAtIndex(win.fonts.findIndex(f => f.cur), ListView.Contain)
+                    delegate: MenuRow {
+                        required property var modelData
+                        width: ListView.view.width
+                        text: modelData.font
+                        checkable: true
+                        checked: modelData.cur
+                        onTriggered: { win.fontsOpen = false; win.run("font-set", modelData.font, "fonts", "font"); }
+                    }
+                }
+            }
+
+            // ── tema de colores ──
+            RowLayout {
+                Layout.fillWidth: true
+                SectionTitle { Layout.fillWidth: true; text: I18n.tr("Theme") }
+                Segmented {
+                    Layout.topMargin: 14
+                    options: [{ key: "dark", label: I18n.tr("Dark") }, { key: "light", label: I18n.tr("Light") }]
+                    current: win.showLight ? "light" : "dark"
+                    onPicked: key => win.showLight = key === "light"
+                }
+            }
+            Group {
+                CardGrid {
+                    id: themeGrid
+                    Repeater {
+                        model: win.themes.filter(t => t.light === win.showLight)
+                        delegate: Column {
+                            id: card
+                            required property var modelData
+                            width: themeGrid.cellWidth
+                            spacing: 6
+                            // vista previa: fondo, "Aa" en el texto y la paleta
+                            Rectangle {
+                                width: parent.width
+                                height: 64
+                                radius: 8
+                                color: card.modelData.bg
+                                border.width: card.modelData.cur ? 2 : 1
+                                border.color: card.modelData.cur ? Theme.accent : Theme.tint(0.12)
+                                Text {
+                                    x: 10; y: 6
+                                    text: "Aa"
+                                    color: card.modelData.fg
+                                    font.pointSize: 13
+                                    font.weight: Font.DemiBold
+                                }
+                                Row {
+                                    x: 10; anchors.bottom: parent.bottom; anchors.bottomMargin: 9
+                                    spacing: 4
+                                    Repeater {
+                                        model: card.modelData.colors
+                                        delegate: Rectangle {
+                                            required property string modelData
+                                            width: 10; height: 10; radius: 5
+                                            color: modelData
+                                        }
+                                    }
+                                }
+                                Rectangle {
+                                    visible: card.modelData.cur
+                                    anchors.top: parent.top; anchors.right: parent.right; anchors.margins: 6
+                                    width: 18; height: 18; radius: 9
+                                    color: Theme.accent
+                                    Glyph { anchors.centerIn: parent; width: 11; height: 11; name: "check"; color: "white" }
+                                }
+                                MouseArea { anchors.fill: parent; onClicked: if (!card.modelData.cur) win.run("theme-set", card.modelData.dir, "themes", "dir") }
+                            }
+                            Text {
+                                width: parent.width
+                                horizontalAlignment: Text.AlignHCenter
+                                text: card.modelData.name
+                                color: card.modelData.cur ? Theme.text : Theme.dim
+                                font.pointSize: 9
+                                elide: Text.ElideRight
+                            }
+                        }
+                    }
+                }
+            }
+
+            // ── fondo de pantalla (los del tema actual) ──
+            SectionTitle { text: I18n.tr("Wallpaper") }
+            Group {
+                CardGrid {
+                    id: bgGrid
+                    minWidth: 120
+                    Repeater {
+                        model: win.backgrounds
+                        delegate: Rectangle {
+                            id: bg
+                            required property var modelData
+                            width: bgGrid.cellWidth
+                            height: width * 0.625
+                            radius: 8
+                            color: Theme.tint(0.08)
+                            border.width: 2
+                            border.color: modelData.cur ? Theme.accent : "transparent"
+                            Image {
+                                anchors.fill: parent
+                                anchors.margins: 3
+                                source: "file://" + bg.modelData.path
+                                sourceSize.width: 240
+                                fillMode: Image.PreserveAspectCrop
+                                asynchronous: true
+                            }
+                            MouseArea { anchors.fill: parent; onClicked: if (!bg.modelData.cur) win.run("background-set", bg.modelData.name, "backgrounds", "name") }
+                        }
+                    }
+                    // "Añadir…": abre la carpeta de fondos del tema (current es un enlace al tema)
+                    Rectangle {
+                        width: bgGrid.cellWidth
+                        height: width * 0.625
+                        radius: 8
+                        color: addMouse.containsMouse ? Theme.buttonHover : Theme.button
+                        Column {
+                            anchors.centerIn: parent
+                            Text { anchors.horizontalCenter: parent.horizontalCenter; text: "+"; color: Theme.dim; font.pointSize: 18 }
+                            Text { text: I18n.tr("Add…"); color: Theme.dim; font.pointSize: 9 }
+                        }
+                        MouseArea {
+                            id: addMouse
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onClicked: Quickshell.execDetached(["sh", "-c", `mkdir -p "$1" && exec uwsm-app -- xdg-open "$1"`,
+                                "sh", win.themesDir + "/current/backgrounds"])
+                        }
+                    }
+                }
+            }
+
+            // ── accesibilidad ──
+            SectionTitle { text: I18n.tr("Accessibility") }
+            Group {
+                LabelRow {
+                    label: I18n.tr("Increase Contrast")
+                    Switch { on: Theme.contrast; onToggled: Sys.toggleContrast() }
+                }
+            }
+        }
+    }
+}

@@ -29,7 +29,7 @@ def home(tmp_path):
     shutil.copytree(CONFIG, tmp_path / ".config", symlinks=True)
     state = tmp_path / ".local/state"
     state.mkdir(parents=True)
-    # Con perfil guardado: si no, el primer theme-set pasa a Modo Mac (y espera 1,5 s)
+    # Con perfil guardado: si no, el primer theme-set pasa a Modo Mac
     (state / "desktop-profile").write_text("default\n")
     # Un "Neovim abierto": sin el interruptor, theme-set le mandaría el tema nuevo
     (tmp_path / "run").mkdir()
@@ -183,6 +183,19 @@ def test_config_set_mac_light(home):
     run(home, "theme-set", DARK[0])
     assert profile(home) == "mac"
     assert f"themes/{DARK[0]}/theme.json" in read(home, ".config/gtk-4.0/gtk.css")
+
+
+def test_mac_light_sin_reiniciar(home):
+    # Entre mac y mac-light no se reinicia Quickshell (la ventana Appearance de macshell
+    # seguiría abierta): solo la recarga normal de theme-set
+    run(home, "theme-set", DARK[0])
+    run(home, "config-set", "mac")
+    run(home, "theme-set", LIGHT[0], reload=True)
+    assert profile(home) == "mac-light"
+    log = read(home, "calls.log")
+    assert "qs ipc call theme reload" in log and "hyprctl reload" in log
+    assert "qs kill" not in log and "qs list" not in log and "hyprctl dispatch" not in log
+    (home / "calls.log").unlink()
 
 
 def test_config_set_default(home):

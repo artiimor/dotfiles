@@ -3,6 +3,7 @@
 Every folder with a `theme.json` is a theme. `current` is a link to the active one.
 
 - Switch themes: **Super+T**, or `~/.config/themes/theme-set <folder>`
+- **Super+M** → Style gathers theme, font, background, profile and increase contrast (in Mac mode, the Appearance window)
 - List the themes: `~/.config/themes/theme-set`
 - After editing the active theme's `theme.json`: `~/.config/themes/theme-set --reapply`
 
@@ -128,8 +129,8 @@ profiles). It applies right away, without logging out.
 the profile becomes **light Mac** (`mac-light`, internal): light macshell and hyprbars,
 Sur icons, GTK `adw-gtk3` + `prefer-light` with a fixed light `gtk.css` (theme-set
 doesn't overwrite it in this profile) and Qt with `mac-light.conf`; with a dark one it goes back to `mac`.
-theme-set does it when switching themes (it calls config-set's `sync_theme()`, which
-restarts Quickshell only if the lightness changes), and `config-set mac` with a light
+theme-set does it when switching themes (it calls config-set's `sync_theme()`; macshell
+switches live, without restarting Quickshell), and `config-set mac` with a light
 theme already saves `mac-light`. `config-set mac-light` still forces it by
 hand (until the next theme switch or `--reapply`). Terminals keep the color theme.
 
