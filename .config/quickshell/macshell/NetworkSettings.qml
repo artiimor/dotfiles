@@ -12,7 +12,7 @@ import Quickshell.Networking
 // guardadas y las VPN, de nmcli.
 FloatingWindow {
     id: win
-    title: "Network"
+    title: "Network" // sin traducir: lo busca una regla de hypr/config/windowrules.lua
     visible: false
     color: Theme.window
     implicitWidth: 560
@@ -218,7 +218,7 @@ FloatingWindow {
             spacing: 6
 
             Text {
-                text: "Network"
+                text: I18n.tr("Network")
                 color: Theme.text
                 font.pointSize: 15
                 font.weight: Font.Bold
@@ -231,7 +231,7 @@ FloatingWindow {
                     glyph: "wifi"
                     tint: Sys.wifiOn ? Theme.accent : Theme.tint(0.18)
                     title: "Wi‑Fi"
-                    subtitle: !Sys.wifiOn ? "Off" : win.current ? "Connected" : "Not connected"
+                    subtitle: !Sys.wifiOn ? I18n.tr("Off") : win.current ? I18n.tr("Connected") : I18n.tr("Not connected")
                     Switch { on: Sys.wifiOn; onToggled: Networking.wifiEnabled = !Networking.wifiEnabled }
                 }
 
@@ -255,7 +255,7 @@ FloatingWindow {
                         name: "lock"; color: Theme.dim
                     }
                     Glyph { name: "wifi"; level: Sys.wifiLevel; color: Theme.text }
-                    PillButton { text: win.showDetails ? "Hide Details" : "Details…"; onTapped: win.showDetails = !win.showDetails }
+                    PillButton { text: win.showDetails ? I18n.tr("Hide Details") : I18n.tr("Details…"); onTapped: win.showDetails = !win.showDetails }
                 }
 
                 ColumnLayout {
@@ -264,21 +264,21 @@ FloatingWindow {
                     Layout.bottomMargin: 10
                     spacing: 0
                     RowDivider {}
-                    InfoRow { label: "IP Address"; value: (win.wifiInfo["IP4.ADDRESS[1]"] ?? "").split("/")[0] }
-                    InfoRow { label: "Subnet"; value: (win.wifiInfo["IP4.ADDRESS[1]"] ?? "").includes("/") ? "/" + win.wifiInfo["IP4.ADDRESS[1]"].split("/")[1] : "" }
+                    InfoRow { label: I18n.tr("IP Address"); value: (win.wifiInfo["IP4.ADDRESS[1]"] ?? "").split("/")[0] }
+                    InfoRow { label: I18n.tr("Subnet"); value: (win.wifiInfo["IP4.ADDRESS[1]"] ?? "").includes("/") ? "/" + win.wifiInfo["IP4.ADDRESS[1]"].split("/")[1] : "" }
                     InfoRow { label: "Router"; value: win.wifiInfo["IP4.GATEWAY"] ?? "" }
                     InfoRow { label: "DNS"; value: [1, 2, 3].map(i => win.wifiInfo["IP4.DNS[" + i + "]"]).filter(x => x).join(", ") }
-                    InfoRow { label: "IPv6 Address"; value: (win.wifiInfo["IP6.ADDRESS[1]"] ?? "").split("/")[0] }
-                    InfoRow { label: "Wi‑Fi Address"; value: win.wifiInfo["GENERAL.HWADDR"] ?? "" }
-                    InfoRow { label: "Signal"; value: win.current ? Math.round(win.current.signalStrength * 100) + " %" : "" }
+                    InfoRow { label: I18n.tr("IPv6 Address"); value: (win.wifiInfo["IP6.ADDRESS[1]"] ?? "").split("/")[0] }
+                    InfoRow { label: I18n.tr("Wi‑Fi Address"); value: win.wifiInfo["GENERAL.HWADDR"] ?? "" }
+                    InfoRow { label: I18n.tr("Signal"); value: win.current ? Math.round(win.current.signalStrength * 100) + " %" : "" }
                     RowLayout {
                         Layout.fillWidth: true
                         Layout.leftMargin: 14; Layout.rightMargin: 14; Layout.topMargin: 6
                         spacing: 8
                         Item { Layout.fillWidth: true }
-                        PillButton { text: "Disconnect"; onTapped: { win.current.disconnect(); win.showDetails = false; } }
+                        PillButton { text: I18n.tr("Disconnect"); onTapped: { win.current.disconnect(); win.showDetails = false; } }
                         PillButton {
-                            text: "Forget This Network…"
+                            text: I18n.tr("Forget This Network…")
                             danger: true
                             onTapped: {
                                 const c = win.saved.find(s => s.type === "802-11-wireless" && win.ssidOf(s) === win.current.name);
@@ -291,7 +291,7 @@ FloatingWindow {
             }
 
             // ── redes conocidas ──
-            SectionTitle { visible: Sys.wifiOn && win.savedWifi.length > 0; text: "Known Networks" }
+            SectionTitle { visible: Sys.wifiOn && win.savedWifi.length > 0; text: I18n.tr("Known Networks") }
             Group {
                 visible: Sys.wifiOn && win.savedWifi.length > 0
                 Repeater {
@@ -308,7 +308,7 @@ FloatingWindow {
                         NetRow {
                             id: knownRow
                             name: known.ssid
-                            status: known.live ? "" : "Not in range"
+                            status: known.live ? "" : I18n.tr("Not in range")
                             // fuera de alcance no hay a qué conectarse (olvidarla sí se puede)
                             clickable: known.live !== null
                             onClicked: known.live.connect()
@@ -320,7 +320,7 @@ FloatingWindow {
                             }
                             PillButton {
                                 visible: knownRow.hovered
-                                text: "Forget"
+                                text: I18n.tr("Forget")
                                 danger: true
                                 onTapped: win.nm(["connection", "delete", "uuid", known.modelData.uuid])
                             }
@@ -330,13 +330,13 @@ FloatingWindow {
             }
 
             // ── otras redes ──
-            SectionTitle { visible: Sys.wifiOn && (win.searching || win.others.length > 0); text: "Other Networks" }
+            SectionTitle { visible: Sys.wifiOn && (win.searching || win.others.length > 0); text: I18n.tr("Other Networks") }
             Group {
                 visible: Sys.wifiOn && (win.searching || win.others.length > 0)
                 Text {
                     visible: win.searching
                     Layout.margins: 14
-                    text: "Searching…"
+                    text: I18n.tr("Searching…")
                     color: Theme.dim; font.pointSize: 9.5
                 }
                 Repeater {
@@ -354,7 +354,7 @@ FloatingWindow {
                         RowDivider { visible: other.index > 0 }
                         NetRow {
                             name: other.modelData.name
-                            status: other.modelData.stateChanging ? "Connecting…" : ""
+                            status: other.modelData.stateChanging ? I18n.tr("Connecting…") : ""
                             onClicked: {
                                 if (!other.secured) other.modelData.connect();
                                 else win.askingFor = other.asking ? "" : other.modelData.name;
@@ -376,7 +376,7 @@ FloatingWindow {
                                     win.askingFor = "";
                                 }
                             }
-                            PillButton { text: "Join"; onTapped: pass.submit() }
+                            PillButton { text: I18n.tr("Join"); onTapped: pass.submit() }
                         }
                     }
                 }
@@ -390,7 +390,7 @@ FloatingWindow {
                     glyph: "ethernet"
                     tint: Sys.wiredUp ? "#30d158" : Theme.tint(0.18)
                     title: "Ethernet"
-                    subtitle: Sys.wiredUp ? "Connected" : "Cable unplugged"
+                    subtitle: Sys.wiredUp ? I18n.tr("Connected") : I18n.tr("Cable unplugged")
                 }
                 ColumnLayout {
                     visible: Sys.wiredUp
@@ -398,9 +398,9 @@ FloatingWindow {
                     Layout.bottomMargin: 8
                     spacing: 0
                     RowDivider {}
-                    InfoRow { label: "IP Address"; value: (win.wiredInfo["IP4.ADDRESS[1]"] ?? "").split("/")[0] }
+                    InfoRow { label: I18n.tr("IP Address"); value: (win.wiredInfo["IP4.ADDRESS[1]"] ?? "").split("/")[0] }
                     InfoRow { label: "Router"; value: win.wiredInfo["IP4.GATEWAY"] ?? "" }
-                    InfoRow { label: "Hardware Address"; value: win.wiredInfo["GENERAL.HWADDR"] ?? "" }
+                    InfoRow { label: I18n.tr("Hardware Address"); value: win.wiredInfo["GENERAL.HWADDR"] ?? "" }
                 }
             }
 
@@ -422,7 +422,7 @@ FloatingWindow {
                             glyph: "lock"
                             tint: vpn.active ? Theme.accent : Theme.tint(0.18)
                             title: vpn.modelData.name
-                            subtitle: vpn.active ? "Connected" : "Not connected"
+                            subtitle: vpn.active ? I18n.tr("Connected") : I18n.tr("Not connected")
                             Switch {
                                 on: vpn.active
                                 onToggled: win.nm(["connection", vpn.active ? "down" : "up", "uuid", vpn.modelData.uuid])

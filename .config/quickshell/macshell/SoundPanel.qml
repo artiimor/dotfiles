@@ -17,7 +17,7 @@ ColumnLayout {
     Text {
         Layout.leftMargin: 4
         Layout.topMargin: 2
-        text: "Sound"
+        text: I18n.tr("Sound")
         color: Theme.text
         font.pointSize: 10.5
         font.weight: Font.DemiBold
@@ -38,7 +38,7 @@ ColumnLayout {
     }
     SectionLabel {
         Layout.leftMargin: 4
-        text: "Output"
+        text: I18n.tr("Output")
         visible: sp.sinks.length > 0
     }
     ColumnLayout {

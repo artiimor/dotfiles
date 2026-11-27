@@ -71,7 +71,7 @@ PanelWindow {
                             font.weight: Font.DemiBold
                         }
                         Text {
-                            text: Theme.locale.toString(Theme.now, "MMMM d")
+                            text: Theme.locale.toString(Theme.now, I18n.dateFormat(false))
                             color: Theme.text
                             font.pointSize: 15
                             font.weight: Font.DemiBold
@@ -122,7 +122,7 @@ PanelWindow {
                     Layout.rightMargin: 4
                     Text {
                         Layout.fillWidth: true
-                        text: "Notifications"
+                        text: I18n.tr("Notifications")
                         color: Theme.text
                         font.pointSize: 10
                         font.weight: Font.DemiBold
@@ -132,7 +132,7 @@ PanelWindow {
                         implicitHeight: 22
                         radius: 11
                         pointSize: 8.5
-                        text: "Clear All"
+                        text: I18n.tr("Clear All")
                         onTapped: center.clearRequested()
                     }
                 }
@@ -160,7 +160,7 @@ PanelWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         y: 24
                         visible: centerList.count === 0
-                        text: "No Notifications"
+                        text: I18n.tr("No Notifications")
                         color: Theme.dim
                         font.pointSize: 10
                     }

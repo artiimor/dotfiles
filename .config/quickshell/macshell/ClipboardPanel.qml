@@ -26,7 +26,7 @@ ColumnLayout {
     SectionLabel {
         Layout.fillWidth: true
         Layout.margins: 6
-        text: "Clipboard"
+        text: I18n.tr("Clipboard")
     }
 
     Repeater {
@@ -48,7 +48,7 @@ ColumnLayout {
     Text {
         visible: cp.lines.length === 0
         Layout.margins: 8
-        text: "Empty"
+        text: I18n.tr("Empty")
         color: Theme.dim
         font.pointSize: 9.5
     }
@@ -57,7 +57,7 @@ ColumnLayout {
 
     MenuRow {
         Layout.fillWidth: true
-        text: "Clear History"
+        text: I18n.tr("Clear History")
         onTriggered: {
             Quickshell.execDetached(["cliphist", "wipe"]);
             cp.done();

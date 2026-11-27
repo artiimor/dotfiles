@@ -26,9 +26,9 @@ ColumnLayout {
                 icon: "wifi"
                 on: Sys.wifiOn
                 title: "Wi‑Fi"
-                subtitle: !Sys.wifiOn ? "Off"
+                subtitle: !Sys.wifiOn ? I18n.tr("Off")
                     : Sys.wifiNetwork ? Sys.wifiNetwork.name
-                    : Sys.wiredUp ? "Ethernet connected" : "Not connected"
+                    : Sys.wiredUp ? I18n.tr("Ethernet connected") : I18n.tr("Not connected")
                 hasChevron: true
                 onToggled: Networking.wifiEnabled = !Networking.wifiEnabled
                 onChevron: cc.openWifi()
@@ -39,8 +39,8 @@ ColumnLayout {
                 icon: "bluetooth"
                 on: Sys.btOn
                 title: "Bluetooth"
-                subtitle: !Sys.btOn ? "Off"
-                    : Sys.btConnected.length ? Sys.btConnected.map(d => d.name).join(", ") : "On"
+                subtitle: !Sys.btOn ? I18n.tr("Off")
+                    : Sys.btConnected.length ? Sys.btConnected.map(d => d.name).join(", ") : I18n.tr("On")
                 onToggled: if (Sys.bt) Sys.bt.enabled = !Sys.bt.enabled
             }
         }
@@ -55,8 +55,8 @@ ColumnLayout {
                 Layout.fillHeight: true
                 icon: "moon"
                 on: cc.dnd
-                title: "Do Not Disturb"
-                subtitle: cc.dnd ? "On" : ""
+                title: I18n.tr("Do Not Disturb")
+                subtitle: cc.dnd ? I18n.tr("On") : ""
                 onToggled: cc.toggleDnd()
             }
         }
@@ -74,8 +74,8 @@ ColumnLayout {
                 Layout.fillWidth: true
                 icon: "sunset"
                 on: Sys.nightOn
-                title: "Night Shift"
-                subtitle: Sys.nightState === "unavailable" ? "Unavailable" : Sys.nightOn ? "On" : "Off"
+                title: I18n.tr("Night Shift")
+                subtitle: Sys.nightState === "unavailable" ? I18n.tr("Unavailable") : Sys.nightOn ? I18n.tr("On") : I18n.tr("Off")
                 onToggled: Sys.toggleNight()
             }
         }
@@ -86,8 +86,8 @@ ColumnLayout {
                 Layout.fillWidth: true
                 icon: "cup"
                 on: Sys.caffeine
-                title: "Keep Awake"
-                subtitle: Sys.caffeine ? "On" : "Off"
+                title: I18n.tr("Keep Awake")
+                subtitle: Sys.caffeine ? I18n.tr("On") : I18n.tr("Off")
                 onToggled: Sys.toggleCaffeine()
             }
         }
@@ -98,7 +98,7 @@ ColumnLayout {
         visible: Sys.hasBacklight
         Layout.fillWidth: true
         spacing: 6
-        Text { text: "Display"; color: Theme.text; font.pointSize: 9.5; font.weight: Font.DemiBold }
+        Text { text: I18n.tr("Display"); color: Theme.text; font.pointSize: 9.5; font.weight: Font.DemiBold }
         Slider {
             Layout.fillWidth: true
             icon: "sun"
@@ -110,7 +110,7 @@ ColumnLayout {
     Tile {
         Layout.fillWidth: true
         spacing: 6
-        Text { text: "Sound"; color: Theme.text; font.pointSize: 9.5; font.weight: Font.DemiBold }
+        Text { text: I18n.tr("Sound"); color: Theme.text; font.pointSize: 9.5; font.weight: Font.DemiBold }
         Slider {
             Layout.fillWidth: true
             icon: "speaker"

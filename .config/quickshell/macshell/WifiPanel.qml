@@ -38,7 +38,7 @@ ColumnLayout {
     SectionLabel {
         visible: Sys.wifiOn
         Layout.leftMargin: 4
-        text: "Networks"
+        text: I18n.tr("Networks")
     }
 
     Column {
@@ -90,7 +90,7 @@ ColumnLayout {
                         }
                         Text {
                             visible: rowItem.modelData.stateChanging
-                            text: "Connecting…"
+                            text: I18n.tr("Connecting…")
                             color: Theme.dim
                             font.pointSize: 8.5
                         }
@@ -118,7 +118,7 @@ ColumnLayout {
                     visible: wp.askingFor === rowItem.modelData.name
                     width: parent.width
                     implicitHeight: 30
-                    placeholder: "Password — press Enter"
+                    placeholder: I18n.tr("Password — press Enter")
                     onSubmitted: psk => {
                         rowItem.modelData.connectWithPsk(psk);
                         wp.askingFor = "";
@@ -132,7 +132,7 @@ ColumnLayout {
 
     MenuRow {
         Layout.fillWidth: true
-        text: "Network Settings…"
+        text: I18n.tr("Network Settings…")
         onTriggered: { wp.openSettings(); wp.done(); }
     }
 }

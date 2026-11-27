@@ -317,7 +317,7 @@ ShellRoot {
             BarButton {
                 active: root.centerOpen
                 Text {
-                    text: Theme.locale.toString(Theme.now, "ddd MMM d   HH:mm")
+                    text: Theme.locale.toString(Theme.now, I18n.dateFormat(true, true) + "   HH:mm")
                     color: Theme.text
                     font.pointSize: 9.5
                 }

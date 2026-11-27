@@ -9,7 +9,7 @@ ColumnLayout {
     Text {
         Layout.leftMargin: 4
         Layout.topMargin: 2
-        text: "Display"
+        text: I18n.tr("Display")
         color: Theme.text
         font.pointSize: 10.5
         font.weight: Font.DemiBold
@@ -27,7 +27,7 @@ ColumnLayout {
         Layout.rightMargin: 2
         Text {
             Layout.fillWidth: true
-            text: "Night Shift"
+            text: I18n.tr("Night Shift")
             color: Sys.nightState === "unavailable" ? Theme.dim : Theme.text
             font.pointSize: 9.5
         }

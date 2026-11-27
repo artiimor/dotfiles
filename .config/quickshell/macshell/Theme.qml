@@ -39,7 +39,7 @@ Singleton {
     readonly property int radius: 16
     readonly property int width: 360
     readonly property int popupTimeout: 5000
-    readonly property var locale: Qt.locale("en_US")
+    readonly property var locale: Qt.locale()
 
     // regiones de blur de las tarjetas (Card) de un ListView
     function cardBlurs(view) { return view.contentItem.children.filter(c => c.blur).map(c => c.blur); }
@@ -55,13 +55,13 @@ Singleton {
 
     function ago(id) {
         const t = times[id];
-        if (!t) return "now";
+        if (!t) return I18n.tr("now");
         const m = Math.floor((now - t) / 60000);
-        if (m < 1) return "now";
-        if (m < 60) return m + " min ago";
+        if (m < 1) return I18n.tr("now");
+        if (m < 60) return I18n.tr("%1 min ago", m);
         const h = Math.floor(m / 60);
-        if (h < 24) return h + " h ago";
-        return locale.toString(t, "MMM d HH:mm");
+        if (h < 24) return I18n.tr("%1 h ago", h);
+        return locale.toString(t, I18n.dateFormat(false, true) + " HH:mm");
     }
 
     // Despierta al cambiar de minuto, pero como mucho cada 5 s: los timers no avanzan

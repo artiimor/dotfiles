@@ -62,16 +62,16 @@ OverlayWindow {
         const q = query;
         if (!q) return [];
         const sections = [
-            ["Applications", appHits.map(e => ({ kind: "item", type: "app", entry: e, title: e.name,
+            [I18n.tr("Applications"), appHits.map(e => ({ kind: "item", type: "app", entry: e, title: e.name,
                 sub: (e.genericName && e.genericName !== e.name) ? e.genericName : "", icon: e.icon }))],
-            ["Documents", fileHits.map(f => ({ kind: "item", type: "file", path: f.path, title: f.name, sub: f.dir, icon: f.icon }))]
+            [I18n.tr("Documents"), fileHits.map(f => ({ kind: "item", type: "file", path: f.path, title: f.name, sub: f.dir, icon: f.icon }))]
         ];
         let top = calc !== "" ? { type: "calc", title: calc, sub: calcQuery + " =", icon: "accessories-calculator" } : null;
         const out = [];
         for (const [title, items] of sections) {
             if (!top && items.length) {
                 top = items.shift();
-                if (top.type === "app") top.sub = "Application";
+                if (top.type === "app") top.sub = I18n.tr("Application");
             }
             if (items.length) out.push({ kind: "header", title }, ...items);
         }
@@ -201,7 +201,7 @@ OverlayWindow {
             focus: true
             Text {
                 visible: !field.text
-                text: "Search"
+                text: I18n.tr("Search")
                 color: Theme.dim
                 font: field.font
             }
@@ -303,7 +303,7 @@ OverlayWindow {
                 }
                 Text {
                     visible: row.current
-                    text: row.modelData.type === "calc" ? "↵ copy" : "↵"
+                    text: row.modelData.type === "calc" ? I18n.tr("↵ copy") : "↵"
                     color: row.softWhite
                     font.pointSize: 9
                 }

@@ -14,11 +14,11 @@ ColumnLayout {
         if (!dev) return "";
         switch (dev.state) {
         case UPowerDeviceState.Charging:
-            return "Charging" + (dev.timeToFull > 0 ? " · " + Sys.duration(dev.timeToFull) + " until full" : "");
-        case UPowerDeviceState.FullyCharged: return "Fully Charged";
-        case UPowerDeviceState.PendingCharge: return "Plugged in, not charging";
+            return dev.timeToFull > 0 ? I18n.tr("Charging · %1 until full", Sys.duration(dev.timeToFull)) : I18n.tr("Charging");
+        case UPowerDeviceState.FullyCharged: return I18n.tr("Fully Charged");
+        case UPowerDeviceState.PendingCharge: return I18n.tr("Plugged in, not charging");
         case UPowerDeviceState.Discharging:
-            return "On battery" + (dev.timeToEmpty > 0 ? " · " + Sys.duration(dev.timeToEmpty) + " left" : "");
+            return dev.timeToEmpty > 0 ? I18n.tr("On battery · %1 left", Sys.duration(dev.timeToEmpty)) : I18n.tr("On battery");
         default: return "";
         }
     }
@@ -28,7 +28,7 @@ ColumnLayout {
         Layout.margins: 4
         Text {
             Layout.fillWidth: true
-            text: "Battery"
+            text: I18n.tr("Battery")
             color: Theme.text
             font.pointSize: 10.5
             font.weight: Font.DemiBold
@@ -49,7 +49,7 @@ ColumnLayout {
     SectionLabel {
         Layout.leftMargin: 4
         Layout.topMargin: 4
-        text: "Energy Mode"
+        text: I18n.tr("Energy Mode")
     }
     // control segmentado
     Rectangle {
@@ -63,9 +63,9 @@ ColumnLayout {
             spacing: 2
             Repeater {
                 model: [
-                    { label: "Low Power", p: PowerProfile.PowerSaver },
-                    { label: "Balanced", p: PowerProfile.Balanced },
-                    { label: "Performance", p: PowerProfile.Performance }
+                    { label: I18n.tr("Low Power"), p: PowerProfile.PowerSaver },
+                    { label: I18n.tr("Balanced"), p: PowerProfile.Balanced },
+                    { label: I18n.tr("Performance"), p: PowerProfile.Performance }
                 ].filter(o => o.p !== PowerProfile.Performance || PowerProfiles.hasPerformanceProfile)
                 delegate: Rectangle {
                     id: seg

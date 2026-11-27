@@ -4,7 +4,7 @@ import QtQuick
 // con Enter (o submit()) emite submitted(psk) y se vacía.
 Rectangle {
     id: f
-    property string placeholder: "Password"
+    property string placeholder: I18n.tr("Password")
     signal submitted(string psk)
     function submit() { submitted(input.text); input.text = ""; }
 

@@ -112,7 +112,7 @@ Row {
         readonly property var win: ToplevelManager.activeToplevel
         readonly property string appId: win?.appId ?? ""
         readonly property var entry: appId ? DesktopEntries.heuristicLookup(appId) : null
-        text: !win ? "Desktop" : (entry?.name || (appId ? appId.charAt(0).toUpperCase() + appId.slice(1) : ""))
+        text: !win ? I18n.tr("Desktop") : (entry?.name || (appId ? appId.charAt(0).toUpperCase() + appId.slice(1) : ""))
         color: Theme.text
         font.pointSize: 10
         font.bold: true

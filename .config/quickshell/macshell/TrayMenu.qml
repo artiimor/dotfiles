@@ -28,7 +28,7 @@ ColumnLayout {
     MenuRow {
         Layout.fillWidth: true
         visible: tm.stack.length > 0
-        text: "‹  Back"
+        text: I18n.tr("‹  Back")
         onTriggered: tm.stack = tm.stack.slice(0, -1)
     }
 

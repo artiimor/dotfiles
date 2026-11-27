@@ -21,12 +21,12 @@ OverlayWindow {
     }
 
     readonly property var actions: [
-        { label: "Lock", glyph: "lock", cmd: "loginctl lock-session" },
-        { label: "Sleep", glyph: "moon", cmd: "loginctl lock-session && sleep 0.5 && systemctl suspend" },
-        { label: "Log Out", glyph: "logout", cmd:
+        { label: I18n.tr("Lock"), glyph: "lock", cmd: "loginctl lock-session" },
+        { label: I18n.tr("Sleep"), glyph: "moon", cmd: "loginctl lock-session && sleep 0.5 && systemctl suspend" },
+        { label: I18n.tr("Log Out"), glyph: "logout", cmd:
             "if uwsm check is-active; then uwsm stop; else loginctl terminate-session \"$XDG_SESSION_ID\"; fi" },
-        { label: "Restart", glyph: "restart", cmd: "systemctl reboot" },
-        { label: "Shut Down", glyph: "power", cmd: "systemctl poweroff" }
+        { label: I18n.tr("Restart"), glyph: "restart", cmd: "systemctl reboot" },
+        { label: I18n.tr("Shut Down"), glyph: "power", cmd: "systemctl poweroff" }
     ]
     property int sel: 0
 
