@@ -68,9 +68,9 @@ import time
 
 sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
 # notify como notify_send: restart_shell() y apply() tienen un parámetro notify (bool)
-from themelib import (CONF, PROFILE_STATE, current_theme, load_script, load_theme,
-                      notify as notify_send, run_quiet, saved_profile, theme_light, tr,
-                      write_atomic)
+from themelib import (CONF, NO_RELOAD, PROFILE_STATE, current_theme, load_script,
+                      load_theme, notify as notify_send, run_quiet, saved_profile,
+                      theme_light, tr, write_atomic)
 
 MACSHELL = f"{CONF}/quickshell/macshell"
 
@@ -270,8 +270,8 @@ def qs_running(path):
 
 
 def restart_shell(name, notify=True):
-    if not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
-        return  # fuera de Hyprland (p.ej. install.sh): ya se verá al entrar
+    if NO_RELOAD or not os.environ.get("HYPRLAND_INSTANCE_SIGNATURE"):
+        return  # fuera de Hyprland (p.ej. install.sh) o en los tests: ya se verá al entrar
     run_quiet(["hyprctl", "reload"])
     # Quickshell: el de siempre (fondo, launcher, OSD, bloqueo... y en "default"
     # la barra) y macshell. shell.qml solo mira el perfil al arrancar.

@@ -22,6 +22,13 @@ PROFILE_STATE = f"{HOME}/.local/state/desktop-profile"  # lo escribe config-set
 
 QUIET = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+# THEMES_NO_RELOAD=1: se escriben los archivos pero no se avisa a nada de fuera
+# (Quickshell, Hyprland, terminales, Neovim, gsettings, notificaciones). Para los
+# tests: con HOME temporal no se toca lo del usuario, pero gsettings sí escribiría
+# en su dconf real. Todo pasa por run_quiet(), salvo reload_nvim() de theme-set y
+# restart_shell() de config-set, que lo miran ellos
+NO_RELOAD = bool(os.environ.get("THEMES_NO_RELOAD"))
+
 
 # ── Idioma ───────────────────────────────────────────────────
 
@@ -118,7 +125,8 @@ def load_script(name):
 # ── Avisos ───────────────────────────────────────────────────
 
 def run_quiet(cmd):
-    subprocess.run(cmd, **QUIET)
+    if not NO_RELOAD:
+        subprocess.run(cmd, **QUIET)
 
 
 def qs_theme_reload():
