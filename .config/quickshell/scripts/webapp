@@ -3,7 +3,7 @@
 # web en una ventana propia del navegador (--app=URL), con su icono en icons/.
 # Las preguntas van por el lanzador de Quickshell (dmenu-qs, de esta carpeta),
 # que funciona igual en Modo normal y en Modo Mac. Lo llaman las entradas
-# "Crear webapp" y "Quitar webapp" del lanzador.
+# "Create webapp" y "Remove webapp" del lanzador.
 #
 #   webapp            pide nombre, URL e icono (URL de una imagen o el de la web)
 #   webapp --remove   elige una webapp y la borra, con su icono
@@ -11,11 +11,17 @@
 APPS="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
 ICONS="$APPS/icons"
 menu() { "$(dirname "$0")/dmenu-qs" -c -p "$1"; }
+# Traducción (ver themelib.py): t "Text %1" arg
+t() { python3 "$(dirname "$0")/../../themes/themelib.py" tr "$@"; }
 say() { notify-send -a Webapps "$@"; }
-fail() { say -u critical "No se pudo" "$1"; exit 1; }
+fail() { say -u critical "$(t "Could not do it")" "$1"; exit 1; }
 
-# Pide que se elija "Sí, $1" frente a "No"
-confirm() { [ "$(printf 'No\nSí, %s\n' "$1" | menu "¿Seguro?")" = "Sí, $1" ]; }
+# Pide que se elija "Yes, $1" frente a "No"
+confirm() {
+	local yes
+	yes=$(t "Yes, %1" "$1")
+	[ "$(printf '%s\n%s\n' "$(t No)" "$yes" | menu "$(t "Are you sure?")")" = "$yes" ]
+}
 
 # Valor de una clave en un .desktop
 field() { sed -n "s/^$2=//p" "$1" | head -n 1; }
@@ -48,30 +54,30 @@ remove() {
 		files+=("$f")
 		names+=("$(field "$f" Name)")
 	done
-	[ ${#files[@]} -gt 0 ] || fail "No hay ninguna webapp"
-	choice=$(printf '%s\n' "${names[@]}" | menu "Quitar webapp") || exit 0
+	[ ${#files[@]} -gt 0 ] || fail "$(t "There are no webapps")"
+	choice=$(printf '%s\n' "${names[@]}" | menu "$(t "Remove webapp")") || exit 0
 	for i in "${!names[@]}"; do
 		[ "${names[$i]}" = "$choice" ] || continue
-		confirm "borrar $choice" || exit 0
+		confirm "$(t "delete %1" "$choice")" || exit 0
 		f=$(field "${files[$i]}" Icon)
 		# El icono solo se borra si es uno de los nuestros
 		case $f in "$ICONS"/*) rm -f -- "$f" ;; esac
 		rm -f -- "${files[$i]}"
-		say "Webapp borrada" "$choice"
+		say "$(t "Webapp deleted")" "$choice"
 		exit 0
 	done
-	fail "No existe la webapp «$choice»"
+	fail "$(t "There is no webapp “%1”" "$choice")"
 }
 
 create() {
 	local name url icon slug host browser file arg dirs d
-	name=$(menu "Nombre de la webapp" </dev/null) || exit 0
+	name=$(menu "$(t "Webapp name")" </dev/null) || exit 0
 	name=$(printf '%s' "$name" | tr -d '[:cntrl:]' | sed 's/^ *//; s/ *$//')
-	[ -n "$name" ] || fail "El nombre está vacío"
+	[ -n "$name" ] || fail "$(t "The name is empty")"
 
-	url=$(menu "URL (p. ej. youtube.com)" </dev/null) || exit 0
+	url=$(menu "$(t "URL (e.g. youtube.com)")" </dev/null) || exit 0
 	[[ $url =~ ^[[:alpha:]]+:// ]] || url="https://$url"  # sin esquema: https:// por defecto
-	[[ $url =~ ^https?://[^/[:space:]]+[^[:space:][:cntrl:]]*$ ]] || fail "URL no válida"
+	[[ $url =~ ^https?://[^/[:space:]]+[^[:space:][:cntrl:]]*$ ]] || fail "$(t "Invalid URL")"
 	host=${url#*://}
 	host=${host%%[/?#]*}
 	host=${host##*@}
@@ -79,25 +85,25 @@ create() {
 	# Nombre del archivo: solo [a-z0-9-], así no puede llevar / ni ..
 	slug=$(printf '%s' "$name" | iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null | tr '[:upper:]' '[:lower:]' |
 		sed 's/[^a-z0-9]\+/-/g; s/^-//; s/-$//')
-	[ -n "$slug" ] || fail "El nombre necesita alguna letra o número"
+	[ -n "$slug" ] || fail "$(t "The name needs at least one letter or number")"
 	file="$APPS/$slug.desktop"
 	if [ -e "$file" ]; then
-		grep -q -- '--app=' "$file" || fail "Ya hay una aplicación llamada $slug.desktop"
-		confirm "sustituir «$(field "$file" Name)»" || exit 0
+		grep -q -- '--app=' "$file" || fail "$(t "There is already an application called %1" "$slug.desktop")"
+		confirm "$(t "replace “%1”" "$(field "$file" Name)")" || exit 0
 	fi
 	# Uno con el mismo nombre en el sistema quedaría tapado por este
 	IFS=: read -ra dirs <<<"${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 	for d in "${dirs[@]}"; do
-		[ -e "$d/applications/$slug.desktop" ] && fail "Ya hay una aplicación del sistema llamada $slug.desktop"
+		[ -e "$d/applications/$slug.desktop" ] && fail "$(t "There is already a system application called %1" "$slug.desktop")"
 	done
 
 	# Navegador: el que usan las webapps de siempre o, si no, otro Chromium
 	for browser in brave chromium google-chrome-stable ""; do
 		[ -n "$browser" ] && command -v "$browser" >/dev/null && break
 	done
-	[ -n "$browser" ] || fail "Hace falta Brave o Chromium"
+	[ -n "$browser" ] || fail "$(t "Brave or Chromium is needed")"
 
-	icon=$(printf 'Automático (favicon de la web)\n' | menu "URL del icono (png, svg…)") || exit 0
+	icon=$(printf '%s\n' "$(t "Automatic (the site's favicon)")" | menu "$(t "Icon URL (png, svg…)")") || exit 0
 	[[ $icon =~ ^https?:// ]] || icon=""
 	rm -f -- "$ICONS/$slug".{png,svg,jpg,ico}
 	icon=$({ [ -n "$icon" ] && fetch_icon "$icon" "$slug"; } ||
@@ -118,11 +124,11 @@ create() {
 		Type=Application
 		StartupNotify=true
 	EOF
-	say -i "$icon" "Webapp creada" "$name ya está en el lanzador"
+	say -i "$icon" "$(t "Webapp created")" "$(t "%1 is now in the launcher" "$name")"
 }
 
 case $1 in
 	--remove) remove ;;
 	"") create ;;
-	*) echo "Uso: webapp [--remove]" >&2; exit 2 ;;
+	*) echo "$(t "Usage: %1" "webapp [--remove]")" >&2; exit 2 ;;
 esac

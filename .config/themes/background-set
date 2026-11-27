@@ -15,7 +15,7 @@ import os
 import sys
 
 sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
-from themelib import HOME, THEMES, current_theme, qs_theme_reload
+from themelib import HOME, THEMES, current_theme, qs_theme_reload, tr
 
 STATE = f"{HOME}/.local/state/theme-backgrounds"
 PEPES = f"{HOME}/.config/backgrounds/wallpaper-desktop.jpg"
@@ -67,7 +67,7 @@ def main():
     elif arg in bgs:
         choose(theme, arg)
     else:
-        sys.exit(f"El tema «{theme}» no tiene el fondo «{arg}». Fondos: {', '.join(names)}")
+        sys.exit(tr("The theme “%1” has no background “%2”. Backgrounds: %3", theme, arg, ", ".join(names)))
 
 
 if __name__ == "__main__":

@@ -13,6 +13,9 @@ step=250
 state="${XDG_RUNTIME_DIR:-/tmp}/nightlight-off"
 conf="$HOME/.config/hypr/hyprsunset.conf"
 
+# Traducción (ver themelib.py): t "Text %1" arg
+t() { python3 "$(dirname "$0")/../../themes/themelib.py" tr "$@"; }
+
 # Quickshell (services/NightLight.qml) vuelve a leer el estado tras cada acción
 
 current() {
@@ -58,10 +61,10 @@ case "$1" in
         hyprctl hyprsunset temperature "$t" >/dev/null ;;
     *)
         if [ -z "$t" ]; then
-            echo '{"text": "󰖙", "class": "unavailable", "tooltip": "hyprsunset no está en marcha"}'
+            echo "{\"text\": \"󰖙\", \"class\": \"unavailable\", \"tooltip\": \"$(t "hyprsunset is not running")\"}"
         elif is_on "$t"; then
-            echo "{\"text\": \"󰖔\", \"class\": \"on\", \"tooltip\": \"Luz nocturna: ${t} K\\nRueda: ajustar · Clic: apagar\"}"
+            echo "{\"text\": \"󰖔\", \"class\": \"on\", \"tooltip\": \"$(t "Night light: %1 K" "$t")\\n$(t "Scroll: adjust · Click: turn off")\"}"
         else
-            echo '{"text": "󰖙", "class": "off", "tooltip": "Luz nocturna apagada\nClic: encender"}'
+            echo "{\"text\": \"󰖙\", \"class\": \"off\", \"tooltip\": \"$(t "Night light off")\\n$(t "Click: turn on")\"}"
         fi ;;
 esac

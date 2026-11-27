@@ -1,6 +1,8 @@
 [Desktop Entry]
-Name=Quitar webapp
-Comment=Borra una webapp del lanzador
+Name=Remove webapp
+Name[es]=Quitar webapp
+Comment=Delete a webapp from the launcher
+Comment[es]=Borra una webapp del lanzador
 Exec=@HOME@/.config/quickshell/scripts/webapp --remove
 Icon=user-trash
 Terminal=false

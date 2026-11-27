@@ -19,8 +19,10 @@ poweroff = [ "systemctl", "poweroff" ]
 # install.sh lo cambia por el hostname de la máquina
 greeting_msg = "cachyos"
 
+# install.sh cambia locale por el de las fechas del sistema (localectl: "es_ES", "de_DE"...)
+# y format por su traducción (.config/themes/i18n/<idioma>.json); aquí, en inglés
 [widget.clock]
-format = "%A, %d de %B  ·  %H:%M"
+format = "%A, %B %d  ·  %H:%M"
 resolution = "500ms"
 label_width = 320
-locale = "es_ES"
+locale = "en_US"

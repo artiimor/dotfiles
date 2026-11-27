@@ -28,6 +28,16 @@ THEME="$(basename "$(readlink "$HOME/.config/themes/current" 2>/dev/null)" 2>/de
 YES=0
 [[ "${1:-}" == "--yes" || "${1:-}" == "-y" ]] && YES=1
 
+# Traducción de los mensajes con el themelib.py del repo (puede que ~/.config/themes
+# aún no exista): t "Text %1" arg. Sin python3, en inglés con los %N cambiados aquí
+t() {
+	python3 "$REPO/.config/themes/themelib.py" tr "$@" 2>/dev/null && return
+	local s="$1" i=1 a
+	shift
+	for a; do s="${s//"%$i"/"$a"}" i=$((i + 1)); done
+	printf '%s' "$s"
+}
+
 # ---------------------------------------------------------------- paquetes
 
 # Escritorio: Hyprland + Quickshell y lo que usan los binds y la barra
@@ -78,16 +88,16 @@ warn() { printf '    %s!%s %s\n' "$red" "$reset" "$*"; }
 ask() {
 	((YES)) && return 0
 	local r
-	read -rp "    $1 [S/n] " r
+	read -rp "    $1 $(t "[Y/n]") " r
 	[[ -z "$r" || "$r" =~ ^[sSyY] ]]
 }
 
 if [[ $EUID -eq 0 ]]; then
-	echo "Ejecútalo como tu usuario, no como root." >&2
+	echo "$(t "Run it as your user, not as root.")" >&2
 	exit 1
 fi
 if ! command -v pacman >/dev/null; then
-	echo "Esto es para CachyOS/Arch (no hay pacman)." >&2
+	echo "$(t "This is for CachyOS/Arch (pacman not found).")" >&2
 	exit 1
 fi
 
@@ -127,12 +137,12 @@ pacman_install() {
 		if pacman -Si "$p" &>/dev/null || pacman -Qq "$p" &>/dev/null; then ok+=("$p"); else missing+=("$p"); fi
 	done
 	if ((${#ok[@]})) && ! sudo pacman -S --needed --noconfirm "${ok[@]}"; then
-		warn "pacman falló (¿un conflicto, p. ej. pulseaudio o tuned-ppd?). Pruebo uno a uno"
+		warn "$(t "pacman failed (a conflict, e.g. pulseaudio or tuned-ppd?). Trying one by one")"
 		for p in "${ok[@]}"; do
-			sudo pacman -S --needed --noconfirm "$p" &>/dev/null || warn "no se pudo instalar $p"
+			sudo pacman -S --needed --noconfirm "$p" &>/dev/null || warn "$(t "could not install %1" "$p")"
 		done
 	fi
-	((${#missing[@]})) && { warn "no están en tus repos: ${missing[*]}"; aur_install "${missing[@]}"; }
+	((${#missing[@]})) && { warn "$(t "not in your repos: %1" "${missing[*]}")"; aur_install "${missing[@]}"; }
 	return 0
 }
 
@@ -194,24 +204,24 @@ gen_monitors() {
 		hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
 		$rules
 	EOF
-	info "monitors.lua generado con: ${!seen[*]}"
+	info "$(t "monitors.lua generated with: %1" "${!seen[*]}")"
 }
 
 aur_install() {
 	local pkg dir
 	for pkg in "$@"; do
 		if pacman -Qq "$pkg" &>/dev/null; then
-			info "$pkg ya está instalado"
+			info "$(t "%1 is already installed" "$pkg")"
 			continue
 		fi
 		if command -v paru >/dev/null; then
-			paru -S --needed --noconfirm "$pkg" || warn "AUR: $pkg falló, sigo"
+			paru -S --needed --noconfirm "$pkg" || warn "$(t "AUR: %1 failed, continuing" "$pkg")"
 		elif command -v yay >/dev/null; then
-			yay -S --needed --noconfirm "$pkg" || warn "AUR: $pkg falló, sigo"
+			yay -S --needed --noconfirm "$pkg" || warn "$(t "AUR: %1 failed, continuing" "$pkg")"
 		else
 			dir="$(mktemp -d)"
 			{ git clone --depth 1 "https://aur.archlinux.org/$pkg.git" "$dir/$pkg" &&
-				(cd "$dir/$pkg" && makepkg -si --needed --noconfirm); } || warn "AUR: $pkg falló, sigo"
+				(cd "$dir/$pkg" && makepkg -si --needed --noconfirm); } || warn "$(t "AUR: %1 failed, continuing" "$pkg")"
 			rm -rf "$dir"
 		fi
 	done
@@ -234,14 +244,14 @@ gpu_setup() {
 		esac
 	done
 	((nvidia && !intel && !amd)) && primary=1
-	info "detectado:$( ((nvidia)) && printf ' NVIDIA')$( ((intel)) && printf ' Intel')$( ((amd)) && printf ' AMD')"
+	info "$(t "detected:%1" "$( ((nvidia)) && printf ' NVIDIA')$( ((intel)) && printf ' Intel')$( ((amd)) && printf ' AMD')")"
 	((intel)) && pkgs+=(intel-media-driver) # VA-API de Intel (AMD ya lo trae mesa)
 	if ((nvidia)); then
 		if pacman -Qq nvidia-utils &>/dev/null; then
-			info "drivers de NVIDIA ya instalados ($(pacman -Q nvidia-utils))"
+			info "$(t "NVIDIA drivers already installed (%1)" "$(pacman -Q nvidia-utils)")"
 		elif command -v chwd >/dev/null; then
 			# CachyOS: chwd elige el driver adecuado para la tarjeta
-			ask "¿Instalar los drivers de NVIDIA con chwd?" && { sudo chwd -a || warn "chwd falló"; }
+			ask "$(t "Install the NVIDIA drivers with chwd?")" && { sudo chwd -a || warn "$(t "%1 failed" chwd)"; }
 		else
 			# Arch: módulo abierto (Turing/RTX 20 o posterior; las anteriores necesitan
 			# el driver propietario de su rama) con las cabeceras de cada kernel instalado
@@ -252,14 +262,14 @@ gpu_setup() {
 			done
 			# Se pregunta aunque haya --yes: en una tarjeta anterior a Turing el módulo
 			# abierto no funciona y nvidia-utils bloquea nouveau (sin gráficos al reiniciar)
-			read -rp "    ¿Instalar ${nv[*]}? (solo RTX 20/GTX 16 o posterior) [s/N] " r || r=""
-			[[ "$r" =~ ^[sSyY] ]] && { sudo pacman -S --needed --noconfirm "${nv[@]}" || warn "no se pudieron instalar los drivers de NVIDIA"; }
+			read -rp "    $(t "Install %1? (RTX 20/GTX 16 or newer only) [y/N]" "${nv[*]}") " r || r=""
+			[[ "$r" =~ ^[sSyY] ]] && { sudo pacman -S --needed --noconfirm "${nv[@]}" || warn "$(t "could not install the NVIDIA drivers")"; }
 		fi
 	fi
-	((${#pkgs[@]})) && ask "¿Instalar ${pkgs[*]}?" && pacman_install "${pkgs[@]}"
+	((${#pkgs[@]})) && ask "$(t "Install %1?" "${pkgs[*]}")" && pacman_install "${pkgs[@]}"
 	# Sin el driver propietario instalado, las variables romperían GLX y VA-API (nouveau)
 	if ((primary)) && ! pacman -Qq nvidia-utils &>/dev/null; then
-		warn "NVIDIA sin el driver propietario: no se ponen sus variables de entorno"
+		warn "$(t "NVIDIA without the proprietary driver: its environment variables are not set")"
 		primary=0
 	fi
 
@@ -268,9 +278,9 @@ gpu_setup() {
 		[[ -L "$env" ]] && rm -f "$env" # no escribir a través de un enlace (stow...)
 		printf '%s\n' "$mark" "export LIBVA_DRIVER_NAME=nvidia" \
 			"export __GLX_VENDOR_LIBRARY_NAME=nvidia" "export NVD_BACKEND=direct" >"$env"
-		info "variables de NVIDIA en ~/.config/uwsm/env.d/gpu"
+		info "$(t "NVIDIA variables in %1" "~/.config/uwsm/env.d/gpu")"
 	else
-		((nvidia)) && info "NVIDIA en un híbrido: sin variables globales (la iGPU dibuja el escritorio)"
+		((nvidia)) && info "$(t "NVIDIA in a hybrid: no global variables (the iGPU draws the desktop)")"
 		# solo se borra si lo generó este script
 		[[ -f "$env" ]] && head -1 "$env" | grep -qxF "$mark" && rm -f "$env"
 	fi
@@ -279,31 +289,31 @@ gpu_setup() {
 
 # ---------------------------------------------------------------- 1. paquetes
 
-step "1. Paquetes del escritorio"
-info "${#DESKTOP[@]} de escritorio, ${#TERMINAL[@]} de terminal, ${#FONTS[@]} fuentes, ${#SYSTEM[@]} de login/arranque, AUR: ${AUR[*]}"
-if ask "¿Instalarlos?"; then
-	sudo pacman -Syu --noconfirm || warn "no se pudo actualizar el sistema, sigo"
+step "$(t "1. Desktop packages")"
+info "$(t "%1 desktop, %2 terminal, %3 fonts, %4 login/boot, AUR: %5" "${#DESKTOP[@]}" "${#TERMINAL[@]}" "${#FONTS[@]}" "${#SYSTEM[@]}" "${AUR[*]}")"
+if ask "$(t "Install the packages?")"; then
+	sudo pacman -Syu --noconfirm || warn "$(t "could not update the system, continuing")"
 	pacman_install "${DESKTOP[@]}" "${TERMINAL[@]}" "${FONTS[@]}" "${SYSTEM[@]}"
 	aur_install "${AUR[@]}"
 fi
 
-step "1b. Gráfica (GPU)"
+step "$(t "1b. Graphics (GPU)")"
 gpu_setup
 
 # ---------------------------------------------------------------- 2. apps
 
-step "2. Apps extra"
+step "$(t "2. Extra apps")"
 info "${APPS[*]}"
-if ask "¿Instalarlas?"; then
+if ask "$(t "Install the apps?")"; then
 	pacman_install "${APPS[@]}"
 fi
 
 # ---------------------------------------------------------------- 3. dotfiles
 
 step "3. Dotfiles"
-info "$REPO/.config -> ~/.config, .bashrc, .bash_profile, .profile, webapps, iconos Sur"
-info "lo que se sobrescriba se guarda en $BACKUP"
-if ask "¿Copiarlos?"; then
+info "$(t "%1 -> ~/.config, .bashrc, .bash_profile, .profile, webapps, Sur icons" "$REPO/.config")"
+info "$(t "whatever gets overwritten is saved in %1" "$BACKUP")"
+if ask "$(t "Copy them?")"; then
 	command -v rsync >/dev/null || sudo pacman -S --needed --noconfirm rsync
 	# monitors.lua: si aún no existe (primera instalación) se genera con las pantallas detectadas
 	mon="$HOME/.config/hypr/config/monitors.lua"
@@ -334,7 +344,7 @@ if ask "¿Copiarlos?"; then
 			cursor=macOS
 		else
 			rm -rf "$cursor_dir"
-			warn "no se pudo descargar el cursor macOS; se usa Adwaita"
+			warn "$(t "could not download the macOS cursor; using Adwaita")"
 			sed -i 's/^gtk-cursor-theme-name=macOS/gtk-cursor-theme-name=Adwaita/' \
 				"$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
 			# hypr/config/environment.lua lee uwsm/env: basta con cambiarlo aquí
@@ -346,34 +356,34 @@ if ask "¿Copiarlos?"; then
 	printf '[Icon Theme]\nName=Default\nInherits=%s\n' "$cursor" >"$HOME/.icons/default/index.theme"
 	gsettings set org.gnome.desktop.interface cursor-theme "$cursor" 2>/dev/null || true
 	xdg-user-dirs-update 2>/dev/null || true
-	[[ -d "$BACKUP" ]] && info "copias de lo anterior en $BACKUP"
+	[[ -d "$BACKUP" ]] && info "$(t "backups of the previous files in %1" "$BACKUP")"
 fi
 
 # CachyOS pone fish de shell por defecto; la config de este repo es la de bash (.bashrc)
-if [[ "$(getent passwd "$ME" | cut -d: -f7)" != */bash ]] && ask "¿Usar bash como shell (en vez de fish)?"; then
+if [[ "$(getent passwd "$ME" | cut -d: -f7)" != */bash ]] && ask "$(t "Use bash as your shell (instead of fish)?")"; then
 	sudo chsh -s /bin/bash "$ME"
-	info "shell cambiado a bash: se nota al volver a iniciar sesión"
+	info "$(t "shell changed to bash: takes effect on your next login")"
 fi
 
 # ---------------------------------------------------------------- 4. tema
 
-step "4. Tema de colores"
-if [[ -x "$HOME/.config/themes/theme-set" ]] && ask "¿Aplicar el tema $THEME?"; then
-	"$HOME/.config/themes/theme-set" "$THEME" || warn "theme-set falló; repítelo dentro de Hyprland"
+step "$(t "4. Color theme")"
+if [[ -x "$HOME/.config/themes/theme-set" ]] && ask "$(t "Apply the %1 theme?" "$THEME")"; then
+	"$HOME/.config/themes/theme-set" "$THEME" || warn "$(t "%1 failed; run it again inside Hyprland" theme-set)"
 fi
 # Perfil del escritorio (Super+Shift+T): el que ya tuvieras; en una instalación nueva, "mac".
 # Ajusta iconos GTK/Qt y qt6ct a ese perfil (el repo los trae como en "mac")
 if [[ -x "$HOME/.config/themes/config-set" ]]; then
-	"$HOME/.config/themes/config-set" --reapply || warn "config-set falló; repítelo dentro de Hyprland"
+	"$HOME/.config/themes/config-set" --reapply || warn "$(t "%1 failed; run it again inside Hyprland" config-set)"
 fi
 
 # ---------------------------------------------------------------- 5. hyprbars
 
-step "5. Barras de título (hyprbars con parche)"
-info "se compila con la misma versión que el Hyprland instalado"
-if command -v Hyprland >/dev/null && ask "¿Compilar hyprbars?"; then
+step "$(t "5. Title bars (patched hyprbars)")"
+info "$(t "built with the same version as the installed Hyprland")"
+if command -v Hyprland >/dev/null && ask "$(t "Build hyprbars?")"; then
 	ver="$(Hyprland --version 2>/dev/null | grep -oP 'Hyprland \K[0-9]+\.[0-9]+\.[0-9]+' | head -1)" || true
-	[[ -n "$ver" ]] || { warn "no sé qué versión de Hyprland hay; pruebo con la de pacman"; ver="$(pacman -Q hyprland 2>/dev/null | awk '{print $2}' | cut -d- -f1)" || true; }
+	[[ -n "$ver" ]] || { warn "$(t "can't tell the Hyprland version; trying the one from pacman")"; ver="$(pacman -Q hyprland 2>/dev/null | awk '{print $2}' | cut -d- -f1)" || true; }
 	dir="$(mktemp -d)"
 	# hyprland-plugins solo etiqueta algunas versiones (v0.57.0 vale para 0.57.1).
 	# Los parches se aplican en orden alfabético (hover-icon, on-drag-end, resize-top-edge)
@@ -386,24 +396,24 @@ if command -v Hyprland >/dev/null && ask "¿Compilar hyprbars?"; then
 		# con dlopen y sobrescribirlo en su sitio lo puede tumbar (SIGBUS)
 		install -Dm755 "$dir/hp/hyprbars/hyprbars.so" "$HOME/.local/lib/hyprland/.hyprbars.so.new"
 		mv -f "$HOME/.local/lib/hyprland/.hyprbars.so.new" "$HOME/.local/lib/hyprland/hyprbars.so"
-		info "hyprbars v$ver instalado en ~/.local/lib/hyprland"
-		info "si una actualización sube la versión de Hyprland, repite este paso"
+		info "$(t "hyprbars v%1 installed in %2" "$ver" "~/.local/lib/hyprland")"
+		info "$(t "if an update bumps the Hyprland version, repeat this step")"
 	else
-		warn "no se pudo compilar (¿no hay tag v$ver en hyprland-plugins?). Sin él todo funciona, solo que sin barras de título."
+		warn "$(t "could not build it (no v%1 tag in hyprland-plugins?). Everything works without it, just without title bars." "$ver")"
 	fi
 	rm -rf "$dir"
 fi
 
 # Los botones de cerrar/minimizar/maximizar los pone hyprbars (estilo macOS):
 # se quitan los que dibujan las propias apps para que no salgan dos veces
-if ask "¿Quitar los botones de ventana propios de GTK y Brave (se quedan solo los de hyprbars)?"; then
+if ask "$(t "Remove the window buttons drawn by GTK and Brave (keeping only the hyprbars ones)?")"; then
 	# GTK 4 / libadwaita lo lee de aquí; GTK 3 de gtk-3.0/settings.ini (paso 3)
 	gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:' 2>/dev/null || true
 	# Brave: "Usar la barra de título y los bordes del sistema" (brave://settings/appearance).
 	# Con Brave abierto el cambio se pierde al cerrarlo, así que solo se toca si está cerrado
 	prefs="$HOME/.config/BraveSoftware/Brave-Browser/Default/Preferences"
 	if pgrep -x brave >/dev/null; then
-		warn "Brave está abierto: ciérralo y repite este paso, o actívalo en brave://settings/appearance"
+		warn "$(t "Brave is open: close it and repeat this step, or enable it in brave://settings/appearance")"
 	elif [[ -f "$prefs" ]]; then
 		python3 - "$prefs" <<-'EOF'
 			import json, sys
@@ -416,38 +426,47 @@ if ask "¿Quitar los botones de ventana propios de GTK y Brave (se quedan solo l
 				json.dump(d, f, separators=(",", ":"))
 			os.replace(p + ".tmp", p)
 		EOF
-		info "Brave usará la barra del sistema"
+		info "$(t "Brave will use the system title bar")"
 	else
-		info "Brave aún no tiene perfil: ábrelo una vez y repite este paso"
+		info "$(t "Brave has no profile yet: open it once and repeat this step")"
 	fi
 fi
 
 # ---------------------------------------------------------------- 6. sistema
 
-step "6. Sistema (sudo)"
+step "$(t "6. System (sudo)")"
 S="$REPO/system"
 
-if ask "¿Login con greetd + ReGreet (sustituye a SDDM/el login que haya)?"; then
+if ask "$(t "Log in with greetd + ReGreet (replaces SDDM or whatever login manager you have)?")"; then
 	for f in config.toml regreet.toml regreet.css environments; do
 		install_sys "$S/etc/greetd/$f" "/etc/greetd/$f"
 	done
 	sudo install -Dm644 "$S/usr/share/backgrounds/greeter.jpg" /usr/share/backgrounds/greeter.jpg
-	sudo sed -i "s|^greeting_msg = .*|greeting_msg = \"$(cat /etc/hostname 2>/dev/null || echo cachyos)\"|" /etc/greetd/regreet.toml
+	# Saludo: el hostname. Idioma del reloj: el de las fechas del sistema (localectl: LC_TIME
+	# o, si no, LANG) sin ".UTF-8", p. ej. "es_ES", y su formato traducido a ese idioma
+	loc="$(localectl status 2>/dev/null | grep -oP '\b(LC_TIME|LANG)=\S+' | sort -r | head -1)" || true
+	loc="${loc#*=}"
+	loc="${loc:-${LC_TIME:-${LANG:-}}}"
+	loc="${loc%%[.@]*}"
+	[[ "$loc" =~ ^[a-z]{2,3}_[A-Z]{2}$ ]] || loc=en_US
+	clock="$(LC_ALL="" LC_MESSAGES="" LANG="$loc" t "%A, %B %d  ·  %H:%M" 2>/dev/null)"
+	sudo sed -i -e "s|^greeting_msg = .*|greeting_msg = \"$(cat /etc/hostname 2>/dev/null || echo cachyos)\"|" \
+		-e "s|^format = .*|format = \"$clock\"|" -e "s|^locale = .*|locale = \"$loc\"|" /etc/greetd/regreet.toml
 	# El login que esté activo (sea cual sea) se desactiva para que greetd ocupe display-manager.service
 	cur="$(basename "$(readlink /etc/systemd/system/display-manager.service 2>/dev/null)" .service)"
 	if [[ -n "$cur" && "$cur" != greetd ]]; then
-		sudo systemctl disable "$cur" || warn "no se pudo desactivar $cur"
+		sudo systemctl disable "$cur" || warn "$(t "could not disable %1" "$cur")"
 	fi
-	sudo systemctl enable greetd || warn "no se pudo activar greetd: revisa display-manager.service"
+	sudo systemctl enable greetd || warn "$(t "could not enable greetd: check display-manager.service")"
 fi
 
-if ask "¿Tema de arranque Plymouth \"sobrio\" (gris neutro)?"; then
+if ask "$(t "Plymouth boot theme \"sobrio\" (neutral grey)?")"; then
 	sudo rm -rf /usr/share/plymouth/themes/sobrio /usr/share/plymouth/themes/canalla
 	sudo cp -r "$S/usr/share/plymouth/themes/sobrio" /usr/share/plymouth/themes/
 	sudo plymouth-set-default-theme sobrio
 	grep -qw plymouth /etc/mkinitcpio.conf 2>/dev/null ||
-		warn "falta el hook plymouth en /etc/mkinitcpio.conf (y 'splash' en la línea del kernel): sin eso no se verá"
-	info "regenerando el initramfs..."
+		warn "$(t "the plymouth hook is missing from /etc/mkinitcpio.conf (and 'splash' from the kernel command line): without them it won't show")"
+	info "$(t "regenerating the initramfs...")"
 	if command -v limine-mkinitcpio >/dev/null; then
 		sudo limine-mkinitcpio
 	else
@@ -458,16 +477,16 @@ fi
 # keyd: thinkpad.conf es para el teclado interno del ThinkPad. Se detecta por DMI: en un
 # ThinkPad la respuesta por defecto es sí; en otro equipo es no (también con --yes).
 # hypr/config/keyd.lua solo cambia keyd si existe /etc/keyd/thinkpad.conf.
-KEYD_Q="¿Teclado del portátil con keyd: intercambiar Alt y Super y CapsLock como Control (hecho para ThinkPad)?"
+KEYD_Q="$(t "Laptop keyboard with keyd: swap Alt and Super, and CapsLock as Control (made for ThinkPad)?")"
 KEYD=0
 if grep -qsi thinkpad /sys/class/dmi/id/product_version /sys/class/dmi/id/product_family; then
-	info "ThinkPad detectado"
+	info "$(t "ThinkPad detected")"
 	ask "$KEYD_Q" && KEYD=1
 elif ((!YES)); then
-	read -rp "    $KEYD_Q (no parece un ThinkPad) [s/N] " r || r=""
+	read -rp "    $(t "%1 (this doesn't look like a ThinkPad) [y/N]" "$KEYD_Q") " r || r=""
 	[[ "$r" =~ ^[sSyY] ]] && KEYD=1
 else
-	info "no parece un ThinkPad: se salta keyd"
+	info "$(t "this doesn't look like a ThinkPad: skipping keyd")"
 fi
 if ((KEYD)); then
 	install_sys "$S/etc/keyd/thinkpad.conf" /etc/keyd/thinkpad.conf
@@ -475,13 +494,13 @@ if ((KEYD)); then
 	# hypr/config/keyd.lua cambia el mapa con "keyd bind": hace falta el grupo keyd
 	if getent group keyd >/dev/null && ! id -nG "$ME" | grep -qw keyd; then
 		sudo usermod -aG keyd "$ME"
-		info "añadido al grupo keyd: se nota al volver a iniciar sesión"
+		info "$(t "added to the keyd group: takes effect on your next login")"
 	fi
 fi
 
 # Al conectarse a una red, NetworkManager pone la zona horaria de la ubicación (ver la cabecera del script)
-info "zona horaria automática: manda tu IP pública a ipinfo.io al conectarte (no con VPN)"
-if ask "¿Zona horaria automática según la red?"; then
+info "$(t "automatic time zone: sends your public IP to ipinfo.io when you connect (not over VPN)")"
+if ask "$(t "Automatic time zone based on the network?")"; then
 	backup_sys /etc/NetworkManager/dispatcher.d/90-timezone
 	# NetworkManager solo ejecuta scripts de root que nadie más pueda escribir
 	sudo install -Dm755 "$S/etc/NetworkManager/dispatcher.d/90-timezone" /etc/NetworkManager/dispatcher.d/90-timezone
@@ -490,20 +509,20 @@ if ask "¿Zona horaria automática según la red?"; then
 fi
 
 # faillock: 10 fallos seguidos bloquean la cuenta 10 min (por defecto 3); afecta a sudo y al bloqueo
-if ask "¿Permitir 10 intentos de contraseña antes de bloquear la cuenta (en vez de 3)?"; then
+if ask "$(t "Allow 10 password attempts before locking the account (instead of 3)?")"; then
 	install_sys "$S/etc/security/faillock.conf" /etc/security/faillock.conf
 fi
 
-if ask "¿Activar servicios (NetworkManager, bluetooth, power-profiles-daemon)?"; then
+if ask "$(t "Enable services (NetworkManager, bluetooth, power-profiles-daemon)?")"; then
 	sudo systemctl enable --now NetworkManager bluetooth power-profiles-daemon
 fi
 
 # ---------------------------------------------------------------- fin
 
-step "Listo"
-[[ -d "$BACKUP" ]] && info "copias de lo que se sobrescribió (incluido /etc) en $BACKUP"
-info "Reinicia y entra en la sesión Hyprland (uwsm)."
-info "Cosas que seguramente quieras cambiar:"
-info "  ~/.config/hypr/config/monitors.lua y variables.lua   monitores y apps por defecto"
-info "  ~/.config/hypr/config/inputs.lua                     distribución de teclado"
-info "  Super+T                                              cambiar de tema"
+step "$(t "Done")"
+[[ -d "$BACKUP" ]] && info "$(t "backups of what was overwritten (including /etc) in %1" "$BACKUP")"
+info "$(t "Reboot and log into the Hyprland (uwsm) session.")"
+info "$(t "Things you will probably want to change:")"
+info "$(t "  ~/.config/hypr/config/monitors.lua and variables.lua  monitors and default apps")"
+info "$(t "  ~/.config/hypr/config/inputs.lua                      keyboard layout")"
+info "$(t "  Super+T                                               change theme")"

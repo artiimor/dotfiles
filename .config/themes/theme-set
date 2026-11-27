@@ -48,7 +48,7 @@ import time
 sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
 from themelib import (CONF, CURRENT, HOME, QUIET, THEMES, current_theme, list_themes,
                       load_script, load_theme, notify, qs_theme_reload, reload_terminals,
-                      run_quiet, saved_profile, write)
+                      run_quiet, saved_profile, tr, write)
 
 HEADER = "Generado por theme-set a partir de themes/{}/theme.json: no editar"
 
@@ -268,7 +268,7 @@ def gen_qt(name, t):
           f"inactiveBlend={kde(dim)}\ninactiveForeground={kde(dim)}\n"
     )
     write(f"{HOME}/.local/share/color-schemes/Theme.colors",
-          f"# {HEADER.format(name)}\n[General]\nColorScheme=Theme\nName=Tema actual\n\n{colors}")
+          f"# {HEADER.format(name)}\n[General]\nColorScheme=Theme\nName={tr('Current theme')}\n\n{colors}")
 
     # kdeglobals: se conservan las demás secciones y se cambian solo las de color
     path = f"{CONF}/kdeglobals"
@@ -362,7 +362,7 @@ def apply(name):
     reload_all(restarted)
     if restarted:
         time.sleep(1.5)  # que el Quickshell nuevo tenga ya el servidor de notificaciones
-    notify("Tema", "Tema de colores", t.get("name", name))
+    notify(tr("Theme"), tr("Color theme"), t.get("name", name))
 
 
 def print_list():
@@ -394,7 +394,7 @@ def main():
         return
     name = current_theme() if args[0] == "--reapply" else args[0]
     if name not in list_themes():
-        sys.exit(f"No existe el tema «{name}». Temas: {', '.join(list_themes())}")
+        sys.exit(tr("There is no theme “%1”. Themes: %2", name, ", ".join(list_themes())))
     apply(name)
 
 

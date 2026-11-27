@@ -27,6 +27,7 @@ git clone https://github.com/artiimor/dotfiles.git ~/dotfiles && ~/dotfiles/inst
 - [Keyboard remapping (keyd)](#keyboard-remapping-keyd)
 - [Repository structure](#repository-structure)
 - [Customizing](#customizing)
+- [Languages](#languages)
 - [Updating and re-applying](#updating-and-re-applying)
 - [Uninstalling / reverting](#uninstalling--reverting)
 - [Troubleshooting](#troubleshooting)
@@ -79,10 +80,10 @@ One `theme.json` per theme recolors Hyprland, Quickshell, the terminals, Neovim,
 |---|---|
 | ![App launcher](screenshots/launcher.png) | ![Background picker](screenshots/backgrounds.png) |
 | **Profile menu (Super+Shift+T)** | **Keybinding cheatsheet (Super+/)** |
-| ![Profile menu: Modo Mac / Modo normal](screenshots/config-menu.png) | ![Keybinding cheatsheet](screenshots/keybindings.png) |
+| ![Profile menu: Mac mode / Normal mode](screenshots/config-menu.png) | ![Keybinding cheatsheet](screenshots/keybindings.png) |
 
 App launcher, clipboard history, emoji picker, power menu, file search, the theme / background / profile menus and the
-cheatsheet are all the same Quickshell launcher in different modes. Their labels are in Spanish.
+cheatsheet are all the same Quickshell launcher in different modes. Their labels follow your [language](#languages).
 
 ## Features
 
@@ -95,12 +96,12 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
   the battery indicator only shows when UPower reports a laptop battery, and brightness (bar, sliders, OSD, keys) only when
   there is a panel in `/sys/class/backlight`, in both profiles. On a laptop, a notification warns at 15% battery and a
   critical one at 5% (both profiles).
-- **Two desktop profiles**, *Modo Mac* and *Modo normal*, switchable live with **Super+Shift+T** (`config-set`).
+- **Two desktop profiles**, *Mac mode* and *Normal mode*, switchable live with **Super+Shift+T** (`config-set`).
 - **Per-workspace desktop mode** (**Super+Alt+D**): floating windows, minimize, a dock and macOS-style edge snapping.
 - **macOS-style titlebars** (close / minimize / maximize) on floating windows, using a patched `hyprbars` plugin.
 - **Color theme switcher** (**Super+T**, `theme-set`): one `theme.json` per theme recolors Hyprland, Quickshell, hyprlock,
   Ghostty, kitty, btop, fzf, GTK, Qt/KDE, fastfetch and running Neovim instances at once. 13 themes, 2 of them light.
-- **Monospace font picker** (**Super+T**, "Fuente" tab, `font-set`) for kitty, Ghostty and the Normal mode titlebars.
+- **Monospace font picker** (**Super+T**, "Font" tab, `font-set`) for kitty, Ghostty and the Normal mode titlebars.
 - **Per-theme backgrounds** (**Super+Ctrl+B**, `background-set`), remembered per theme.
 - **Terminal setup**: Ghostty, bash + starship, a minimal Neovim built on mini.nvim (colors generated from the theme with
   mini.hues; LazyVim, available as `lazyvim`, shares the same colors and keeps `miami` and `basalt` colorschemes),
@@ -108,7 +109,7 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 - **System extras** (optional, under `system/`): greetd + ReGreet login screen, the "sobrio" Plymouth boot theme (plain neutral gray),
   a keyd config for a ThinkPad keyboard, automatic time zone from the network and 10 password attempts before lockout (faillock).
 - **Web apps** (`.local/share/applications`): Proton Mail, Proton Calendar, Proton Drive, WhatsApp and YouTube as Brave app windows.
-  "Crear webapp" and "Quitar webapp" in the launcher (and Spotlight) add or remove your own (`quickshell/scripts/webapp`).
+  "Create webapp" and "Remove webapp" in the launcher (and Spotlight) add or remove your own (`quickshell/scripts/webapp`).
 
 ## Requirements
 
@@ -128,7 +129,7 @@ git clone https://github.com/artiimor/dotfiles.git ~/dotfiles
 The script is safe to re-run: `pacman` uses `--needed`, overwritten files are backed up, and your own
 `monitors.lua`, `variables.lua`, `inputs.lua`, user files (below) and chosen theme are kept if they already exist.
 It asks for `sudo` once at the start and keeps it alive. A failed package, AUR build or download is only a warning.
-Its prompts are in Spanish (`[S/n]`: `s`/`y` or Enter means yes).
+Its prompts follow your [language](#languages) (`[Y/n]`: `y`/`s` or Enter means yes).
 
 When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 
@@ -143,7 +144,7 @@ When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 | **3b. Shell** | If your login shell isn't bash (CachyOS defaults to fish), offers `chsh -s /bin/bash`. |
 | **4. Theme and profile** | Runs `theme-set <theme>` (your current theme if you already had one, otherwise **grafito**) and `config-set --reapply` (keeps your profile; Mac mode on a fresh install). |
 | **5. hyprbars** | Clones `hyprwm/hyprland-plugins` at the tag matching your installed Hyprland (falls back to `vX.Y.0`), applies the three patches in `.config/hypr/`, builds it and copies `hyprbars.so` to `~/.local/lib/hyprland/`. Then offers to remove the apps' own window buttons (GTK `button-layout`, and Brave's "use system title bar", only if Brave is closed). |
-| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname, disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group. The default answer depends on the hardware: yes if a ThinkPad is detected via DMI, no otherwise, and `--yes` follows that default); **automatic time zone** (installs the NetworkManager dispatcher script `system/etc/NetworkManager/dispatcher.d/90-timezone` and enables `NetworkManager-dispatcher`: on each connection it sends your public IP to ipinfo.io and sets the time zone it returns; it does nothing while a VPN is active); **password attempts** (installs `system/etc/security/faillock.conf` with `deny = 10`: 10 failed passwords lock the account for 10 minutes, instead of 3; it affects sudo and the lock screen); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
+| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname and the clock's locale and date format to the system's date locale (`LC_TIME`, or else `LANG`, from `localectl`), disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group. The default answer depends on the hardware: yes if a ThinkPad is detected via DMI, no otherwise, and `--yes` follows that default); **automatic time zone** (installs the NetworkManager dispatcher script `system/etc/NetworkManager/dispatcher.d/90-timezone` and enables `NetworkManager-dispatcher`: on each connection it sends your public IP to ipinfo.io and sets the time zone it returns; it does nothing while a VPN is active); **password attempts** (installs `system/etc/security/faillock.conf` with `deny = 10`: 10 failed passwords lock the account for 10 minutes, instead of 3; it affects sudo and the lock screen); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
 
 Details of step 3:
 
@@ -193,7 +194,7 @@ Then replace the `@HOME@` placeholder yourself:
 
 ## Desktop profiles: Mac mode / Normal mode
 
-**Super+Shift+T** opens the "Config" menu with *Modo Mac* and *Modo normal* (the active one has a check mark). From a terminal:
+**Super+Shift+T** opens the "Config" menu with *Mac mode* and *Normal mode* (the active one has a check mark). From a terminal:
 
 ```sh
 ~/.config/themes/config-set mac       # Mac mode (Mac light if the color theme is light)
@@ -244,7 +245,7 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 
 ## Color themes
 
-**Super+T** opens the theme menu, split into two tabs, **Oscuros** (dark) and **Claros** (light), plus a third, **Fuente**
+**Super+T** opens the theme menu, split into two tabs, **Dark** and **Light**, plus a third, **Font**
 ([font](#font)); it opens on the active theme's tab with that theme selected. Switch tabs by clicking, with Tab / Shift+Tab or with ←/→. Each tab has its own search (just type; it is kept per tab), and fonts also match their original name (e.g. "Cascadia" finds CaskaydiaCove). From a terminal:
 
 ```sh
@@ -295,11 +296,11 @@ The login screen (ReGreet, macOS-style dark gray) and Plymouth ("sobrio") are ou
 
 **Creating a theme**: copy a folder (`cp -r ~/.config/themes/miami ~/.config/themes/my-theme`), change `name` and the
 colors in its `theme.json` (add `"light": true` for a light theme) and pick it with Super+T.
-The meaning of each `theme.json` section is documented in [`.config/themes/README.md`](.config/themes/README.md) (Spanish).
+The meaning of each `theme.json` section is documented in [`.config/themes/README.md`](.config/themes/README.md).
 
 ### Font
 
-The monospace font is separate from the color theme: pick it in the **Fuente** tab of Super+T (each row is written in
+The monospace font is separate from the color theme: pick it in the **Font** tab of Super+T (each row is written in
 its font) or with `~/.config/themes/font-set "<family>"` (no argument lists the installed Nerd Fonts). It applies at once
 to kitty, Ghostty and the hyprbars titlebars in Normal mode, and is saved in `~/.local/state/font`. The Quickshell UI
 (Inter, or Noto Sans in Mac mode) keeps its own font. Details in [`.config/themes/README.md`](.config/themes/README.md#fuente).
@@ -322,7 +323,7 @@ No theme in the repo ships backgrounds yet, so out of the box you get the Pepes.
 ~/.config/themes/background-set --path       # path of the active one
 ```
 
-**Adding backgrounds**: choose **"＋ Añadir fondos…"** at the bottom of the Super+Ctrl+B picker; it creates and opens the
+**Adding backgrounds**: choose **"＋ Add wallpapers…"** at the bottom of the Super+Ctrl+B picker; it creates and opens the
 current theme's `backgrounds/` folder in the file manager, so you can drop images in. Or copy them there by hand.
 
 The choice is remembered per theme in `~/.local/state/theme-backgrounds`. With nothing chosen (or if the chosen file
@@ -376,7 +377,7 @@ left **Alt** key (see [keyd](#keyboard-remapping-keyd)).
 | Super+Ctrl+V | Clipboard history |
 | Super+. | Emoji picker |
 | Super+T | Color theme and font menu |
-| Super+Shift+T | Profile menu (Modo Mac / Modo normal) |
+| Super+Shift+T | Profile menu (Mac mode / Normal mode) |
 | Super+Ctrl+B | Background picker |
 | Super+Ctrl+Shift+B | Next background |
 | Super+/ | Keybinding cheatsheet |
@@ -511,6 +512,20 @@ Things you'll probably want to change after installing:
 | `~/.config/hypr/config/environment.lua` and `~/.config/uwsm/env` | Environment variables (`environment.lua` reads them from `uwsm/env` and `uwsm/env.d/gpu`). NVIDIA variables are generated by `install.sh` into `uwsm/env.d/gpu`; on a hybrid laptop add them there yourself only if you really want them |
 | `~/.config/hypr/hyprsunset.conf` | Night light schedule and temperature |
 | `~/.config/quickshell/Theme.qml` | Sizes and the lock screen / default wallpaper paths |
+
+## Languages
+
+Everything is written in English and translated at runtime: the Quickshell bar, launcher and menus, macshell
+(Mac mode), the theme scripts, `webapp` and `install.sh`. The language is the first one set of `LC_ALL`,
+`LC_MESSAGES` and `LANG` (`es_ES.UTF-8` → `es`); English if there's no translation for it, and any missing string
+also falls back to English. Dates follow your system locale (`LC_TIME`). Only Spanish (`es`) is included for now.
+
+To add a language, copy the three `es.json` files to `<language>.json` (e.g. `fr.json`) and translate the values,
+keeping the keys and the `%1`, `%2`… placeholders:
+
+- `.config/quickshell/i18n/` (bar, launcher, menus, notifications, lock screen)
+- `.config/quickshell/macshell/i18n/` (Mac mode)
+- `.config/themes/i18n/` (theme scripts, `webapp`, night light tooltip, `install.sh` and the login screen clock format)
 
 ## Updating and re-applying
 

@@ -27,7 +27,7 @@ import subprocess
 import sys
 
 sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
-from themelib import CONF, HOME, notify, read_state, reload_terminals, run_quiet, write
+from themelib import CONF, HOME, notify, read_state, reload_terminals, run_quiet, tr, write
 
 STATE = f"{HOME}/.local/state/font"
 HEADER = "Generado por font-set: no editar, elige la fuente con font-set (Super+T, Fuente)"
@@ -58,7 +58,7 @@ def apply(fam, fams):
     write(f"{CONF}/hypr/font.conf", f"# {HEADER}\n{propo}\n")
     reload_terminals()  # kitty y Ghostty releen su config
     run_quiet(["hyprctl", "reload"])  # hyprbars
-    notify("Fuente", "Fuente", fam)
+    notify(tr("Font"), tr("Font"), fam)
 
 
 def main():
@@ -75,7 +75,7 @@ def main():
     elif arg in names:
         apply(arg, fams)
     else:
-        sys.exit(f"No está instalada la fuente «{arg}». Fuentes: {', '.join(names)}")
+        sys.exit(tr("The font “%1” is not installed. Fonts: %2", arg, ", ".join(names)))
 
 
 if __name__ == "__main__":

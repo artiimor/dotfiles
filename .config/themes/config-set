@@ -69,7 +69,8 @@ import time
 sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
 # notify como notify_send: restart_shell() y apply() tienen un parámetro notify (bool)
 from themelib import (CONF, PROFILE_STATE, current_theme, load_script, load_theme,
-                      notify as notify_send, run_quiet, saved_profile, theme_light, write_atomic)
+                      notify as notify_send, run_quiet, saved_profile, theme_light, tr,
+                      write_atomic)
 
 MACSHELL = f"{CONF}/quickshell/macshell"
 
@@ -80,7 +81,7 @@ MAC_FONTS = {
 
 PROFILES = {
     "mac": {
-        "name": "Modo Mac",
+        "name": tr("Mac mode"),
         "icons": "Sur-Transparente",
         "qt_style": "Breeze",
         "qt_colors": "mac-dark.conf",  # no la toca theme-set
@@ -88,7 +89,7 @@ PROFILES = {
         "light": False,
     },
     "mac-light": {
-        "name": "Modo Mac (claro)",
+        "name": tr("Mac mode (light)"),
         "icons": "Sur",
         "qt_style": "Breeze",
         "qt_colors": "mac-light.conf",
@@ -97,7 +98,7 @@ PROFILES = {
         "fixed_css": True,  # gtk.css claro fijo (GTK_LIGHT), no el del tema
     },
     "default": {
-        "name": "Modo normal",
+        "name": tr("Normal mode"),
         "icons": "Papirus-Dark",  # Papirus-Light con un tema claro (ver settings())
         "qt_style": "Fusion",
         "qt_colors": "current.conf",  # la genera theme-set con el tema activo
@@ -109,7 +110,7 @@ PROFILES = {
 MAC_PROFILES = ("mac", "mac-light")
 
 # Lo que sale en el menú (Super+Shift+T): "mac" vale para mac y mac-light
-MENU = (("mac", "Modo Mac"), ("default", "Modo normal"))
+MENU = (("mac", tr("Mac mode")), ("default", tr("Normal mode")))
 
 # gtk.css de mac-light: colores claros de macOS (theme-set no lo pisa en este perfil)
 GTK_LIGHT = {
@@ -294,7 +295,7 @@ def restart_shell(name, notify=True):
         run_quiet(["hyprctl", "dispatch", f"hl.dsp.exec_cmd('{cmd}')"])
     if notify:
         time.sleep(1.5)  # que haya servidor de notificaciones para el aviso
-        notify_send("Config", "Config del escritorio", PROFILES[name]["name"])
+        notify_send(tr("Config"), tr("Desktop config"), PROFILES[name]["name"])
 
 
 def write_files(name, css=True):
@@ -307,8 +308,8 @@ def write_files(name, css=True):
 
 def apply(name, notify=True):
     if name in MAC_PROFILES and not has_macshell():
-        print(f"Aviso: no está macshell ({MACSHELL}); \"{name}\" se verá como \"default\" "
-              "en la barra (vuelve a copiar los dotfiles: install.sh, paso 3)", file=sys.stderr)
+        print(tr("Warning: macshell is missing (%1); \"%2\" will look like \"default\" in the "
+                 "bar (copy the dotfiles again: install.sh, step 3)", MACSHELL, name), file=sys.stderr)
     write_state(name)
     write_files(name)
     restart_shell(name, notify)
@@ -348,7 +349,7 @@ def main():
     family = "mac" if cur in MAC_PROFILES else cur
     if not args:
         for k, n in MENU:
-            extra = " (claro)" if k == family and cur == "mac-light" else ""
+            extra = tr(" (light)") if k == family and cur == "mac-light" else ""
             print(("* " if k == family else "  ") + f"{k:<8} {n}{extra}")
         return
     if args[0] == "--list":
@@ -361,7 +362,7 @@ def main():
     else:
         name = resolve(args[0])
     if name not in PROFILES:
-        sys.exit(f"No existe el perfil «{name}». Perfiles: {', '.join(k for k, _ in MENU)}")
+        sys.exit(tr("There is no profile “%1”. Profiles: %2", name, ", ".join(k for k, _ in MENU)))
     _lock = lock()
     apply(name)
 

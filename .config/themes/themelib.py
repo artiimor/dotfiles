@@ -1,8 +1,11 @@
 # Lo común a theme-set, config-set, background-set y font-set: rutas, tema actual, perfil
-# guardado, escritura de archivos y avisos a Quickshell. No es un tema (no tiene
-# theme.json) ni un script: lo importan ellos, que se ejecutan desde esta
+# guardado, escritura de archivos, avisos a Quickshell y traducción (tr). No es un
+# tema (no tiene theme.json): lo importan ellos, que se ejecutan desde esta
 # carpeta (sys.path[0]) y ponen antes sys.dont_write_bytecode = True para que no
 # aparezca __pycache__ aquí.
+#
+# Los scripts de bash (install.sh, quickshell/scripts/webapp...) traducen con
+#   python3 ~/.config/themes/themelib.py tr "Text %1" arg
 
 import importlib.util
 import json
@@ -18,6 +21,31 @@ CURRENT = f"{THEMES}/current"
 PROFILE_STATE = f"{HOME}/.local/state/desktop-profile"  # lo escribe config-set
 
 QUIET = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+
+# ── Idioma ───────────────────────────────────────────────────
+
+_dict = None  # traducciones del idioma activo; se carga la primera vez que hace falta
+
+
+def tr(s, *args):
+    # Texto en inglés → idioma activo (i18n/<idioma>.json junto a este archivo; sin
+    # archivo o sin la clave, inglés). %1, %2... se cambian por args
+    global _dict
+    if _dict is None:
+        _dict = {}
+        env = next((v for v in (os.environ.get(k) for k in ("LC_ALL", "LC_MESSAGES", "LANG")) if v), "")
+        lang = env.replace(".", "_").replace("@", "_").split("_")[0]
+        if lang not in ("", "en", "C", "POSIX"):
+            try:
+                with open(f"{os.path.dirname(os.path.abspath(__file__))}/i18n/{lang}.json") as f:
+                    _dict = json.load(f)
+            except (OSError, ValueError):
+                pass
+    s = _dict.get(s, s)
+    for i in range(len(args), 0, -1):  # de mayor a menor: %10 antes que %1
+        s = s.replace(f"%{i}", str(args[i - 1]))
+    return s
 
 
 # ── Temas ────────────────────────────────────────────────────
@@ -105,3 +133,7 @@ def reload_terminals():
 
 def notify(app, title, body):
     run_quiet(["notify-send", "-a", app, title, body])
+
+
+if __name__ == "__main__" and sys.argv[1:2] == ["tr"] and len(sys.argv) > 2:
+    print(tr(*sys.argv[2:]), end="")
