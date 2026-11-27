@@ -9,7 +9,6 @@ import qs.components
 
 Island {
     id: root
-    spacing: 4
 
     visible: SystemTray.items.values.length > 0
 
@@ -21,7 +20,8 @@ Island {
             required property SystemTrayItem modelData
             readonly property bool attention: modelData.status === Status.NeedsAttention
 
-            implicitWidth: 26
+            // Misma celda que los iconos de Status, así el paso entre iconos es igual
+            implicitWidth: Theme.iconCell
             implicitHeight: Theme.barHeight
 
             Rectangle {
@@ -34,7 +34,9 @@ Island {
 
             IconImage {
                 anchors.centerIn: parent
-                implicitSize: 16
+                // Algo más pequeño que antes: con 16 abultaban más que los glifos de al
+                // lado (par, para que quede en píxeles enteros dentro de la celda)
+                implicitSize: 14
                 source: trayItem.modelData.icon
             }
 

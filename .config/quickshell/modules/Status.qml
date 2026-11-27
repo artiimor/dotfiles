@@ -29,28 +29,34 @@ Item {
         fromRight: true
 
         BarIcon {
+            cell: Theme.iconCell
+            padding: 4
             icon: "󰍛"
-            color: Theme.muted
+            color: TopBar.muted
             clickable: false
             tooltip: `${SysStats.memUsed.toFixed(1)} / ${SysStats.memTotal.toFixed(1)} GiB`
         }
 
         BarIcon {
+            cell: Theme.iconCell
+            padding: 4
             readonly property bool critical: SysStats.temp >= SysStats.tempCritical
             icon: ["󱃃", "󰔏", "󱃂"][Math.min(2, Math.floor(3 * SysStats.temp / SysStats.tempCritical))]
-            color: critical ? Theme.red : Theme.muted
+            color: critical ? Theme.red : TopBar.muted
             clickable: false
             tooltip: `${SysStats.temp}°C`
         }
 
         // Perfil de energía · Clic: menú de perfiles
         BarIcon {
+            cell: Theme.iconCell
+            padding: 4
             readonly property int profile: PowerProfiles.profile
 
             icon: profile === PowerProfile.Performance ? "󰓅"
                 : profile === PowerProfile.PowerSaver ? "󰾆"
                 : "󰾅"
-            color: Theme.fg
+            color: TopBar.fg
             tooltip: I18n.tr("Profile: %1\nClick: change", profile === PowerProfile.Performance ? I18n.tr("Performance")
                 : profile === PowerProfile.PowerSaver ? I18n.tr("Power saver")
                 : I18n.tr("Balanced"))
@@ -60,8 +66,10 @@ Item {
 
         // Apagado · Clic: menú de energía (también con Super+Escape)
         BarIcon {
+            cell: Theme.iconCell
+            padding: 4
             icon: "⏻"
-            color: Theme.muted
+            color: TopBar.muted
             hoverColor: Theme.red
             onClicked: Launcher.toggle("power")
         }
@@ -75,7 +83,7 @@ Item {
                 anchors.centerIn: parent
                 width: 1
                 height: 14
-                color: Theme.border
+                color: TopBar.border
             }
         }
     }
@@ -88,8 +96,10 @@ Item {
         // Clic: mezclador · Clic derecho: silenciar · Rueda: volumen ±5%
         BarIcon {
             id: volumeIcon
+            cell: Theme.iconCell
+            padding: 4
             icon: (Audio.bluetooth && !Audio.muted ? "󰂯 " : "") + Audio.icon
-            color: Audio.muted ? Theme.muted : Theme.fg
+            color: Audio.muted ? TopBar.muted : TopBar.fg
             tooltip: mixer.visible ? ""
                 : Audio.sink ? `${Audio.sink.description}\n` + I18n.tr("Volume %1%", Math.round(Audio.volume * 100))
                 : I18n.tr("No audio output")
@@ -107,6 +117,8 @@ Item {
         // ── Brillo ────────────────────────────────────────────
         // Rueda: brillo ±5% · Solo con panel retroiluminado (portátil)
         BarIcon {
+            cell: Theme.iconCell
+            padding: 4
             visible: Brightness.available
             icon: Brightness.icon
             color: Theme.yellow
@@ -119,10 +131,12 @@ Item {
         // ── Red ───────────────────────────────────────────────
         // Clic: networkmanager_dmenu
         BarIcon {
+            cell: Theme.iconCell
+            padding: 4
             icon: Net.wired ? "󰈀"
                 : Net.wifi ? ["󰤟", "󰤢", "󰤥", "󰤨"][Math.min(3, Math.floor(Net.signal / 25))]
                 : "󰤭"
-            color: Net.wired || Net.wifi ? Theme.fg : Theme.muted
+            color: Net.wired || Net.wifi ? TopBar.fg : TopBar.muted
             tooltip: {
                 if (!Net.wired && !Net.wifi)
                     return I18n.tr("Disconnected");
@@ -139,10 +153,12 @@ Item {
         readonly property var btConnected: adapter?.devices.values.filter(d => d.connected) ?? []
 
         BarIcon {
+            cell: Theme.iconCell
+            padding: 4
             readonly property bool on: fixed.adapter?.enabled ?? false
 
             icon: !on ? "󰂲" : fixed.btConnected.length > 0 ? "󰂱" : "󰂯"
-            color: on ? Theme.fg : Theme.muted
+            color: on ? TopBar.fg : TopBar.muted
             tooltip: !on ? I18n.tr("Bluetooth off")
                 : fixed.btConnected.length > 0 ? fixed.btConnected.map(d => d.name).join("\n")
                 : I18n.tr("Bluetooth on")
@@ -163,6 +179,8 @@ Item {
 
         BarIcon {
             id: batteryIcon
+            cell: Theme.iconCell
+            padding: 4
             visible: Battery.present
             readonly property bool warning: !Battery.charging && Battery.percent <= 30
             readonly property bool critical: !Battery.charging && !Battery.plugged && Battery.percent <= 15
@@ -170,10 +188,10 @@ Item {
             icon: Battery.charging ? "󰂄"
                 : Battery.plugged ? "󰚥"
                 : ["󰂎", "󰁺", "󰁼", "󰁾", "󰂀", "󰂂", "󰁹"][Math.min(6, Math.floor(Battery.percent / 100 * 7))]
-            color: Battery.charging ? Theme.fg
-                : critical ? (blink ? Theme.fg : Theme.red)
+            color: Battery.charging ? TopBar.fg
+                : critical ? (blink ? TopBar.fg : Theme.red)
                 : warning ? Theme.yellow
-                : Theme.fg
+                : TopBar.fg
             tooltip: {
                 const time = fixed.formatTime(Battery.charging ? Battery.device?.timeToFull : Battery.device?.timeToEmpty);
                 return `${Battery.percent}%${time ? " · " + time : ""}\n${Math.abs(Battery.device?.changeRate ?? 0).toFixed(1)} W`;
@@ -193,9 +211,11 @@ Item {
         // ── Notificaciones ────────────────────────────────────
         // Clic: panel · Clic derecho: no molestar
         BarIcon {
+            cell: Theme.iconCell
+            padding: 4
             visible: Notifs.count > 0 || Notifs.dnd || Notifs.centerOpen
             icon: Notifs.dnd ? "󰂛" : Notifs.count > 0 ? "󱅫" : "󰂚"
-            color: Notifs.centerOpen || Notifs.count > 0 ? Theme.accent : Theme.muted
+            color: Notifs.centerOpen || Notifs.count > 0 ? TopBar.accent : TopBar.muted
             tooltip: Notifs.count > 0 ? I18n.tr("%1 notifications", Notifs.count) : ""
 
             onClicked: m => m.button === Qt.RightButton ? Notifs.toggleDnd() : Notifs.togglePanel()

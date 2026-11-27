@@ -45,6 +45,8 @@ git clone https://github.com/artiimor/dotfiles.git ~/dotfiles && ~/dotfiles/inst
 
 Dwindle tiling with square corners and the Quickshell top bar; every workspace starts tiling.
 **Super+Enter** opens a terminal, **Super+H/J/K/L** moves focus, **Super+B** hides or shows the bar.
+The bar has no background by default and its icons turn light or dark to match the wallpaper;
+double-click an empty spot on it to toggle a solid background (remembered across restarts).
 
 ### Floating workspaces (desktop mode)
 

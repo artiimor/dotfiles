@@ -3,6 +3,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 import qs.modules
+import qs.services
 
 PanelWindow {
     id: bar
@@ -16,58 +17,78 @@ PanelWindow {
         left: true
         right: true
     }
-    // La ventana va pegada al borde para que el degradado llegue arriba del todo;
-    // el hueco de antes ahora son márgenes del contenido
+    // La ventana va pegada al borde para que el fondo definido llegue arriba del
+    // todo; el hueco de antes ahora son márgenes del contenido
     implicitHeight: Theme.barHeight + Theme.gap
     color: "transparent"
     WlrLayershell.namespace: "quickshell-bar"
 
-    // Fondo: oscuro arriba y transparente abajo, sin recuadros. Con un tema claro,
-    // más opaco a la altura de los iconos: si no, sobre el fondo de pantalla
-    // oscuro quedarían en una franja a medio tono y apenas se leerían
+    // Fondo: por defecto no hay, solo los iconos (en claro u oscuro según el
+    // fondo de pantalla, ver TopBar). Doble clic en un hueco vacío de la barra
+    // la "define": fondo liso casi opaco y una línea fina abajo. Se guarda en
+    // TopBar (sobrevive a los reinicios)
     Rectangle {
         anchors.fill: parent
-        gradient: Gradient {
-            GradientStop { position: 0; color: Theme.withAlpha(Theme.bgSolid, Theme.themeLight ? 0.95 : 0.9) }
-            GradientStop { position: Theme.themeLight ? 0.75 : 0.6; color: Theme.withAlpha(Theme.bgSolid, Theme.themeLight ? 0.88 : 0.6) }
-            GradientStop { position: 1; color: "transparent" }
+        color: Theme.withAlpha(Theme.bgSolid, 0.95)
+        opacity: TopBar.solidBackground ? 1 : 0
+        visible: opacity > 0
+        Behavior on opacity { NumberAnimation { duration: Theme.anim } }
+
+        Rectangle {
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.bottom: parent.bottom
+            height: 1
+            color: Theme.border
         }
     }
 
-    Item {
-        id: content
+    // Detrás del contenido: los clics en iconos, workspaces y bandeja van a sus
+    // propias MouseArea; aquí solo llega lo que cae en un hueco vacío
+    MouseArea {
         anchors.fill: parent
-        anchors.topMargin: Theme.gap
-        anchors.leftMargin: Theme.gap
-        anchors.rightMargin: Theme.gap
+        acceptedButtons: Qt.LeftButton
+        onDoubleClicked: TopBar.toggleBackground()
+    }
 
-        // Izquierda
-        Row {
-            anchors.left: parent.left
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: Theme.gap
+    Item {
+        anchors.fill: parent
 
-            Workspaces { screen: bar.modelData }
-            Media {}
-        }
+        Item {
+            id: content
+            anchors.fill: parent
+            anchors.topMargin: Theme.gap
+            anchors.leftMargin: Theme.gap
+            anchors.rightMargin: Theme.gap
 
-        // Centro
-        Center {
-            anchors.centerIn: parent
-        }
+            // Izquierda
+            Row {
+                anchors.left: parent.left
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: Theme.gap
 
-        // Derecha
-        Row {
-            anchors.right: parent.right
-            anchors.verticalCenter: parent.verticalCenter
-            spacing: Theme.gap
-
-            // Se esconde mientras el cajón de Status la tapa
-            Tray {
-                opacity: status.drawerOpen ? 0 : 1
-                Behavior on opacity { NumberAnimation { duration: Theme.anim } }
+                Workspaces { screen: bar.modelData }
+                Media {}
             }
-            Status { id: status }
+
+            // Centro
+            Center {
+                anchors.centerIn: parent
+            }
+
+            // Derecha
+            Row {
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                spacing: Theme.gap
+
+                // Se esconde mientras el cajón de Status la tapa
+                Tray {
+                    opacity: status.drawerOpen ? 0 : 1
+                    Behavior on opacity { NumberAnimation { duration: Theme.anim } }
+                }
+                Status { id: status }
+            }
         }
     }
 }

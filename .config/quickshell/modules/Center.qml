@@ -23,7 +23,7 @@ Item {
         id: clockIcon
         padding: 16
         pixelSize: Theme.fontSize
-        color: Theme.accent
+        color: TopBar.accent
         clickable: false
         // p. ej. "jue 19  14:32" (en español aunque el sistema esté en inglés)
         icon: "󰥔  " + clock.date.toLocaleString(Qt.locale(), "ddd d  HH:mm")
@@ -49,10 +49,11 @@ Item {
 
         BarIcon {
             icon: NightLight.icon
-            padding: 14
+            cell: Theme.iconCell
+            padding: 4
             color: NightLight.state === "on" ? Theme.yellow
-                 : NightLight.state === "off" ? Theme.muted
-                 : Theme.withAlpha(Theme.muted, 0.5)
+                 : NightLight.state === "off" ? TopBar.muted
+                 : Theme.withAlpha(TopBar.muted, 0.5)
             tooltip: NightLight.tooltip
             onClicked: NightLight.toggle()
             onScrolledUp: NightLight.cooler()
@@ -61,8 +62,9 @@ Item {
 
         BarIcon {
             icon: Idle.inhibited ? "󰅶" : "󰾪"
-            padding: 14
-            color: Idle.inhibited ? Theme.yellow : Theme.muted
+            cell: Theme.iconCell
+            padding: 4
+            color: Idle.inhibited ? Theme.yellow : TopBar.muted
             tooltip: Idle.inhibited ? I18n.tr("Automatic suspend off") : I18n.tr("Automatic suspend on")
             onClicked: Idle.inhibited = !Idle.inhibited
         }
@@ -70,8 +72,9 @@ Item {
         // Aumentar contraste: Theme.contrast se actualiza solo al cambiar el archivo
         BarIcon {
             icon: "󰆗"
-            padding: 14
-            color: Theme.contrast ? Theme.yellow : Theme.muted
+            cell: Theme.iconCell
+            padding: 4
+            color: Theme.contrast ? Theme.yellow : TopBar.muted
             tooltip: Theme.contrast ? I18n.tr("Increase contrast: on") : I18n.tr("Increase contrast: off")
             onClicked: Quickshell.execDetached([Quickshell.env("HOME") + "/.config/themes/contrast-set", "toggle"])
         }

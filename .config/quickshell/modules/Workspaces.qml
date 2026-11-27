@@ -38,7 +38,8 @@ Island {
 
             anchors.verticalCenter: parent.verticalCenter
             implicitHeight: Theme.barHeight - 8
-            implicitWidth: label.implicitWidth + 18
+            // Ancho fijo (como mínimo): el 1 y el 3 no miden lo mismo y quedaban desiguales
+            implicitWidth: Math.max(24, label.implicitWidth + 14)
 
             // El activo no lleva pastilla: solo una rayita debajo del número
             Rectangle {
@@ -47,7 +48,7 @@ Island {
                 height: 2
                 radius: 1
                 width: ws.active ? 14 : 0
-                color: ws.modelData.urgent ? Theme.red : Theme.accent
+                color: ws.modelData.urgent ? Theme.red : TopBar.accent
 
                 Behavior on width {
                     NumberAnimation { duration: Theme.anim; easing.type: Easing.OutCubic }
@@ -67,9 +68,11 @@ Island {
 
             Text {
                 id: label
-                anchors.centerIn: parent
+                // Centrado y redondeado a píxeles enteros (si no, sale borroso)
+                x: Math.round((ws.width - implicitWidth) / 2)
+                y: Math.round((ws.height - implicitHeight) / 2)
                 text: ws.num
-                color: ws.modelData.urgent ? Theme.red : ws.active ? Theme.accent : ws.hovered ? Theme.fg : Theme.muted
+                color: ws.modelData.urgent ? Theme.red : ws.active ? TopBar.accent : ws.hovered ? TopBar.fg : TopBar.muted
                 font.family: Theme.font
                 font.pixelSize: Theme.fontSize
                 font.bold: true

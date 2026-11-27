@@ -8,6 +8,12 @@
 //       onClicked: mouse => ...      // mouse.button dice qué botón
 //       onScrolledUp: ...
 //   }
+//
+// Si icon es solo un glifo (sin letras ni números), se centra por su tinta y no
+// por la caja de la fuente: los glifos de Nerd Font vienen de otra fuente (la de
+// respaldo) y cada uno tiene sus márgenes, así unos quedaban altos o torcidos.
+// Con cell > 0 el ancho es fijo (como mínimo cell): glifos de distinto ancho
+// quedan a la misma distancia unos de otros.
 import QtQuick
 import Quickshell
 import qs
@@ -22,6 +28,7 @@ Item {
     property int pixelSize: Theme.iconSize
     property bool italic: false
     property int padding: 10
+    property int cell: 0
     property bool clickable: true   // false: sin la manita (solo tooltip o rueda)
     readonly property bool hovered: mouse.containsMouse
 
@@ -29,12 +36,26 @@ Item {
     signal scrolledUp
     signal scrolledDown
 
-    implicitWidth: label.implicitWidth + padding * 2
+    // Solo glifos: ni letras ni números (p. ej. "󰕾", "⏻" o "󰂯 󰕾")
+    readonly property bool glyph: icon !== "" && !/[0-9A-Za-z\u00C0-\u024F]/.test(icon)
+
+    implicitWidth: Math.max(cell, label.implicitWidth + padding * 2)
     implicitHeight: Theme.barHeight
+
+    // Caja de la tinta del glifo (relativa a la línea base)
+    TextMetrics {
+        id: ink
+        font: label.font
+        text: root.glyph ? root.icon : ""
+    }
 
     Text {
         id: label
-        anchors.centerIn: parent
+        // Redondeado a píxeles enteros para que no salga borroso
+        x: root.glyph ? Math.round((root.width - ink.tightBoundingRect.width) / 2 - ink.tightBoundingRect.x)
+                      : Math.round((root.width - implicitWidth) / 2)
+        y: root.glyph ? Math.round(root.height / 2 - baselineOffset - ink.tightBoundingRect.y - ink.tightBoundingRect.height / 2)
+                      : Math.round((root.height - implicitHeight) / 2)
         text: root.icon
         textFormat: Text.PlainText   // p. ej. el título de la canción (Media) viene de fuera
         color: root.hovered ? root.hoverColor : root.color

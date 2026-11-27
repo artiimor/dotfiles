@@ -138,6 +138,7 @@ Singleton {
     readonly property string font: mac ? "Noto Sans" : "Inter"
     readonly property int fontSize: 13
     readonly property int iconSize: 12
+    readonly property int iconCell: 30 // ancho fijo de cada icono de la barra (glifos y bandeja)
 
     readonly property int barHeight: 26
     readonly property int gap: 8      // separación entre islas y margen de la barra

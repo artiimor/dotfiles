@@ -17,7 +17,7 @@ Island {
         padding: 14
         pixelSize: Theme.fontSize
         italic: !Player.playing
-        color: Player.playing ? Theme.accent : Theme.muted
+        color: Player.playing ? TopBar.accent : TopBar.muted
         tooltip: Player.player ? `${Player.player.identity}: ${Player.player.trackTitle}\n${Player.player.trackArtist} · ${Player.player.trackAlbum}\n` + I18n.tr("Click: pause · Wheel: change track") : ""
 
         onClicked: Player.player.togglePlaying()
