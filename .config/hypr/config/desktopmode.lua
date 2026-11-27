@@ -194,7 +194,7 @@ hl.bind("SUPER + ALT + D", function()
 			makeTiled(w)
 		end
 	end
-end, { description = "Modo escritorio" })
+end, { description = "Desktop mode" })
 
 -- Al cambiar entre mac y default (config-set hace hyprctl reload) las ventanas que
 -- ya están abiertas se adaptan al modo nuevo de su workspace
@@ -209,7 +209,7 @@ if not readLines(appliedFile)[family] then
 	writeLines(appliedFile, { family })
 end
 
-hl.bind("SUPER + M", hl.dsp.window.move({ workspace = MINIMIZED, follow = false }), { description = "Minimizar" })
+hl.bind("SUPER + M", hl.dsp.window.move({ workspace = MINIMIZED, follow = false }), { description = "Minimize" })
 
 -- Snap como macOS: al soltar una ventana arrastrada con el cursor pegado al borde
 --   izquierda/derecha → media pantalla   arriba → maximizar (igual que el botón □)

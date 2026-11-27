@@ -34,7 +34,7 @@ BarPopup {
 
         Channel {
             node: root.sink
-            label: root.sink?.description ?? "Sin salida de audio"
+            label: root.sink?.description ?? I18n.tr("No audio output")
         }
 
         Repeater {
@@ -52,7 +52,7 @@ BarPopup {
             anchors.right: parent.right
             implicitHeight: 24
             padding: 4
-            icon: "Más ajustes  󰒓"
+            icon: I18n.tr("More settings") + "  󰒓"
             pixelSize: Theme.fontSize
             color: Theme.muted
             hoverColor: Theme.accent

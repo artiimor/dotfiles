@@ -66,7 +66,7 @@ Item {
         anchors.horizontalCenter: parent.horizontalCenter
         anchors.verticalCenter: parent.verticalCenter
         anchors.verticalCenterOffset: -105
-        text: clock.date.toLocaleDateString(Qt.locale("es_ES"), "dddd, d 'de' MMMM")
+        text: clock.date.toLocaleDateString(Qt.locale(), I18n.dateFormat(true))
         color: root.wallMuted
         font.family: Theme.font
         font.pixelSize: 20
@@ -147,10 +147,10 @@ Item {
             Text {
                 anchors.centerIn: parent
                 visible: Lock.password === ""
-                text: Lock.checking ? "Comprobando..."
+                text: Lock.checking ? I18n.tr("Checking...")
                     : Lock.failed ? `${Lock.error} (${Lock.attempts})`
-                    : Lock.capsLock ? "Bloq Mayús activado"
-                    : "Contraseña..."
+                    : Lock.capsLock ? I18n.tr("Caps Lock on")
+                    : I18n.tr("Password...")
                 color: Lock.failed ? Theme.red : Lock.capsLock || Lock.checking ? Theme.yellow : Theme.muted
                 font.family: Theme.font
                 font.pixelSize: 14

@@ -59,7 +59,7 @@ Singleton {
     readonly property var groups: {
         const map = new Map();
         for (const n of list.slice().reverse()) {
-            const app = n.appName || "Otras";
+            const app = n.appName || I18n.tr("Other");
             if (!map.has(app))
                 map.set(app, []);
             map.get(app).push(n);
@@ -86,11 +86,11 @@ Singleton {
             return "";
         const min = Math.floor((now - t) / 60000);
         if (min < 1)
-            return "ahora";
+            return I18n.tr("now");
         if (min < 60)
-            return `hace ${min} min`;
+            return I18n.tr("%1 min ago", min);
         const h = Math.floor(min / 60);
-        return h < 24 ? `hace ${h} h` : `hace ${Math.floor(h / 24)} d`;
+        return h < 24 ? I18n.tr("%1 h ago", h) : I18n.tr("%1 d ago", Math.floor(h / 24));
     }
 
     NotificationServer {

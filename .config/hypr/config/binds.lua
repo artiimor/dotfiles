@@ -31,11 +31,11 @@ end
 ---------------------------
 
 -- Window manipulation
-hl.bind(mainMod .. " + SHIFT + Escape", hl.dsp.exec_cmd("hyprctl kill"), { description = "Matar ventana (clic)" })
-hl.bind(mainMod .. " + W", hl.dsp.window.close(), { description = "Cerrar ventana" })
-hl.bind(mainMod .. " + D", hl.dsp.window.float({ action = "toggle" }), { description = "Flotante / tiling" })
-hl.bind(mainMod .. " + SHIFT + M", hl.dsp.window.fullscreen({ mode = 1 }), { description = "Maximizar" })
-hl.bind(mainMod .. " + CTRL + J", hl.dsp.layout("togglesplit"), { description = "Cambiar división" })
+hl.bind(mainMod .. " + SHIFT + Escape", hl.dsp.exec_cmd("hyprctl kill"), { description = "Kill window (click)" })
+hl.bind(mainMod .. " + W", hl.dsp.window.close(), { description = "Close window" })
+hl.bind(mainMod .. " + D", hl.dsp.window.float({ action = "toggle" }), { description = "Floating / tiling" })
+hl.bind(mainMod .. " + SHIFT + M", hl.dsp.window.fullscreen({ mode = 1 }), { description = "Maximize" })
+hl.bind(mainMod .. " + CTRL + J", hl.dsp.layout("togglesplit"), { description = "Toggle split" })
 
 -- Change focus. Si la ventana que recibe el foco es flotante, sale delante de las demás
 -- flotantes (bring_to_top); en tiling no cambia nada
@@ -48,44 +48,44 @@ local function focusDir(direction)
 		end
 	end
 end
-hl.bind(mainMod .. " + H", focusDir("left"), { description = "Foco a la izquierda" })
-hl.bind(mainMod .. " + L", focusDir("right"), { description = "Foco a la derecha" })
-hl.bind(mainMod .. " + K", focusDir("up"), { description = "Foco arriba" })
-hl.bind(mainMod .. " + J", focusDir("down"), { description = "Foco abajo" })
+hl.bind(mainMod .. " + H", focusDir("left"), { description = "Focus left" })
+hl.bind(mainMod .. " + L", focusDir("right"), { description = "Focus right" })
+hl.bind(mainMod .. " + K", focusDir("up"), { description = "Focus up" })
+hl.bind(mainMod .. " + J", focusDir("down"), { description = "Focus down" })
 -- bring_to_top: en los workspaces de modo escritorio la ventana elegida sale delante
 hl.bind("ALT + Tab", function()
 	hl.dispatch(hl.dsp.window.cycle_next())
 	hl.dispatch(hl.dsp.window.bring_to_top())
-end, { description = "Siguiente ventana" })
+end, { description = "Next window" })
 
 -- Move active window around workspaces & monitors
-hl.bind(mainMod .. " + SHIFT + K", hl.dsp.window.move({ direction = "u" }), { description = "Mover ventana arriba" })
-hl.bind(mainMod .. " + SHIFT + L", hl.dsp.window.move({ direction = "r" }), { description = "Mover ventana a la derecha" })
-hl.bind(mainMod .. " + SHIFT + H", hl.dsp.window.move({ direction = "l" }), { description = "Mover ventana a la izquierda" })
-hl.bind(mainMod .. " + SHIFT + J", hl.dsp.window.move({ direction = "d" }), { description = "Mover ventana abajo" })
+hl.bind(mainMod .. " + SHIFT + K", hl.dsp.window.move({ direction = "u" }), { description = "Move window up" })
+hl.bind(mainMod .. " + SHIFT + L", hl.dsp.window.move({ direction = "r" }), { description = "Move window right" })
+hl.bind(mainMod .. " + SHIFT + H", hl.dsp.window.move({ direction = "l" }), { description = "Move window left" })
+hl.bind(mainMod .. " + SHIFT + J", hl.dsp.window.move({ direction = "d" }), { description = "Move window down" })
 bindDigits(" + SHIFT", function(i)
 	return function()
 		hl.dispatch(hl.dsp.window.move({ workspace = wsFor(i) }))
 	end
-end, "Mover ventana al workspace")
+end, "Move window to workspace")
 bindDigits(" + SHIFT + ALT", function(i)
 	return function()
 		hl.dispatch(hl.dsp.window.move({ workspace = wsFor(i), follow = false }))
 	end
-end, "Mover ventana al workspace (sin ir)")
+end, "Move window to workspace (stay)")
 
 -- Resize active window. Pasos de 50 px; se repite al mantener la tecla
 local function resizeBind(key, x, y, desc)
 	hl.bind(mainMod .. " + ALT + " .. key, hl.dsp.window.resize({ x = x, y = y, relative = true }), { repeating = true, description = desc })
 end
-resizeBind("H", -50, 0, "Ventana más estrecha")
-resizeBind("J", 0, 50, "Ventana más alta")
-resizeBind("K", 0, -50, "Ventana más baja")
-resizeBind("L", 50, 0, "Ventana más ancha")
+resizeBind("H", -50, 0, "Narrower window")
+resizeBind("J", 0, 50, "Taller window")
+resizeBind("K", 0, -50, "Shorter window")
+resizeBind("L", 50, 0, "Wider window")
 
 -- Move & Resize with mouse
-hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { description = "Mover ventana con el ratón" })
-hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { description = "Redimensionar con el ratón" })
+hl.bind(mainMod .. " + mouse:272", hl.dsp.window.drag(), { description = "Move window with the mouse" })
+hl.bind(mainMod .. " + mouse:273", hl.dsp.window.resize(), { description = "Resize with the mouse" })
 
 -- Zoom
 local function zoom(delta)
@@ -94,8 +94,8 @@ local function zoom(delta)
 		hl.config({ cursor = { zoom_factor = math.max(1.0, math.min(3.0, z)) } })
 	end
 end
-hl.bind(mainMod .. " + Minus", zoom(-0.3), { repeating = true, description = "Alejar zoom" })
-hl.bind(mainMod .. " + Plus", zoom(0.3), { repeating = true, description = "Acercar zoom" })
+hl.bind(mainMod .. " + Minus", zoom(-0.3), { repeating = true, description = "Zoom out" })
+hl.bind(mainMod .. " + Plus", zoom(0.3), { repeating = true, description = "Zoom in" })
 -- Con el teclado numérico (KP_Subtract / KP_Add)
 hl.bind(mainMod .. " + code:82", zoom(-0.3), { repeating = true })
 hl.bind(mainMod .. " + code:86", zoom(0.3), { repeating = true })
@@ -105,16 +105,16 @@ hl.bind(mainMod .. " + code:86", zoom(0.3), { repeating = true })
 ------------------
 
 hl.bind(mainMod .. " + Return", hl.dsp.exec_cmd(launchPrefix .. TERMINAL), { description = "Terminal" })
-hl.bind(mainMod .. " + F", hl.dsp.exec_cmd(launchPrefix .. FILE_MANAGER), { description = "Archivos" })
+hl.bind(mainMod .. " + F", hl.dsp.exec_cmd(launchPrefix .. FILE_MANAGER), { description = "Files" })
 hl.bind(mainMod .. " + CTRL + T", hl.dsp.exec_cmd(launchPrefix .. EDITOR), { description = "Editor" })
-hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd(launchPrefix .. CALCULATOR), { description = "Calculadora" })
+hl.bind(mainMod .. " + SHIFT + C", hl.dsp.exec_cmd(launchPrefix .. CALCULATOR), { description = "Calculator" })
 hl.bind("XF86Calculator", hl.dsp.exec_cmd(launchPrefix .. CALCULATOR))
-hl.bind("CONTROL + SHIFT + Escape", hl.dsp.exec_cmd(launchPrefix .. TERMINAL .. " -e btop"), { description = "Monitor del sistema (btop)" })
+hl.bind("CONTROL + SHIFT + Escape", hl.dsp.exec_cmd(launchPrefix .. TERMINAL .. " -e btop"), { description = "System monitor (btop)" })
 -- Copiar / pegar / cortar universal: Ctrl+Insert y Shift+Insert
 -- funcionan igual en terminales, navegadores y apps GTK/Qt
-hl.bind(mainMod .. " + C", hl.dsp.send_shortcut({ mods = "CTRL", key = "Insert" }), { description = "Copiar" })
-hl.bind(mainMod .. " + V", hl.dsp.send_shortcut({ mods = "SHIFT", key = "Insert" }), { description = "Pegar" })
-hl.bind(mainMod .. " + X", hl.dsp.send_shortcut({ mods = "CTRL", key = "X" }), { description = "Cortar" })
+hl.bind(mainMod .. " + C", hl.dsp.send_shortcut({ mods = "CTRL", key = "Insert" }), { description = "Copy" })
+hl.bind(mainMod .. " + V", hl.dsp.send_shortcut({ mods = "SHIFT", key = "Insert" }), { description = "Paste" })
+hl.bind(mainMod .. " + X", hl.dsp.send_shortcut({ mods = "CTRL", key = "X" }), { description = "Cut" })
 
 -- Lanzador y menús de Quickshell (pulsar otra vez cierra)
 -- Perfil "mac": Spotlight, energía y notificaciones de macshell (si fallan, los de siempre).
@@ -123,17 +123,17 @@ local macshell = "qs -p " .. util.MACSHELL_DIR .. " ipc call "
 local function shellCmd(mac, own)
 	return PROFILE_MAC and (macshell .. mac .. " || " .. own) or own
 end
-hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd(shellCmd("spotlight toggle", "qs ipc call launcher apps")), { description = PROFILE_MAC and "Buscar" or "Lanzador de apps" })
-hl.bind(mainMod .. " + SHIFT + Space", hl.dsp.exec_cmd("qs ipc call launcher apps"), { description = "Lanzador de apps" })
-hl.bind(mainMod .. " + ALT + Space", hl.dsp.exec_cmd("qs ipc call launcher appsFloat"), { description = "Lanzador de apps (abre en flotante)" })
-hl.bind(mainMod .. " + CTRL + V", hl.dsp.exec_cmd("qs ipc call launcher clipboard"), { description = "Portapapeles" })
-hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd(shellCmd("power toggle", "qs ipc call launcher power")), { description = "Menú de energía" })
+hl.bind(mainMod .. " + Space", hl.dsp.exec_cmd(shellCmd("spotlight toggle", "qs ipc call launcher apps")), { description = PROFILE_MAC and "Search" or "App launcher" })
+hl.bind(mainMod .. " + SHIFT + Space", hl.dsp.exec_cmd("qs ipc call launcher apps"), { description = "App launcher" })
+hl.bind(mainMod .. " + ALT + Space", hl.dsp.exec_cmd("qs ipc call launcher appsFloat"), { description = "App launcher (opens floating)" })
+hl.bind(mainMod .. " + CTRL + V", hl.dsp.exec_cmd("qs ipc call launcher clipboard"), { description = "Clipboard" })
+hl.bind(mainMod .. " + Escape", hl.dsp.exec_cmd(shellCmd("power toggle", "qs ipc call launcher power")), { description = "Power menu" })
 hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("qs ipc call launcher emoji"), { description = "Emojis" })
-hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("qs ipc call launcher themes"), { description = "Tema de colores" })
-hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("qs ipc call launcher configs"), { description = "Config (Modo Mac / Modo normal)" })
-hl.bind(mainMod .. " + CTRL + B", hl.dsp.exec_cmd("qs ipc call launcher backgrounds"), { description = "Fondo de pantalla" })
-hl.bind(mainMod .. " + CTRL + SHIFT + B", hl.dsp.exec_cmd("~/.config/themes/background-set --next"), { description = "Siguiente fondo" })
-hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("qs ipc call launcher keys"), { description = "Chuleta de atajos" })
+hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("qs ipc call launcher themes"), { description = "Color theme" })
+hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("qs ipc call launcher configs"), { description = "Config (Mac mode / Normal mode)" })
+hl.bind(mainMod .. " + CTRL + B", hl.dsp.exec_cmd("qs ipc call launcher backgrounds"), { description = "Wallpaper" })
+hl.bind(mainMod .. " + CTRL + SHIFT + B", hl.dsp.exec_cmd("~/.config/themes/background-set --next"), { description = "Next wallpaper" })
+hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("qs ipc call launcher keys"), { description = "Shortcut cheat sheet" })
 
 ---------------------------
 ---- HARDWARE CONTROLS ----
@@ -168,16 +168,16 @@ hl.bind("XF86MonBrightnessDown", hl.dsp.exec_cmd("qs ipc call brightness down"),
 -------------------
 
 -- Screen Capture
-hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprshot -m region"), { description = "Captura de una zona" })
+hl.bind(mainMod .. " + SHIFT + P", hl.dsp.exec_cmd("hyprshot -m region"), { description = "Screenshot of an area" })
 -- Notifications
-hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(shellCmd("center toggle", "qs ipc call notifs toggle")), { description = "Notificaciones" })
+hl.bind(mainMod .. " + A", hl.dsp.exec_cmd(shellCmd("center toggle", "qs ipc call notifs toggle")), { description = "Notifications" })
 -- Mostrar / ocultar la barra (como en Omarchy); en el Modo Mac la barra es de macshell
 if not PROFILE_MAC then
-	hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("qs ipc call bar toggle"), { description = "Mostrar / ocultar la barra" })
+	hl.bind(mainMod .. " + B", hl.dsp.exec_cmd("qs ipc call bar toggle"), { description = "Show / hide the bar" })
 end
 
 -- Lock
-hl.bind(mainMod .. " + CTRL + L", hl.dsp.exec_cmd("loginctl lock-session"), { description = "Bloquear" })
+hl.bind(mainMod .. " + CTRL + L", hl.dsp.exec_cmd("loginctl lock-session"), { description = "Lock" })
 -------------------------------
 ---- WORKSPACES & MONITORS ----
 -------------------------------
@@ -187,7 +187,7 @@ bindDigits("", function(i)
 	return function()
 		hl.dispatch(hl.dsp.focus({ workspace = wsFor(i) }))
 	end
-end, "Ir al workspace")
+end, "Go to workspace")
 
 -- Workspaces 11..20 (los del monitor externo, p.ej. huérfanos al desconectarlo): solo si existen y tienen ventanas
 bindDigits(" + ALT", function(i)
@@ -197,16 +197,16 @@ bindDigits(" + ALT", function(i)
 			hl.dispatch(hl.dsp.focus({ workspace = 10 + i }))
 		end
 	end
-end, "Ir al workspace 11-20")
+end, "Go to workspace 11-20")
 
 -- Scroll through existing workspaces & monitors
 hl.bind(mainMod .. " + mouse_down", hl.dsp.focus({ workspace = "m-1" }))
-hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "m+1" }), { description = "Cambiar de workspace" })
+hl.bind(mainMod .. " + mouse_up", hl.dsp.focus({ workspace = "m+1" }), { description = "Switch workspace" })
 hl.bind(mainMod .. " + CONTROL + mouse_up", hl.dsp.focus({ workspace = "m-1" }))
 hl.bind(mainMod .. " + CONTROL + mouse_down", hl.dsp.focus({ workspace = "m+1" }))
 
 -- Cambiar de monitor (los números ya son workspaces del monitor actual)
-hl.bind(mainMod .. " + Tab", hl.dsp.focus({ monitor = "+1" }), { description = "Cambiar de monitor" })
+hl.bind(mainMod .. " + Tab", hl.dsp.focus({ monitor = "+1" }), { description = "Switch monitor" })
 
 -- Mover la ventana activa al workspace activo del otro monitor
 -- shortcut: con 3+ monitores elige el primero no enfocado; usar un selector relativo si hace falta
@@ -217,8 +217,8 @@ hl.bind(mainMod .. " + SHIFT + Tab", function()
 			return
 		end
 	end
-end, { description = "Mover ventana al otro monitor" })
+end, { description = "Move window to the other monitor" })
 
 -- Special workspace (scratchpad)
-hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special" }), { description = "Mandar al scratchpad" })
+hl.bind(mainMod .. " + SHIFT + S", hl.dsp.window.move({ workspace = "special" }), { description = "Send to scratchpad" })
 hl.bind(mainMod .. " + S", hl.dsp.workspace.toggle_special(), { description = "Scratchpad" })

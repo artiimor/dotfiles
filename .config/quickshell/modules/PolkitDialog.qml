@@ -76,7 +76,7 @@ Scope {
                         font.pixelSize: 28
                     }
                     Text {
-                        text: "Autenticación necesaria"
+                        text: I18n.tr("Authentication required")
                         color: Theme.accent
                         font.family: Theme.font
                         font.pixelSize: 16
@@ -127,7 +127,7 @@ Scope {
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             visible: !input.text
-                            text: (root.flow?.inputPrompt ?? "").replace(/:\s*$/, "") || "Contraseña"
+                            text: (root.flow?.inputPrompt ?? "").replace(/:\s*$/, "") || I18n.tr("Password")
                             color: Theme.muted
                             font: input.font
                         }
@@ -153,14 +153,14 @@ Scope {
                     spacing: 8
 
                     DialogButton {
-                        text: "Cancelar"
+                        text: I18n.tr("Cancel")
                         color: hovered ? Theme.surface : "transparent"
                         border.width: 1
                         border.color: Theme.border
                         onClicked: win.cancel()
                     }
                     DialogButton {
-                        text: "Autenticar"
+                        text: I18n.tr("Authenticate")
                         primary: true
                         onClicked: win.submit()
                     }

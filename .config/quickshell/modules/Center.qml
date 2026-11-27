@@ -26,7 +26,7 @@ Item {
         color: Theme.accent
         clickable: false
         // p. ej. "jue 19  14:32" (en español aunque el sistema esté en inglés)
-        icon: "󰥔  " + clock.date.toLocaleString(Qt.locale("es_ES"), "ddd d  HH:mm")
+        icon: "󰥔  " + clock.date.toLocaleString(Qt.locale(), "ddd d  HH:mm")
 
         onScrolledUp: calendar.shift(-1)
         onScrolledDown: calendar.shift(1)
@@ -63,7 +63,7 @@ Item {
             icon: Idle.inhibited ? "󰅶" : "󰾪"
             padding: 14
             color: Idle.inhibited ? Theme.yellow : Theme.muted
-            tooltip: Idle.inhibited ? "Sin suspensión automática" : "Suspensión automática activa"
+            tooltip: Idle.inhibited ? I18n.tr("Automatic suspend off") : I18n.tr("Automatic suspend on")
             onClicked: Idle.inhibited = !Idle.inhibited
         }
     }

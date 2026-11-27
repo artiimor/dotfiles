@@ -7,6 +7,7 @@ pragma Singleton
 import QtQuick
 import Quickshell
 import Quickshell.Services.UPower
+import qs
 
 Singleton {
     id: root
@@ -30,8 +31,8 @@ Singleton {
     onLowLevelChanged: {
         if (lowLevel < lastLevel)
             Quickshell.execDetached(lowLevel === 5
-                ? ["notify-send", "-a", "Batería", "-u", "critical", "-i", "battery-caution", "Batería crítica", percent + " %: enchufa el portátil"]
-                : ["notify-send", "-a", "Batería", "-i", "battery-low", "Batería baja", percent + " % restante"]);
+                ? ["notify-send", "-a", I18n.tr("Battery"), "-u", "critical", "-i", "battery-caution", I18n.tr("Battery critical"), I18n.tr("%1%: plug in the laptop", percent)]
+                : ["notify-send", "-a", I18n.tr("Battery"), "-i", "battery-low", I18n.tr("Battery low"), I18n.tr("%1% left", percent)]);
         lastLevel = lowLevel;
     }
 }

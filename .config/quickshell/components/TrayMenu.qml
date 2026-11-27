@@ -30,10 +30,10 @@ BarPopup {
         y: 6
         width: parent.width - 12
 
-        // "Atrás" cuando estás en un submenú
+        // "Atrás" (Back) cuando estás en un submenú
         MenuRow {
             visible: root.stack.length > 0
-            label: "Atrás"
+            label: I18n.tr("Back")
             leading: "󰁍"
             onActivated: root.stack = root.stack.slice(0, -1)
         }

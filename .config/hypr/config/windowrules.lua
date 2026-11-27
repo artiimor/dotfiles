@@ -81,7 +81,7 @@ local floatApps = {
 }
 for _, m in ipairs(floatApps) do hl.window_rule({ match = m, float = true }) end
 
--- pavucontrol ("Más ajustes" in the Quickshell volume mixer), top right under the bar
+-- pavucontrol ("More settings" in the Quickshell volume mixer), top right under the bar
 hl.window_rule({ match = { class = "^(org.pulseaudio.pavucontrol)$" }, float = true, size = { 640, 420 }, move = { "monitor_w - 650", 50 } })
 -- "Network Settings…" from the macshell wifi panel (macOS-style window)
 hl.window_rule({ match = { class = "^(org\\.quickshell)$", title = "^(Network)$" }, float = true, size = { 560, 660 }, center = true })

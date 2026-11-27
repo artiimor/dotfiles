@@ -51,7 +51,9 @@ Item {
                 : profile === PowerProfile.PowerSaver ? "󰾆"
                 : "󰾅"
             color: Theme.fg
-            tooltip: `Perfil: ${PowerProfile.toString(profile)}\nClic: cambiar`
+            tooltip: I18n.tr("Profile: %1\nClick: change", profile === PowerProfile.Performance ? I18n.tr("Performance")
+                : profile === PowerProfile.PowerSaver ? I18n.tr("Power saver")
+                : I18n.tr("Balanced"))
 
             onClicked: Launcher.toggle("profiles")
         }
@@ -89,8 +91,8 @@ Item {
             icon: (Audio.bluetooth && !Audio.muted ? "󰂯 " : "") + Audio.icon
             color: Audio.muted ? Theme.muted : Theme.fg
             tooltip: mixer.visible ? ""
-                : Audio.sink ? `${Audio.sink.description}\nVolumen ${Math.round(Audio.volume * 100)}%`
-                : "Sin salida de audio"
+                : Audio.sink ? `${Audio.sink.description}\n` + I18n.tr("Volume %1%", Math.round(Audio.volume * 100))
+                : I18n.tr("No audio output")
 
             onClicked: m => m.button === Qt.RightButton ? Audio.toggleMute() : mixer.toggle()
             onScrolledUp: Audio.step(0.05)
@@ -109,7 +111,7 @@ Item {
             icon: Brightness.icon
             color: Theme.yellow
             clickable: false
-            tooltip: `Brillo ${Brightness.percent}%\nRueda: ajustar`
+            tooltip: I18n.tr("Brightness %1%\nWheel: adjust", Brightness.percent)
             onScrolledUp: Brightness.raise()
             onScrolledDown: Brightness.lower()
         }
@@ -123,9 +125,9 @@ Item {
             color: Net.wired || Net.wifi ? Theme.fg : Theme.muted
             tooltip: {
                 if (!Net.wired && !Net.wifi)
-                    return "Desconectado";
+                    return I18n.tr("Disconnected");
                 const name = Net.wired ? Net.iface : `${Net.wifiNetwork?.name ?? "Wi-Fi"} (${Net.signal}%)`;
-                return `${name}\n${Net.ip || "Sin IP"}\n󰇚 ${Net.speed(Net.down)}   󰕒 ${Net.speed(Net.up)}`;
+                return `${name}\n${Net.ip || I18n.tr("No IP")}\n󰇚 ${Net.speed(Net.down)}   󰕒 ${Net.speed(Net.up)}`;
             }
 
             onClicked: Quickshell.execDetached(["networkmanager_dmenu"])
@@ -141,9 +143,9 @@ Item {
 
             icon: !on ? "󰂲" : fixed.btConnected.length > 0 ? "󰂱" : "󰂯"
             color: on ? Theme.fg : Theme.muted
-            tooltip: !on ? "Bluetooth apagado"
+            tooltip: !on ? I18n.tr("Bluetooth off")
                 : fixed.btConnected.length > 0 ? fixed.btConnected.map(d => d.name).join("\n")
-                : "Bluetooth encendido"
+                : I18n.tr("Bluetooth on")
 
             onClicked: Quickshell.execDetached(["bzmenu", "-l", "custom", "--launcher-command",
                 `${Quickshell.shellDir}/scripts/dmenu-qs -p '{hint}'`])
@@ -194,7 +196,7 @@ Item {
             visible: Notifs.count > 0 || Notifs.dnd || Notifs.centerOpen
             icon: Notifs.dnd ? "󰂛" : Notifs.count > 0 ? "󱅫" : "󰂚"
             color: Notifs.centerOpen || Notifs.count > 0 ? Theme.accent : Theme.muted
-            tooltip: Notifs.count > 0 ? `${Notifs.count} notificaciones` : ""
+            tooltip: Notifs.count > 0 ? I18n.tr("%1 notifications", Notifs.count) : ""
 
             onClicked: m => m.button === Qt.RightButton ? Notifs.toggleDnd() : Notifs.togglePanel()
         }

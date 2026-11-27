@@ -29,7 +29,7 @@ Column {
 
     Text {
         anchors.horizontalCenter: parent.horizontalCenter
-        text: root.month.toLocaleDateString(Qt.locale("es_ES"), "MMMM yyyy")
+        text: root.month.toLocaleDateString(Qt.locale(), "MMMM yyyy")
         color: Theme.accent
         font.family: Theme.font
         font.pixelSize: Theme.fontSize
@@ -42,7 +42,7 @@ Column {
         rowSpacing: 2
 
         Repeater {
-            model: ["L", "M", "X", "J", "V", "S", "D"]
+            model: [1, 2, 3, 4, 5, 6, 0].map(d => Qt.locale().dayName(d, Locale.NarrowFormat))
             Text {
                 required property string modelData
                 width: 26

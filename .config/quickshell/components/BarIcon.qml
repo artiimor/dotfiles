@@ -4,7 +4,7 @@
 //       icon: "󰕾"
 //       color: Theme.accent
 //       hoverColor: Theme.red        // opcional: color con el ratón encima
-//       tooltip: "Volumen 50%"
+//       tooltip: I18n.tr("Volume %1%", 50)
 //       onClicked: mouse => ...      // mouse.button dice qué botón
 //       onScrolledUp: ...
 //   }

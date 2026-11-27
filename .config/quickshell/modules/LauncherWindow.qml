@@ -181,7 +181,7 @@ PanelWindow {
 
                     Text {
                         visible: !search.text
-                        text: Launcher.tabPrompt || Launcher.prompt || "Buscar…"
+                        text: Launcher.tabPrompt || Launcher.prompt || I18n.tr("Search…")
                         color: Theme.muted
                         font: search.font
                     }
@@ -408,7 +408,7 @@ PanelWindow {
             visible: list.visible && list.count === 0 && !Launcher.password && Launcher.mode !== "dmenu"
             x: column.x + list.x + (list.width - width) / 2
             y: column.y + list.y + (list.height - height) / 2
-            text: "¯\\_(ツ)_/¯  nada por aquí"
+            text: "¯\\_(ツ)_/¯  " + I18n.tr("nothing here")
             color: Theme.muted
             font.family: Theme.font
             font.pixelSize: Theme.fontSize

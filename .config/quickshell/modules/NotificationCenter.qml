@@ -63,7 +63,7 @@ PanelWindow {
 
                 Text {
                     Layout.fillWidth: true
-                    text: "Notificaciones"
+                    text: I18n.tr("Notifications")
                     color: Theme.accent
                     font.family: Theme.font
                     font.pixelSize: 16
@@ -71,7 +71,7 @@ PanelWindow {
                 }
 
                 TextButton {
-                    text: "󰎟  Limpiar"
+                    text: "󰎟  " + I18n.tr("Clear")
                     hoverColor: Theme.red
                     textColor: hovered ? Theme.bgSolid : Theme.fg
                     visible: Notifs.count > 0
@@ -85,7 +85,7 @@ PanelWindow {
 
                 Text {
                     Layout.fillWidth: true
-                    text: "No molestar"
+                    text: I18n.tr("Do not disturb")
                     color: Theme.fg
                     font.family: Theme.font
                     font.pixelSize: Theme.fontSize
@@ -210,7 +210,7 @@ PanelWindow {
             SliderRow {
                 Layout.fillWidth: true
                 icon: "󰕾"
-                tooltip: "Clic: silenciar"
+                tooltip: I18n.tr("Click: mute")
                 value: Audio.volume
                 muted: Audio.muted
                 onIconClicked: Audio.toggleMute()
@@ -241,7 +241,7 @@ PanelWindow {
                 Text {
                     anchors.centerIn: parent
                     visible: Notifs.count === 0
-                    text: "󰂚\nSin notificaciones"
+                    text: "󰂚\n" + I18n.tr("No notifications")
                     horizontalAlignment: Text.AlignHCenter
                     color: Theme.muted
                     font.family: Theme.font
@@ -300,7 +300,7 @@ PanelWindow {
                                 icon: "󰎟"
                                 color: Theme.muted
                                 hoverColor: Theme.red
-                                tooltip: "Borrar el grupo"
+                                tooltip: I18n.tr("Clear group")
                                 onClicked: Notifs.clearGroup(group.notifs)
                             }
                         }

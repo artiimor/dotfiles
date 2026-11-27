@@ -1,7 +1,7 @@
 // Botón con texto (paneles, diálogos, acciones de las notificaciones).
 //
 //   TextButton {
-//       text: "Borrar todo"
+//       text: I18n.tr("Clear")
 //       hoverColor: Theme.red        // fondo con el ratón encima (no primario)
 //       onClicked: ...
 //   }

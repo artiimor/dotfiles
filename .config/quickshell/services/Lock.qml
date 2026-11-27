@@ -10,6 +10,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.Pam
+import qs
 
 Singleton {
     id: root
@@ -58,7 +59,7 @@ Singleton {
             } else {
                 root.attempts++;
                 root.failed = true;
-                root.error = result === PamResult.MaxTries ? "Demasiados intentos" : "Contraseña incorrecta";
+                root.error = result === PamResult.MaxTries ? I18n.tr("Too many attempts") : I18n.tr("Wrong password");
             }
             root.password = "";
         }
@@ -66,7 +67,7 @@ Singleton {
         onError: err => {
             root.checking = false;
             root.failed = true;
-            root.error = "Error de PAM: " + PamError.toString(err);
+            root.error = I18n.tr("PAM error: %1", PamError.toString(err));
             root.password = "";
         }
     }

@@ -19,6 +19,7 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 import Quickshell.Services.UPower
+import qs
 
 Singleton {
     id: root
@@ -41,26 +42,26 @@ Singleton {
     readonly property var modes: ({
         // Sin título: la lupa ya dice que es un buscador
         apps: { width: 360, prompt: "", items: () => root.apps, showSub: true },
-        clipboard: { width: 640, prompt: "Portapapeles", proc: cliphist },
+        clipboard: { width: 640, prompt: I18n.tr("Clipboard"), proc: cliphist },
         emoji: { width: 420, prompt: "Emoji", items: () => root.emojis },
-        power: { width: 220, prompt: "Energía", noSearch: true, items: () => [
-            { text: "Bloquear", glyph: "󰌾", data: "lock" },
-            { text: "Suspender", glyph: "󰤄", data: "suspend" },
-            { text: "Cerrar sesión", glyph: "󰍃", data: "logout" },
-            { text: "Reiniciar", glyph: "󰜉", data: "reboot" },
-            { text: "Apagar", glyph: "󰐥", data: "poweroff" }
+        power: { width: 220, prompt: I18n.tr("Power"), noSearch: true, items: () => [
+            { text: I18n.tr("Lock"), glyph: "󰌾", data: "lock" },
+            { text: I18n.tr("Suspend"), glyph: "󰤄", data: "suspend" },
+            { text: I18n.tr("Log out"), glyph: "󰍃", data: "logout" },
+            { text: I18n.tr("Restart"), glyph: "󰜉", data: "reboot" },
+            { text: I18n.tr("Shut down"), glyph: "󰐥", data: "poweroff" }
         ] },
-        themes: { width: 420, prompt: "Tema", proc: themeList, tabs: ["Oscuros", "Claros", "Fuente"],
-                  tabPrompts: ["Buscar tema oscuro…", "Buscar tema claro…", "Buscar fuente…"] },
-        backgrounds: { width: 420, prompt: "Fondo", noSearch: true, proc: backgroundList },
+        themes: { width: 420, prompt: I18n.tr("Theme"), proc: themeList, tabs: [I18n.tr("Dark"), I18n.tr("Light"), I18n.tr("Font")],
+                  tabPrompts: [I18n.tr("Search dark themes…"), I18n.tr("Search light themes…"), I18n.tr("Search fonts…")] },
+        backgrounds: { width: 420, prompt: I18n.tr("Background"), noSearch: true, proc: backgroundList },
         configs: { width: 260, prompt: "Config", noSearch: true, proc: configList },
-        keys: { width: 520, prompt: "Atajos", proc: binds, showSub: true },
-        profiles: { prompt: "Perfil de energía", items: () => {
+        keys: { width: 520, prompt: I18n.tr("Shortcuts"), proc: binds, showSub: true },
+        profiles: { prompt: I18n.tr("Power profile"), items: () => {
             const mark = v => root.curMark(PowerProfiles.profile === v);
             return [
-                { text: "Rendimiento" + mark(PowerProfile.Performance), glyph: "󰓅", data: "performance" },
-                { text: "Equilibrado" + mark(PowerProfile.Balanced), glyph: "󰾅", data: "balanced" },
-                { text: "Ahorro" + mark(PowerProfile.PowerSaver), glyph: "󰾆", data: "power-saver" }
+                { text: I18n.tr("Performance") + mark(PowerProfile.Performance), glyph: "󰓅", data: "performance" },
+                { text: I18n.tr("Balanced") + mark(PowerProfile.Balanced), glyph: "󰾅", data: "balanced" },
+                { text: I18n.tr("Power saver") + mark(PowerProfile.PowerSaver), glyph: "󰾆", data: "power-saver" }
             ];
         } }
     })
@@ -238,7 +239,7 @@ Singleton {
                     const m = k.match(/^code:(\d+)$/);
                     if (m && +m[1] >= 11 && +m[1] <= 19)
                         return String((+m[1] - 9) % 10);
-                    return ({ "mouse:272": "Clic izq.", "mouse:273": "Clic dcho.", mouse_up: "Rueda", mouse_down: "Rueda",
+                    return ({ "mouse:272": I18n.tr("Left click"), "mouse:273": I18n.tr("Right click"), mouse_up: I18n.tr("Wheel"), mouse_down: I18n.tr("Wheel"),
                               Return: "Enter", Escape: "Esc", period: ".", slash: "?", Minus: "-", Plus: "+" })[k]
                         ?? (k.length === 1 ? k.toUpperCase() : k);
                 };
@@ -248,7 +249,7 @@ Singleton {
                 } catch (e) {}
                 root.loaded("keys", list.filter(b => b.has_description).map(b => {
                     const combo = mods.filter(([bit]) => b.modmask & bit).map(([, n]) => n).concat(keyName(b.key)).join(" + ");
-                    return { text: b.description, sub: combo, keywords: combo };
+                    return { text: I18n.tr(b.description), sub: combo, keywords: combo };
                 }));
             }
         }
@@ -336,7 +337,7 @@ Singleton {
                         image: "file://" + path,
                         data: name
                     };
-                }).concat({ text: "＋ Añadir fondos…", data: "+" }));
+                }).concat({ text: I18n.tr("＋ Add wallpapers…"), data: "+" }));
             }
         }
     }
@@ -374,7 +375,7 @@ Singleton {
         dmenuDir = dir;
         dmenuInfo = center ? { width: 420 } : {};
         mode = "dmenu";
-        prompt = p || "Elegir";
+        prompt = p || I18n.tr("Choose");
         password = pass;
         items = [];
         dmenuItems.path = dir + "/items";
