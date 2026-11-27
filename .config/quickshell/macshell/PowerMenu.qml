@@ -89,8 +89,8 @@ OverlayWindow {
                         anchors.horizontalCenter: parent.horizontalCenter
                         width: 56; height: 56; radius: 28
                         color: btn.current ? Theme.tint(0.28) : Theme.button
-                        border.width: btn.current ? 2 : 0
-                        border.color: Theme.accent
+                        border.width: btn.current ? 2 : Theme.outlineWidth
+                        border.color: btn.current ? Theme.accent : Theme.separator
                         Behavior on color { ColorAnimation { duration: 120 } }
                         Glyph {
                             anchors.centerIn: parent

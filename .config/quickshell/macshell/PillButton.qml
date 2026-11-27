@@ -13,6 +13,8 @@ Rectangle {
     implicitHeight: 24
     radius: 6
     color: mouse.containsMouse ? Theme.buttonHover : Theme.button
+    border.width: Theme.outlineWidth
+    border.color: Theme.separator
     Text {
         id: label
         anchors.centerIn: parent

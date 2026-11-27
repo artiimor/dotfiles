@@ -19,6 +19,8 @@ Item {
         width: 28; height: 28; radius: 14
         anchors.verticalCenter: parent.verticalCenter
         color: t.on ? Theme.accent : Theme.tint(0.14)
+        border.width: t.on ? 0 : Theme.outlineWidth
+        border.color: Theme.separator
         Behavior on color { ColorAnimation { duration: 120 } }
         Glyph {
             anchors.centerIn: parent

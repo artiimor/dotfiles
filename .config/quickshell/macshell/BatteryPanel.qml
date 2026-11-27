@@ -57,6 +57,8 @@ ColumnLayout {
         implicitHeight: 28
         radius: 8
         color: Theme.tint(0.08)
+        border.width: Theme.outlineWidth
+        border.color: Theme.separator
         RowLayout {
             anchors.fill: parent
             anchors.margins: 2

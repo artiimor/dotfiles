@@ -5,5 +5,5 @@ import QtQuick.Layouts
 Rectangle {
     Layout.fillWidth: true
     implicitHeight: 1
-    color: Theme.tint(0.1)
+    color: Theme.separator
 }

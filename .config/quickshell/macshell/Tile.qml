@@ -12,7 +12,7 @@ Rectangle {
     implicitHeight: col.implicitHeight + 2 * padding
     radius: 12
     color: Theme.tint(0.07)
-    border.color: Theme.tint(0.06)
+    border.color: Theme.outline
     border.width: 1
     ColumnLayout {
         id: col

@@ -10,6 +10,8 @@ Rectangle {
     implicitWidth: 38; implicitHeight: 22
     radius: height / 2
     color: on ? Theme.accent : Theme.tint(0.2)
+    border.width: on ? 0 : Theme.outlineWidth
+    border.color: Theme.separator
     Behavior on color { ColorAnimation { duration: 120 } }
     Rectangle {
         width: sw.height - 4; height: width; radius: width / 2

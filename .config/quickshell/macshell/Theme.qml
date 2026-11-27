@@ -31,7 +31,12 @@ Singleton {
 
     readonly property color card: solid(light ? Qt.rgba(0.96, 0.96, 0.97, 0.86) : Qt.rgba(0.16, 0.16, 0.17, 0.80))
     readonly property color cardHover: solid(light ? Qt.rgba(0.91, 0.91, 0.92, 0.90) : Qt.rgba(0.20, 0.20, 0.21, 0.86))
-    readonly property color border: light ? Qt.rgba(0, 0, 0, contrast ? 0.35 : 0.10) : Qt.rgba(1, 1, 1, contrast ? 0.35 : 0.10)
+    readonly property color border: light ? Qt.rgba(0, 0, 0, contrast ? 0.5 : 0.10) : Qt.rgba(1, 1, 1, contrast ? 0.5 : 0.10)
+    // líneas divisorias y contorno de módulos y controles: casi invisibles normalmente,
+    // bien marcados con contraste (outlineWidth pone borde a lo que normalmente no lo tiene)
+    readonly property color separator: contrast ? (light ? Qt.rgba(0, 0, 0, 0.45) : Qt.rgba(1, 1, 1, 0.45)) : tint(0.1)
+    readonly property color outline: contrast ? separator : tint(0.06)
+    readonly property int outlineWidth: contrast ? 1 : 0
     readonly property color text: light ? "#1d1d1f" : "#f5f5f7"
     readonly property color dim: light ? Qt.rgba(0.11, 0.11, 0.12, contrast ? 0.85 : 0.55) : Qt.rgba(0.92, 0.92, 0.96, contrast ? 0.85 : 0.55)
     readonly property color button: tint(0.10)

@@ -29,6 +29,15 @@ Item {
             color: Theme.sliderFill
         }
     }
+    // contorno con contraste, encima del relleno (la pista recorta a sus hijos)
+    Rectangle {
+        anchors.fill: track
+        radius: track.radius
+        color: "transparent"
+        border.width: Theme.outlineWidth
+        border.color: Theme.separator
+        z: 1
+    }
     Glyph {
         x: 5
         anchors.verticalCenter: parent.verticalCenter
