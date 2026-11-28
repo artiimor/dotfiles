@@ -1,4 +1,5 @@
-// Memoria y temperatura, leídas de /proc y /sys cada 3 segundos.
+// Memoria y temperatura, leídas de /proc y /sys cada 15 segundos, o cada 2
+// mientras se ven (fast: el cajón de la barra abierto, lo pone Status.qml).
 pragma Singleton
 
 import QtQuick
@@ -12,16 +13,22 @@ Singleton {
     property real memTotal: 0    // GiB
     property int temp: 0         // °C
     readonly property int tempCritical: 80
+    property bool fast: false
+
+    function refresh() {
+        meminfo.reload();
+        thermal.reload();
+    }
+
+    // Al abrir el cajón se lee ya, sin esperar al siguiente disparo
+    onFastChanged: if (fast) refresh()
 
     Timer {
-        interval: 3000
+        interval: root.fast ? 2000 : 15000
         running: true
         repeat: true
         triggeredOnStart: true
-        onTriggered: {
-            meminfo.reload();
-            thermal.reload();
-        }
+        onTriggered: root.refresh()
     }
 
     FileView {

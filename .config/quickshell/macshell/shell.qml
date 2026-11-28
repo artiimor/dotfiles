@@ -40,6 +40,8 @@ ShellRoot {
     function closeAll() { popupKind = ""; popupItem = null; centerOpen = false; }
     function toggleCenter() { popupKind = ""; popupItem = null; centerOpen = !centerOpen; }
     function clearNotifications() { server.trackedNotifications.values.slice().forEach(n => n.dismiss()); }
+    // memoria y temperatura más a menudo mientras se ven
+    Binding { target: Sys; property: "statsFast"; value: root.popupKind === "system" }
 
     // ───────────── notificaciones ─────────────
     NotificationServer {

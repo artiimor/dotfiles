@@ -236,9 +236,13 @@ Singleton {
     property real memTotal: 0    // GiB
     property int temp: 0         // °C
     readonly property int tempCritical: 80
+    // cada 15 s, o cada 2 s mientras se ve el popup de sistema (lo pone shell.qml)
+    property bool statsFast: false
+    function refreshStats() { meminfo.reload(); if (thermal.path !== "") thermal.reload(); }
+    onStatsFastChanged: if (statsFast) refreshStats()
     Timer {
-        interval: 3000; running: true; repeat: true; triggeredOnStart: true
-        onTriggered: { meminfo.reload(); if (thermal.path !== "") thermal.reload(); }
+        interval: sys.statsFast ? 2000 : 15000; running: true; repeat: true; triggeredOnStart: true
+        onTriggered: sys.refreshStats()
     }
     FileView {
         id: meminfo

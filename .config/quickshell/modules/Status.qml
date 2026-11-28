@@ -18,6 +18,14 @@ Item {
     // Se abre el cajón: Bar.qml lo usa para esconder la bandeja que queda debajo
     readonly property bool drawerOpen: drawer.open
 
+    // Memoria y temperatura más a menudo mientras se ven
+    Binding {
+        target: SysStats
+        property: "fast"
+        value: true
+        when: drawer.open
+    }
+
     // Solo cuenta lo fijo; el cajón sobresale hacia la izquierda
     implicitWidth: fixed.implicitWidth
     implicitHeight: Theme.barHeight
