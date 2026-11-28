@@ -305,3 +305,10 @@ def test_background_set(home):
     run(home, "background-set", "--next")
     assert [r[0] for r in listing() if r[2] == "1"] == ["b.png"]
     assert run(home, "background-set", "notas.txt", check=False).returncode != 0
+
+
+def test_background_set_light_pepes(home):
+    # Light themes get the daytime meadow as "pepes"
+    run(home, "theme-set", LIGHT[0])
+    day = f"{home}/.config/backgrounds/wallpaper-desktop-day.jpg"
+    assert run(home, "background-set", "--path").stdout == day + "\n"

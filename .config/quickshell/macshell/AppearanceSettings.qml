@@ -51,10 +51,32 @@ FloatingWindow {
     // it. Everything else (including switching between Mac light and dark) doesn't close it: everything is re-read
     // without touching the Dark/Light filter or the scroll position. With `list` and `key` (e.g.
     // "themes", "dir") the selected mark moves to that row at once, without waiting for the re-read
+    // The lists are re-read as soon as the script exits (light/dark themes swap the backgrounds,
+    // e.g. the day/night Pepes). config-set may restart macshell, so it stays detached + timer.
     function run(script, arg, list, key) {
-        Quickshell.execDetached(["setsid", "-f", themesDir + "/" + script, arg]);
         if (list) win[list] = win[list].map(x => Object.assign({}, x, { cur: x[key] === arg }));
-        refreshSoon.restart();
+        if (script === "config-set") {
+            Quickshell.execDetached(["setsid", "-f", themesDir + "/" + script, arg]);
+            refreshSoon.restart();
+        } else if (runProc.running) {
+            // queued in click order, only the last click of each script
+            const cmd = [themesDir + "/" + script, arg];
+            win.pendingRuns = win.pendingRuns.filter(c => c[0] !== cmd[0]).concat([cmd]);
+        } else {
+            runProc.command = [themesDir + "/" + script, arg];
+            runProc.running = true;
+        }
+    }
+    property var pendingRuns: []
+    Process {
+        id: runProc
+        onExited: {
+            if (win.pendingRuns.length) {
+                command = win.pendingRuns[0];
+                win.pendingRuns = win.pendingRuns.slice(1);
+                running = true;
+            } else win.refresh();
+        }
     }
     Timer { id: refreshSoon; interval: 2000; onTriggered: win.refresh() }
 

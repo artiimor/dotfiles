@@ -326,6 +326,8 @@ Night light and Keep awake (Normal mode), or with `~/.config/themes/contrast-set
 
 Like in Omarchy, every theme can ship its own wallpapers in `~/.config/themes/<theme>/backgrounds/`
 (`jpg`, `jpeg`, `png`, `webp`, `bmp`, `gif`). The default "Pepes" meadow wallpaper is always appended at the end of the list.
+It comes in two versions: a night one (`wallpaper-desktop.jpg`) for dark themes and a day one
+(`wallpaper-desktop-day.jpg`) for light themes (`"light": true`).
 No theme in the repo ships backgrounds yet, so out of the box you get the Pepes.
 
 | Keys | Action |
