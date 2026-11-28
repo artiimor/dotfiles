@@ -66,11 +66,18 @@ Singleton {
             }
         }
     }
+    // In Mac Mode this singleton is also created (the launcher uses belowBar),
+    // but nobody uses the luminance there: ffmpeg isn't launched
+    function measureLuma() {
+        if (Theme.profileReady && !Theme.mac)
+            luma.running = true;
+    }
     Connections {
         target: Theme
-        function onDesktopWallpaperChanged() { luma.running = true; }
+        function onDesktopWallpaperChanged() { root.measureLuma(); }
+        function onProfileReadyChanged() { root.measureLuma(); }
     }
-    Component.onCompleted: luma.running = true
+    Component.onCompleted: measureLuma()
 
     function toggleBackground() {
         solidBackground = !solidBackground;
