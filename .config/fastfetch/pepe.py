@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 # Pepes en ASCII con color para fastfetch, sacados de imágenes.
-# Genera pepe-<nombre>.txt; ~/.bashrc elige uno al azar y theme-set hace la versión
-# teñida con el tema (fastfetch/themed/).
+# Genera pepe-<nombre>.txt; theme-set hace la versión teñida con el tema
+# (fastfetch/themed/), y config.jsonc usa la del mago.
 #
 # Idea: las líneas oscuras del dibujo y el borde de la silueta se convierten en
 # caracteres que siguen su dirección ( - _ / \ | ) en un tono claro, para que se

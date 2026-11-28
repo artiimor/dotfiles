@@ -116,6 +116,8 @@ def test_theme_set(home, theme):
     assert "[Colors:Window]" in read(home, ".config/kdeglobals")
     pepes = sorted(p.name for p in (home / ".config/fastfetch").glob("pepe-*.txt"))
     assert pepes and sorted(p.name for p in (home / ".config/fastfetch/themed").iterdir()) == pepes
+    # fastfetch usa el logo teñido
+    assert '"source": "~/.config/fastfetch/themed/pepe-' in read(home, ".config/fastfetch/config.jsonc")
 
 
 def test_theme_set_list(home):

@@ -2,10 +2,10 @@
 // Colores ANSI de kitty: blue = lavanda #a99bd6, magenta = rosa suave, cyan, green...
 {
   "$schema": "https://github.com/fastfetch-cli/fastfetch/raw/dev/doc/json_schema.json",
-  // Logo: Pepe en ASCII (lo genera pepe.py; theme-set deja versiones teñidas en themed/)
+  // Logo: Pepe en ASCII (lo genera pepe.py) teñido con el acento del tema (theme-set → themed/)
   "logo": {
     "type": "file-raw",
-    "source": "~/.config/fastfetch/pepe-mago.txt",
+    "source": "~/.config/fastfetch/themed/pepe-mago.txt",
     "padding": { "top": 1, "left": 2, "right": 4 }
   },
   "display": {
