@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Installs this desktop on a freshly installed CachyOS.
+# Installs this desktop on a freshly installed CachyOS (or plain Arch Linux).
 #
 #   git clone https://github.com/artiimor/wasdjy.git ~/.local/share/wasdjy
 #   ~/.local/share/wasdjy/install.sh            asks before each step
@@ -559,7 +559,7 @@ if ask "$(t "Log in with greetd + ReGreet (replaces SDDM or whatever login manag
 	loc="${loc%%[.@]*}"
 	[[ "$loc" =~ ^[a-z]{2,3}_[A-Z]{2}$ ]] || loc=en_US
 	clock="$(LC_ALL="" LC_MESSAGES="" LANG="$loc" t "%A, %B %d  ·  %H:%M" 2>/dev/null)"
-	sudo sed -i -e "s|^greeting_msg = .*|greeting_msg = \"$(cat /etc/hostname 2>/dev/null || echo cachyos)\"|" \
+	sudo sed -i -e "s|^greeting_msg = .*|greeting_msg = \"$(cat /etc/hostname 2>/dev/null || uname -n)\"|" \
 		-e "s|^format = .*|format = \"$clock\"|" -e "s|^locale = .*|locale = \"$loc\"|" /etc/greetd/regreet.toml
 	# Whatever login manager is active is disabled so greetd takes display-manager.service
 	cur="$(basename "$(readlink /etc/systemd/system/display-manager.service 2>/dev/null)" .service)"

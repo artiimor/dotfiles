@@ -1,4 +1,4 @@
--- CachyOS Hyprland Configuration
+-- wasdjy Hyprland configuration
 
 require("config.profile") -- "mac", "mac-light" or "default" profile (Mac Mode / Normal Mode: see profile.lua and wasdjy-config)
 require("config.animations")

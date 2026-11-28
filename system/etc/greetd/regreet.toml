@@ -17,7 +17,7 @@ poweroff = [ "systemctl", "poweroff" ]
 
 [appearance]
 # install.sh replaces it with the machine's hostname
-greeting_msg = "cachyos"
+greeting_msg = "wasdjy"
 
 # install.sh replaces locale with the system date locale (localectl: "es_ES", "de_DE"...)
 # and format with its translation (lib/i18n/<language>.json); here, in English

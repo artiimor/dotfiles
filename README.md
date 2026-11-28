@@ -120,7 +120,7 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 
 ## Requirements
 
-- **CachyOS or Arch Linux** (the installer needs `pacman`; it refuses to run without it).
+- **CachyOS or Arch Linux** (the installer needs `pacman`; it refuses to run without it). On plain Arch, the packages CachyOS ships prebuilt (`qview`, `brave-bin`, `proton-pass`, `claude-code`) come from the AUR (with `makepkg` if there's no `paru`/`yay`), so the first install takes longer; Plymouth also needs the `plymouth` hook and `splash` on the kernel command line (the installer warns if they're missing).
 - **Hyprland 0.57 or newer** (the config is Lua, which older versions don't support).
 - A normal user with `sudo`. Don't run the installer as root (it refuses).
 - Internet access: packages, the AUR packages `bzmenu` and `whitesur-icon-theme`, the macOS cursor download and the `hyprland-plugins` clone for `hyprbars`.
