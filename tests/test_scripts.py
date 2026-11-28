@@ -1,7 +1,8 @@
-# Tests for the bin/ scripts (wasdjy-theme, wasdjy-config, wasdjy-font,
-# wasdjy-background, wasdjy-contrast). Each test copies the repo's .config to a temporary HOME and
-# runs the scripts there with THEMES_NO_RELOAD=1. Some stubs go first in PATH
-# (qs, hyprctl, gsettings...) that only record their call: at the end of each test
+# Tests for the bin/ scripts (wasdjy-theme, wasdjy-config, wasdjy-font, wasdjy-background,
+# wasdjy-contrast; wasdjy-migrate and wasdjy-update at the end, with their own repo).
+# Each test copies the repo's .config to a temporary HOME and runs the scripts there with
+# THEMES_NO_RELOAD=1. Some stubs go first in PATH (qs, hyprctl, gsettings...) that only
+# record their call: at the end of each test
 # it checks that nothing outside was notified. If the switch failed,
 # the stubs also avoid touching the user's desktop.
 import json
@@ -13,7 +14,7 @@ import sys
 
 import pytest
 
-from conftest import BIN, CONFIG, REPO, THEMES, load_theme
+from conftest import BIN, CONFIG, LIB, REPO, THEMES, load_theme
 
 # Programs with effects outside the files (and fc-list, which only reads)
 STUBS = ("qs", "hyprctl", "gsettings", "notify-send", "nvim", "ghostty", "pkill",
@@ -323,8 +324,8 @@ OLD_NAMES = {"theme-set": "wasdjy-theme", "config-set": "wasdjy-config",
 
 
 def test_bin_ejecutables():
-    # The five scripts are in bin/ and executable (Quickshell and Hyprland run them directly)
-    for new in OLD_NAMES.values():
+    # The scripts are in bin/ and executable (Quickshell, Hyprland and install.sh run them directly)
+    for new in [*OLD_NAMES.values(), "wasdjy-migrate", "wasdjy-update"]:
         assert os.access(BIN / new, os.X_OK), new
 
 
@@ -357,3 +358,154 @@ def test_sin_rutas_viejas():
                     if old.search(line):
                         bad.append(f"{f.relative_to(REPO)}:{i}: {line.strip()}")
     assert not bad, "\n".join(bad)
+
+
+# ── wasdjy-migrate and wasdjy-update (bash) ─────────────
+
+def bash_env(tmp_path, **extra):
+    return {**os.environ, "HOME": str(tmp_path / "home"), "LC_ALL": "C", **extra}
+
+
+@pytest.fixture
+def migrations(tmp_path):
+    # A repo of its own (bin/, lib/ and migrations/) and a temporary HOME. Each migration
+    # appends its name to ran.log; "b" fails if fail.flag exists
+    repo = tmp_path / "repo"
+    shutil.copytree(BIN, repo / "bin")
+    shutil.copytree(LIB, repo / "lib")
+    (repo / "migrations").mkdir()
+    (tmp_path / "home").mkdir()
+    for name in ("20260101-a.sh", "20260102-b.sh", "20260103-c.sh"):
+        fail = f'[ ! -e "{tmp_path}/fail.flag" ] || exit 3\n' if name.endswith("b.sh") else ""
+        (repo / "migrations" / name).write_text(
+            f'echo "{name} $REPO" >> "{tmp_path}/ran.log"\n{fail}')
+    return tmp_path
+
+
+def migrate(tmp, *args):
+    return subprocess.run([str(tmp / "repo/bin/wasdjy-migrate"), *args], env=bash_env(tmp),
+                          capture_output=True, text=True)
+
+
+def ran(tmp):
+    log = tmp / "ran.log"
+    return [l.split()[0] for l in log.read_text().splitlines()] if log.exists() else []
+
+
+def applied(tmp):
+    return (tmp / "home/.local/state/wasdjy/migrations").read_text().splitlines()
+
+
+ALL = ["20260101-a.sh", "20260102-b.sh", "20260103-c.sh"]
+
+
+def test_migrate_en_orden(migrations):
+    # The pending ones run in order, with REPO, and the ones already done aren't repeated
+    r = migrate(migrations)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert ran(migrations) == ALL
+    assert applied(migrations) == ALL
+    assert f" {migrations / 'repo'}" in (migrations / "ran.log").read_text()
+    (migrations / "repo/migrations/20260104-d.sh").write_text(f'echo d >> "{migrations}/ran.log"\n')
+    assert migrate(migrations).returncode == 0
+    assert ran(migrations) == [*ALL, "d"]
+    assert applied(migrations) == [*ALL, "20260104-d.sh"]
+
+
+def test_migrate_falla(migrations):
+    # The one that fails stops the run, isn't marked and the next ones don't run;
+    # once fixed, it's retried
+    (migrations / "fail.flag").touch()
+    r = migrate(migrations)
+    assert r.returncode != 0
+    assert "20260102-b.sh failed" in r.stdout
+    assert ran(migrations) == ALL[:2]
+    assert applied(migrations) == ALL[:1]
+    (migrations / "fail.flag").unlink()
+    assert migrate(migrations).returncode == 0
+    assert ran(migrations) == [*ALL[:2], *ALL[1:]]
+    assert applied(migrations) == ALL
+
+
+def test_migrate_mark_all(migrations):
+    # Fresh install: all marked, none run (and not repeated afterwards). --pending only checks
+    assert migrate(migrations, "--pending").returncode == 0
+    assert migrate(migrations, "--mark-all").returncode == 0
+    assert migrate(migrations, "--pending").returncode == 1
+    assert applied(migrations) == ALL
+    assert migrate(migrations).returncode == 0
+    assert ran(migrations) == []
+    assert migrate(migrations, "--bad").returncode == 2
+
+
+@pytest.fixture
+def update_repo(tmp_path):
+    # A bare remote and a clone with bin/, lib/ and an install.sh stub that records its
+    # call; stubs for sudo (records it) and the rest of the outside programs
+    git_env = bash_env(tmp_path, GIT_AUTHOR_NAME="t", GIT_AUTHOR_EMAIL="t@t",
+                       GIT_COMMITTER_NAME="t", GIT_COMMITTER_EMAIL="t@t",
+                       GIT_CONFIG_GLOBAL="/dev/null", GIT_CONFIG_NOSYSTEM="1")
+    git = lambda cwd, *a: subprocess.run(["git", *a], cwd=cwd, env=git_env, check=True,
+                                         capture_output=True)
+    (tmp_path / "home").mkdir()
+    src = tmp_path / "src"
+    shutil.copytree(BIN, src / "bin")
+    shutil.copytree(LIB, src / "lib")
+    (src / "install.sh").write_text(f'#!/bin/sh\necho "install.sh $*" >> "{tmp_path}/calls.log"\n')
+    (src / "install.sh").chmod(0o755)
+    git(tmp_path, "init", "-q", "--bare", "-b", "main", "remote.git")
+    git(src, "init", "-q", "-b", "main")
+    git(src, "add", ".")
+    git(src, "commit", "-qm", "First")
+    git(src, "remote", "add", "origin", str(tmp_path / "remote.git"))
+    git(src, "push", "-q", "-u", "origin", "main")
+    git(tmp_path, "clone", "-q", str(tmp_path / "remote.git"), "repo")
+    stubs = tmp_path / "stubs"
+    stubs.mkdir()
+    for name in ("sudo", "pacman", "hyprctl", "qs"):
+        (stubs / name).write_text(f'#!/bin/sh\necho "{name} $*" >> "{tmp_path}/calls.log"\n')
+        (stubs / name).chmod(0o755)
+    env = {**git_env, "PATH": f"{stubs}:{os.environ['PATH']}"}
+    return tmp_path, src, git, env
+
+
+def test_update(update_repo):
+    tmp, src, git, env = update_repo
+    update = [str(tmp / "repo/bin/wasdjy-update"), "--yes"]
+    # Nothing new: no install.sh, but pacman -Syu without asking
+    r = subprocess.run(update, env=env, capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "already up to date" in r.stdout
+    assert (tmp / "calls.log").read_text().splitlines() == ["sudo pacman -Syu --noconfirm"]
+    # A new commit upstream: pull, its log and install.sh --update
+    (src / "new.txt").write_text("x\n")
+    git(src, "add", ".")
+    git(src, "commit", "-qm", "Second commit")
+    git(src, "push", "-q")
+    (tmp / "calls.log").unlink()
+    r = subprocess.run(update, env=env, capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "Second commit" in r.stdout and "First" not in r.stdout
+    assert (tmp / "repo/new.txt").exists()
+    assert (tmp / "calls.log").read_text().splitlines() == [
+        "sudo pacman -Syu --noconfirm", "install.sh --update"]
+    # Nothing new but a migration still pending (it failed last time): install.sh --update again
+    (tmp / "repo/migrations").mkdir()
+    (tmp / "repo/migrations/20260101-a.sh").write_text("true\n")
+    (tmp / "calls.log").unlink()
+    r = subprocess.run(update, env=env, capture_output=True, text=True)
+    assert r.returncode == 0, r.stdout + r.stderr
+    assert "already up to date" in r.stdout
+    assert (tmp / "calls.log").read_text().splitlines() == [
+        "sudo pacman -Syu --noconfirm", "install.sh --update"]
+    # A pull that isn't fast-forward: warns and stops before pacman
+    (tmp / "repo/new.txt").write_text("local\n")
+    git(tmp / "repo", "commit", "-qam", "Local")
+    (src / "new.txt").write_text("remote\n")
+    git(src, "commit", "-qam", "Remote")
+    git(src, "push", "-q")
+    (tmp / "calls.log").unlink()
+    r = subprocess.run(update, env=env, capture_output=True, text=True)
+    assert r.returncode != 0
+    assert "git pull failed" in r.stdout
+    assert not (tmp / "calls.log").exists()

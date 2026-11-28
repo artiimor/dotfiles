@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Update wasdjy
+Name[es]=Actualizar wasdjy
+Comment=Update the desktop and the system packages
+Comment[es]=Actualiza el escritorio y los paquetes del sistema
+Exec=ghostty --wait-after-command=true -e @HOME@/.local/share/wasdjy/bin/wasdjy-update
+Icon=system-software-update
+Terminal=false
+Type=Application

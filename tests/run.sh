@@ -38,12 +38,13 @@ each() {
 	return "$rc"
 }
 
-# Shell scripts: the root ones, the uwsm environment and those with an sh/bash shebang
-shells=(install.sh .bashrc .bash_profile .profile .config/uwsm/env)
+# Shell scripts: the root ones, the uwsm environment, lib/wasdjy.sh, the migrations
+# (bash without a shebang) and those with an sh/bash shebang
+shells=(install.sh .bashrc .bash_profile .profile .config/uwsm/env lib/wasdjy.sh)
 while IFS= read -r -d '' f; do
 	IFS= read -r line <"$f"
-	[[ $line =~ ^#!.*[/\ ](ba)?sh($|\ ) ]] && shells+=("$f")
-done < <(find .config .local system tests -type f -print0)
+	[[ $f == migrations/*.sh || $line =~ ^#!.*[/\ ](ba)?sh($|\ ) ]] && shells+=("$f")
+done < <(find .config .local system tests bin migrations -type f -print0)
 
 mapfile -t hypr_lua < <(find .config/hypr -name '*.lua')
 mapfile -t nvim_lua < <(find .config/nvim .config/nvim-lazyvim -name '*.lua')

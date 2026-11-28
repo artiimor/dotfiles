@@ -1,0 +1,66 @@
+#!/usr/bin/env bash
+# Updates an existing wasdjy install without running all of install.sh again.
+#
+#   wasdjy-update          asks before updating the system packages
+#   wasdjy-update --yes    without asking (-y also works)
+#
+# Also from the launcher ("Update wasdjy", .local/share/applications/wasdjy-update.desktop).
+#
+#   1. git pull --ff-only in ~/.local/share/wasdjy and the new commits (git log)
+#   2. sudo pacman -Syu. No snapshot of its own: on CachyOS snap-pac already takes a
+#      snapper one before and after every pacman transaction
+#   3. If the repo changed or a migration is still pending: install.sh --update, which runs the pending migrations
+#      (wasdjy-migrate), copies the files and re-applies the theme and the profile.
+#      That re-apply already reloads Hyprland and Quickshell (wasdjy-theme, wasdjy-config)
+#
+# git pull may rewrite this very file while bash runs it (bash reads scripts in chunks):
+# everything is inside main(), which is parsed whole before it starts.
+
+set -euo pipefail
+
+main() {
+	# By realpath: also works through a symlink
+	local REPO old new
+	REPO="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
+	# shellcheck source=lib/wasdjy.sh
+	. "$REPO/lib/wasdjy.sh"
+	YES=0
+	case "${1:-}" in
+	"") ;;
+	--yes | -y) YES=1 ;;
+	*)
+		echo "$(t "Usage: %1" "wasdjy-update [--yes]")" >&2
+		return 2
+		;;
+	esac
+
+	step "$(t "Updating wasdjy")"
+	old="$(git -C "$REPO" rev-parse HEAD)"
+	if ! git -C "$REPO" pull --ff-only; then
+		warn "$(t "git pull failed (local changes or a diverged branch?): nothing was updated")"
+		return 1
+	fi
+	new="$(git -C "$REPO" rev-parse HEAD)"
+	if [[ "$old" == "$new" ]]; then
+		info "$(t "already up to date")"
+	else
+		git -C "$REPO" --no-pager log --oneline "$old..$new"
+	fi
+
+	step "$(t "System packages")"
+	local noconfirm=()
+	((YES)) && noconfirm=(--noconfirm)
+	if ask "$(t "Update the system packages (pacman -Syu)?")"; then
+		sudo pacman -Syu "${noconfirm[@]}" || warn "$(t "could not update the system, continuing")"
+	fi
+
+	# Also with no new commits if a migration is pending: it failed last time, and
+	# install.sh stopped before copying the files
+	if [[ "$old" != "$new" ]] || "$REPO/bin/wasdjy-migrate" --pending; then
+		"$REPO/install.sh" --update
+	fi
+	step "$(t "Done")"
+}
+
+main "$@"
+exit

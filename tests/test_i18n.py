@@ -57,10 +57,14 @@ def bind_texts():
     return out
 
 
+def is_python(path):
+    return path.read_text().startswith("#!/usr/bin/env python3")
+
+
 def python_texts():
-    # tr("...") with a literal as first argument in the bin/ scripts and themelib.py
+    # tr("...") with a literal as first argument in the Python bin/ scripts and themelib.py
     out = set()
-    for path in [*sorted(BIN.glob("wasdjy-*")), LIB / "themelib.py"]:
+    for path in [*(p for p in sorted(BIN.glob("wasdjy-*")) if is_python(p)), LIB / "themelib.py"]:
         for node in ast.walk(ast.parse(path.read_text())):
             if (isinstance(node, ast.Call) and getattr(node.func, "id", None) == "tr"
                     and node.args and isinstance(node.args[0], ast.Constant)):
@@ -69,10 +73,11 @@ def python_texts():
 
 
 def bash_texts():
-    # t "Text %1" arg in install.sh and quickshell/scripts (t calls themelib.py tr);
-    # also $(t No) without quotes. Those with variables ($1...) are skipped
+    # t "Text %1" arg in install.sh, lib/wasdjy.sh, the bash bin/ scripts and quickshell/scripts
+    # (t calls themelib.py tr); also $(t No) without quotes. Those with variables ($1...) are skipped
     out = set()
-    for f in [REPO / "install.sh", *(QS / "scripts").iterdir()]:
+    bash_bin = [p for p in sorted(BIN.glob("wasdjy-*")) if not is_python(p)]
+    for f in [REPO / "install.sh", LIB / "wasdjy.sh", *bash_bin, *(QS / "scripts").iterdir()]:
         for s, word in re.findall(r"(?<![\w$-])t (?:" + STR + r"|(\w+)\))", lines(f, "#")):
             s = re.sub(r'\\(["\\$`])', r"\1", s) or word
             if "$" not in s:

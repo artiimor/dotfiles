@@ -133,6 +133,8 @@ git clone https://github.com/artiimor/wasdjy.git ~/.local/share/wasdjy
 ~/.local/share/wasdjy/install.sh --yes    # does everything without asking (-y also works)
 ```
 
+Later, to update: [`wasdjy-update`](#updating-and-re-applying).
+
 The repo stays in `~/.local/share/wasdjy` (like Omarchy): its `bin/` holds the `wasdjy-*` commands
 (`wasdjy-theme`, `wasdjy-config`, `wasdjy-background`, `wasdjy-font`, `wasdjy-contrast`) and is added to the `PATH`
 by `~/.config/uwsm/env` (Hyprland session) and `~/.profile` (TTY/ssh). Cloned somewhere else, step 3 links
@@ -153,7 +155,7 @@ When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 | **1. Desktop packages** | `pacman -Syu`, then installs the desktop, terminal, font and login/boot package groups (see the list below). Packages missing from your repos (e.g. CachyOS-only ones on plain Arch) are reported and tried from the AUR; if a batch conflicts, it retries one by one. `bzmenu` and `whitesur-icon-theme` come from the AUR via `paru`/`yay` if present, otherwise `makepkg`. |
 | **1b. GPU** | Detects the graphics cards from PCI (`/sys/bus/pci/devices`). Intel: offers `intel-media-driver` (VA-API). NVIDIA: if `nvidia-utils` is already installed (CachyOS does it with `chwd`) nothing is installed; on CachyOS without drivers it offers `chwd -a`; on plain Arch it offers `nvidia-open-dkms nvidia-utils egl-wayland libva-nvidia-driver` plus the headers of each installed kernel that are in your repos (`nvidia-open` needs Turing/RTX 20 or newer, so this question defaults to no and is asked even with `--yes`). If NVIDIA is the primary GPU (the only one, or the boot GPU) and `nvidia-utils` is installed, it writes `LIBVA_DRIVER_NAME`, `__GLX_VENDOR_LIBRARY_NAME` and `NVD_BACKEND` to `~/.config/uwsm/env.d/gpu`; on hybrid laptops (Intel/AMD iGPU + NVIDIA) it doesn't, since forcing them breaks the session. The file is regenerated on every run. |
 | **2. Extra apps** (optional) | `firefox brave-bin spotify-launcher discord proton-pass proton-vpn-gtk-app claude-code github-cli`, installed the same way as step 1. |
-| **3. Configuration files** | Links `~/.local/share/wasdjy` to the repo if it was cloned elsewhere, replaces the old `~/.config/themes/*-set` copies with symlinks to `bin/wasdjy-*`, copies `.config/` → `~/.config/`, `.local/share/applications/` (web apps) → `~/.local/share/applications/`, `.local/share/icons/` (Sur icons) → `~/.local/share/icons/` (and builds their `icon-theme.cache` with `gtk-update-icon-cache`), and `.bashrc`, `.bash_profile`, `.profile` → `~`. Details below. |
+| **3. Configuration files** | Links `~/.local/share/wasdjy` to the repo if it was cloned elsewhere, runs the pending [migrations](#updating-and-re-applying) (`wasdjy-migrate`; on a fresh install they're only marked as applied), replaces the old `~/.config/themes/*-set` copies with symlinks to `bin/wasdjy-*`, copies `.config/` → `~/.config/`, `.local/share/applications/` (web apps) → `~/.local/share/applications/`, `.local/share/icons/` (Sur icons) → `~/.local/share/icons/` (and builds their `icon-theme.cache` with `gtk-update-icon-cache`), and `.bashrc`, `.bash_profile`, `.profile` → `~`. Details below. |
 | **3b. Shell** | If your login shell isn't bash (CachyOS defaults to fish), offers `chsh -s /bin/bash`. |
 | **4. Theme and profile** | Runs `wasdjy-theme <theme>` (your current theme if you already had one, otherwise **grafito**) and `wasdjy-config --reapply` (keeps your profile; Mac mode on a fresh install). |
 | **5. hyprbars** | Clones `hyprwm/hyprland-plugins` at the tag matching your installed Hyprland (falls back to `vX.Y.0`), applies the four patches in `.config/hypr/`, builds it and copies `hyprbars.so` to `~/.local/lib/hyprland/`. Then offers to remove the apps' own window buttons (GTK `button-layout`, and Brave's "use system title bar", only if Brave is closed). |
@@ -492,8 +494,10 @@ the installer (or copy `system/etc/keyd/thinkpad.conf` to `/etc/keyd/` and enabl
 ```text
 wasdjy/                           (~/.local/share/wasdjy)
 ├── install.sh                    installer (see above)
-├── bin/                          wasdjy-theme, wasdjy-config, wasdjy-background, wasdjy-font, wasdjy-contrast (in the PATH)
-├── lib/                          themelib.py (shared by bin/) and its i18n/
+├── bin/                          wasdjy-theme, wasdjy-config, wasdjy-background, wasdjy-font, wasdjy-contrast,
+│                                 wasdjy-update, wasdjy-migrate (in the PATH)
+├── lib/                          themelib.py (shared by bin/) and its i18n/; wasdjy.sh (shared by the bash scripts)
+├── migrations/                   one-off scripts for existing installs (run by wasdjy-migrate)
 ├── .bashrc .bash_profile .profile
 ├── .config/
 │   ├── hypr/
@@ -562,6 +566,19 @@ keeping the keys and the `%1`, `%2`… placeholders:
 - `lib/i18n/` (`wasdjy-*` scripts, `webapp`, night light tooltip, `install.sh` and the login screen clock format)
 
 ## Updating and re-applying
+
+```sh
+wasdjy-update          # also in the launcher: "Update wasdjy"
+wasdjy-update --yes    # without asking before pacman -Syu
+```
+
+`wasdjy-update` pulls the repo (`git pull --ff-only`, so local commits or changes stop it), shows the new commits,
+offers `sudo pacman -Syu` (CachyOS's snap-pac already takes a snapper snapshot before it) and, if the repo changed
+(or a migration that failed last time is still pending), runs `install.sh --update`: only steps 3 and 4, without asking. That runs the pending **migrations** (one-off scripts in
+`migrations/` that bring existing installs up to date: renamed files, new packages…; a fresh install marks them all as
+applied), copies the files and re-applies your theme and profile, which reloads Hyprland and Quickshell.
+
+To re-run the full installer instead:
 
 ```sh
 cd ~/.local/share/wasdjy && git pull

@@ -4,6 +4,7 @@
 #   git clone https://github.com/artiimor/wasdjy.git ~/.local/share/wasdjy
 #   ~/.local/share/wasdjy/install.sh            asks before each step
 #   ~/.local/share/wasdjy/install.sh --yes      does everything without asking
+#   ~/.local/share/wasdjy/install.sh --update   only steps 3 and 4, without asking (used by wasdjy-update)
 #
 # The repo lives in ~/.local/share/wasdjy and its bin/ (wasdjy-theme, wasdjy-config...) goes
 # in the PATH (uwsm/env, .profile). Cloned somewhere else (e.g. ~/src/wasdjy), step 3 links
@@ -13,7 +14,7 @@
 #   1. Desktop packages (pacman) and AUR ones (bzmenu, WhiteSur icons) with makepkg
 #   1b. GPU: missing drivers and NVIDIA variables if it's the primary one (not on hybrids)
 #   2. Extra apps (Firefox, Brave, Spotify, Discord, Proton...)
-#   3. Files: ~/.local/share/wasdjy, .config (with macshell), .bashrc, webapps, Sur icons -> ~ (whatever gets replaced goes to ~/.local/state/wasdjy/backup/<date>) and bash as shell
+#   3. Files: ~/.local/share/wasdjy, pending migrations (bin/wasdjy-migrate), .config (with macshell), .bashrc, webapps, Sur icons -> ~ (whatever gets replaced goes to ~/.local/state/wasdjy/backup/<date>) and bash as shell
 #   4. Color theme (wasdjy-theme) and Mac Mode / Normal Mode profile (wasdjy-config)
 #   5. hyprbars plugin with the desktop-mode patches (and removes GTK/Brave's own buttons)
 #   6. System (sudo): greetd + ReGreet, Plymouth "sobrio", keyd (ThinkPad), automatic
@@ -31,18 +32,17 @@ WASDJY="$HOME/.local/share/wasdjy"
 # Color theme: the one you already have (not lost when re-running the install), otherwise grafito
 THEME="$(basename "$(readlink "$HOME/.config/themes/current" 2>/dev/null)" 2>/dev/null)"
 [[ -f "$REPO/.config/themes/$THEME/theme.json" ]] || THEME="grafito"
-YES=0
-[[ "${1:-}" == "--yes" || "${1:-}" == "-y" ]] && YES=1
+YES=0 UPDATE=0
+case "${1:-}" in
+--yes | -y) YES=1 ;;
+# --update: files, theme and migrations of an existing install, without asking
+--update) YES=1 UPDATE=1 ;;
+esac
 
-# Messages are translated with the repo's lib/themelib.py (~/.local/share/wasdjy may
-# not exist yet): t "Text %1" arg. Without python3, in English with the %N replaced here
-t() {
-	python3 "$REPO/lib/themelib.py" tr "$@" 2>/dev/null && return
-	local s="$1" i=1 a
-	shift
-	for a; do s="${s//"%$i"/"$a"}" i=$((i + 1)); done
-	printf '%s' "$s"
-}
+# t (translated messages), step, info, warn and ask, from the repo itself
+# (~/.local/share/wasdjy may not exist yet)
+# shellcheck source=lib/wasdjy.sh
+. "$REPO/lib/wasdjy.sh"
 
 # ---------------------------------------------------------------- packages
 
@@ -83,20 +83,6 @@ APPS=(firefox brave-bin spotify-launcher discord proton-pass proton-vpn-gtk-app 
 
 # ---------------------------------------------------------------- utilities
 
-bold=$'\e[1m' dim=$'\e[2m' accent=$'\e[35m' red=$'\e[31m' reset=$'\e[0m'
-
-step() { printf '\n%s==>%s %s%s%s\n' "$accent" "$reset" "$bold" "$*" "$reset"; }
-info() { printf '    %s%s%s\n' "$dim" "$*" "$reset"; }
-warn() { printf '    %s!%s %s\n' "$red" "$reset" "$*"; }
-
-# ask "question" -> 0 if yes (Enter = yes)
-ask() {
-	((YES)) && return 0
-	local r
-	read -rp "    $1 $(t "[Y/n]") " r
-	[[ -z "$r" || "$r" =~ ^[sSyY] ]]
-}
-
 if [[ $EUID -eq 0 ]]; then
 	echo "$(t "Run it as your user, not as root.")" >&2
 	exit 1
@@ -109,11 +95,14 @@ fi
 BACKUP="$HOME/.local/state/wasdjy/backup/$(date +%Y%m%d-%H%M%S)"
 ME="$(id -un)"
 
-# Asks for sudo once and keeps it alive (AUR builds can take a while)
-sudo -v
-while sleep 60; do sudo -n true; done 2>/dev/null &
-SUDO_KEEPALIVE=$!
-trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null' EXIT
+# Asks for sudo once and keeps it alive (AUR builds can take a while).
+# Not with --update: steps 3 and 4 hardly need it
+if ((!UPDATE)); then
+	sudo -v
+	while sleep 60; do sudo -n true; done 2>/dev/null &
+	SUDO_KEEPALIVE=$!
+	trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null' EXIT
+fi
 
 # Config files edited by hand: if they already exist they aren't overwritten on re-runs
 KEEP=(hypr/config/monitors.lua hypr/config/variables.lua hypr/config/inputs.lua themes/current
@@ -334,25 +323,30 @@ gpu_setup() {
 	return 0
 }
 
-# ---------------------------------------------------------------- 1. packages
+# Steps 1, 1b and 2 (packages): not with --update (wasdjy-update runs pacman -Syu itself)
+if ((!UPDATE)); then
 
-step "$(t "1. Desktop packages")"
-info "$(t "%1 desktop, %2 terminal, %3 fonts, %4 login/boot, AUR: %5" "${#DESKTOP[@]}" "${#TERMINAL[@]}" "${#FONTS[@]}" "${#SYSTEM[@]}" "${AUR[*]}")"
-if ask "$(t "Install the packages?")"; then
-	sudo pacman -Syu --noconfirm || warn "$(t "could not update the system, continuing")"
-	pacman_install "${DESKTOP[@]}" "${TERMINAL[@]}" "${FONTS[@]}" "${SYSTEM[@]}"
-	aur_install "${AUR[@]}"
-fi
+	# ---------------------------------------------------------------- 1. packages
 
-step "$(t "1b. Graphics (GPU)")"
-gpu_setup
+	step "$(t "1. Desktop packages")"
+	info "$(t "%1 desktop, %2 terminal, %3 fonts, %4 login/boot, AUR: %5" "${#DESKTOP[@]}" "${#TERMINAL[@]}" "${#FONTS[@]}" "${#SYSTEM[@]}" "${AUR[*]}")"
+	if ask "$(t "Install the packages?")"; then
+		sudo pacman -Syu --noconfirm || warn "$(t "could not update the system, continuing")"
+		pacman_install "${DESKTOP[@]}" "${TERMINAL[@]}" "${FONTS[@]}" "${SYSTEM[@]}"
+		aur_install "${AUR[@]}"
+	fi
 
-# ---------------------------------------------------------------- 2. apps
+	step "$(t "1b. Graphics (GPU)")"
+	gpu_setup
 
-step "$(t "2. Extra apps")"
-info "${APPS[*]}"
-if ask "$(t "Install the apps?")"; then
-	pacman_install "${APPS[@]}"
+	# ---------------------------------------------------------------- 2. apps
+
+	step "$(t "2. Extra apps")"
+	info "${APPS[*]}"
+	if ask "$(t "Install the apps?")"; then
+		pacman_install "${APPS[@]}"
+	fi
+
 fi
 
 # ---------------------------------------------------------------- 3. files
@@ -367,6 +361,16 @@ if ask "$(t "Copy them?")"; then
 	# monitors.lua: if it doesn't exist yet (first install) it is generated with the detected screens
 	mon="$HOME/.config/hypr/config/monitors.lua"
 	[[ -e "$mon" ]] && mon=""
+	# Migrations (migrations/, see bin/wasdjy-migrate), before copying the new files: a fresh
+	# install is already up to date (all marked as applied); an existing one runs the pending ones
+	if [[ -n "$mon" ]]; then
+		"$REPO/bin/wasdjy-migrate" --mark-all
+	elif ! "$REPO/bin/wasdjy-migrate"; then
+		again="$0"
+		((UPDATE)) && again=wasdjy-update
+		warn "$(t "stopping: fix the migration and run %1 again" "$again")"
+		exit 1
+	fi
 	copy_tree "$REPO/.config" "$HOME/.config"
 	[[ -z "$mon" ]] || gen_monitors "$mon"
 	copy_tree "$REPO/.local/share/applications" "$HOME/.local/share/applications"
@@ -416,7 +420,7 @@ if ask "$(t "Copy them?")"; then
 fi
 
 # CachyOS sets fish as the default shell; this repo's config is for bash (.bashrc)
-if [[ "$(getent passwd "$ME" | cut -d: -f7)" != */bash ]] && ask "$(t "Use bash as your shell (instead of fish)?")"; then
+if ((!UPDATE)) && [[ "$(getent passwd "$ME" | cut -d: -f7)" != */bash ]] && ask "$(t "Use bash as your shell (instead of fish)?")"; then
 	sudo chsh -s /bin/bash "$ME"
 	info "$(t "shell changed to bash: takes effect on your next login")"
 fi
@@ -433,6 +437,9 @@ fi
 if [[ -d "$HOME/.config/themes" ]]; then
 	"$REPO/bin/wasdjy-config" --reapply || warn "$(t "%1 failed; run it again inside Hyprland" wasdjy-config)"
 fi
+
+# --update ends here: hyprbars and the system parts aren't touched
+((UPDATE)) && exit 0
 
 # ---------------------------------------------------------------- 5. hyprbars
 

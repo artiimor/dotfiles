@@ -121,5 +121,13 @@
   "%1 already exists and is not this repo: the wasdjy-* commands will run from there": "%1 ya existe y no es este repo: los comandos wasdjy-* se ejecutarán desde ahí",
   "%1 -> %2": "%1 -> %2",
   "%1 -> %2 (wasdjy-* commands)": "%1 -> %2 (comandos wasdjy-*)",
-  "3. Configuration files": "3. Archivos de configuración"
+  "3. Configuration files": "3. Archivos de configuración",
+  "System packages": "Paquetes del sistema",
+  "Update the system packages (pacman -Syu)?": "¿Actualizar los paquetes del sistema (pacman -Syu)?",
+  "Updating wasdjy": "Actualizando wasdjy",
+  "already up to date": "ya está al día",
+  "git pull failed (local changes or a diverged branch?): nothing was updated": "git pull falló (¿cambios locales o una rama que diverge?): no se ha actualizado nada",
+  "migration %1": "migración %1",
+  "migration %1 failed: not marked as applied, it will be retried": "la migración %1 falló: no se marca como aplicada, se reintentará",
+  "stopping: fix the migration and run %1 again": "me paro: arregla la migración y vuelve a ejecutar %1"
 }

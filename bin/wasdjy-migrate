@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+# Migrations: scripts in migrations/ that run only once per machine, to bring an
+# existing install up to date (renamed files, a new package, a setting that copying
+# the files doesn't re-apply...). Convention in migrations/README.md.
+#
+#   wasdjy-migrate              runs, in order, the migrations not applied yet
+#   wasdjy-migrate --mark-all   marks them all as applied without running them (fresh install)
+#   wasdjy-migrate --pending    exit 0 if some migration is pending, 1 if none (runs nothing)
+#
+# install.sh runs it in step 3, before copying the files (--mark-all on a fresh install),
+# and so does wasdjy-update through install.sh --update (also with no new commits, if
+# --pending says one is left: e.g. it failed last time and install.sh stopped before copying).
+#
+# The applied ones are listed in ~/.local/state/wasdjy/migrations (one file name per line);
+# without that file none is applied. Each one is marked as soon as it ends well. The first one
+# that fails (exit != 0) stops the run without being marked: it is retried the next time.
+
+set -euo pipefail
+
+# By realpath: also works through a symlink
+REPO="$(dirname "$(dirname "$(realpath "${BASH_SOURCE[0]}")")")"
+# shellcheck source=lib/wasdjy.sh
+. "$REPO/lib/wasdjy.sh"
+STATE="$HOME/.local/state/wasdjy/migrations"
+
+case "${1:-}" in
+"" | --mark-all | --pending) ;;
+*)
+	echo "$(t "Usage: %1" "wasdjy-migrate [--mark-all]")" >&2
+	exit 2
+	;;
+esac
+
+mkdir -p "${STATE%/*}"
+touch "$STATE"
+shopt -s nullglob
+# The glob comes sorted: by name, that is, by date (AAAAMMDD-description.sh)
+for f in "$REPO"/migrations/*.sh; do
+	name="${f##*/}"
+	grep -qxF "$name" "$STATE" && continue
+	[[ "${1:-}" == --pending ]] && exit 0
+	if [[ "${1:-}" != --mark-all ]]; then
+		info "$(t "migration %1" "$name")"
+		# Strict bash, with REPO available (exported to the migration)
+		if ! REPO="$REPO" bash -euo pipefail "$f"; then
+			warn "$(t "migration %1 failed: not marked as applied, it will be retried" "$name")"
+			exit 1
+		fi
+	fi
+	echo "$name" >>"$STATE"
+done
+if [[ "${1:-}" == --pending ]]; then
+	exit 1
+fi
