@@ -81,7 +81,7 @@
   "Usage: %1": "Uso: %1",
   "Usage: wasdjy-contrast [on|off|toggle]": "Uso: wasdjy-contrast [on|off|toggle]",
   "Use bash as your shell (instead of fish)?": "¿Usar bash como shell (en vez de fish)?",
-  "Warning: macshell is missing (%1); \"%2\" will look like \"default\" in the bar (copy the dotfiles again: install.sh, step 3)": "Aviso: no está macshell (%1); \"%2\" se verá como \"default\" en la barra (vuelve a copiar los dotfiles: install.sh, paso 3)",
+  "Warning: macshell is missing (%1); \"%2\" will look like \"default\" in the bar (install wasdjy again: install.sh, step 3)": "Aviso: no está macshell (%1); \"%2\" se verá como \"default\" en la barra (vuelve a instalar wasdjy: install.sh, paso 3)",
   "Webapp created": "Webapp creada",
   "Webapp deleted": "Webapp borrada",
   "Webapp name": "Nombre de la webapp",
@@ -119,5 +119,6 @@
   "zenity is not installed": "zenity no está instalado",
   "%1 already exists and is not this repo: the wasdjy-* commands will run from there": "%1 ya existe y no es este repo: los comandos wasdjy-* se ejecutarán desde ahí",
   "%1 -> %2": "%1 -> %2",
-  "%1 -> %2 (wasdjy-* commands)": "%1 -> %2 (comandos wasdjy-*)"
+  "%1 -> %2 (wasdjy-* commands)": "%1 -> %2 (comandos wasdjy-*)",
+  "3. Configuration files": "3. Archivos de configuración"
 }

@@ -1,4 +1,4 @@
-# dotfiles
+# wasdjy
 
 My **Hyprland** desktop for **CachyOS / Arch Linux**: Hyprland with a Lua config, and **Quickshell** for everything else
 (bar, launcher, menus, notifications, OSD, wallpaper, lock screen, polkit dialog and dock).
@@ -10,7 +10,7 @@ Designed by me and implemented with help from [Claude Code](https://claude.com/c
 [Omarchy](https://omarchy.org) inspired the desktop mode, the theme switcher and the per-theme backgrounds.
 
 ```sh
-git clone https://github.com/artiimor/dotfiles.git ~/.local/share/wasdjy && ~/.local/share/wasdjy/install.sh
+git clone https://github.com/artiimor/wasdjy.git ~/.local/share/wasdjy && ~/.local/share/wasdjy/install.sh
 ```
 
 ## Contents
@@ -128,7 +128,7 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 ## Installation
 
 ```sh
-git clone https://github.com/artiimor/dotfiles.git ~/.local/share/wasdjy
+git clone https://github.com/artiimor/wasdjy.git ~/.local/share/wasdjy
 ~/.local/share/wasdjy/install.sh          # asks before each step (Enter = yes)
 ~/.local/share/wasdjy/install.sh --yes    # does everything without asking (-y also works)
 ```
@@ -153,22 +153,22 @@ When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 | **1. Desktop packages** | `pacman -Syu`, then installs the desktop, terminal, font and login/boot package groups (see the list below). Packages missing from your repos (e.g. CachyOS-only ones on plain Arch) are reported and tried from the AUR; if a batch conflicts, it retries one by one. `bzmenu` and `whitesur-icon-theme` come from the AUR via `paru`/`yay` if present, otherwise `makepkg`. |
 | **1b. GPU** | Detects the graphics cards from PCI (`/sys/bus/pci/devices`). Intel: offers `intel-media-driver` (VA-API). NVIDIA: if `nvidia-utils` is already installed (CachyOS does it with `chwd`) nothing is installed; on CachyOS without drivers it offers `chwd -a`; on plain Arch it offers `nvidia-open-dkms nvidia-utils egl-wayland libva-nvidia-driver` plus the headers of each installed kernel that are in your repos (`nvidia-open` needs Turing/RTX 20 or newer, so this question defaults to no and is asked even with `--yes`). If NVIDIA is the primary GPU (the only one, or the boot GPU) and `nvidia-utils` is installed, it writes `LIBVA_DRIVER_NAME`, `__GLX_VENDOR_LIBRARY_NAME` and `NVD_BACKEND` to `~/.config/uwsm/env.d/gpu`; on hybrid laptops (Intel/AMD iGPU + NVIDIA) it doesn't, since forcing them breaks the session. The file is regenerated on every run. |
 | **2. Extra apps** (optional) | `firefox brave-bin spotify-launcher discord proton-pass proton-vpn-gtk-app claude-code github-cli`, installed the same way as step 1. |
-| **3. Dotfiles** | Links `~/.local/share/wasdjy` to the repo if it was cloned elsewhere, replaces the old `~/.config/themes/*-set` copies with symlinks to `bin/wasdjy-*`, copies `.config/` → `~/.config/`, `.local/share/applications/` (web apps) → `~/.local/share/applications/`, `.local/share/icons/` (Sur icons) → `~/.local/share/icons/` (and builds their `icon-theme.cache` with `gtk-update-icon-cache`), and `.bashrc`, `.bash_profile`, `.profile` → `~`. Details below. |
+| **3. Configuration files** | Links `~/.local/share/wasdjy` to the repo if it was cloned elsewhere, replaces the old `~/.config/themes/*-set` copies with symlinks to `bin/wasdjy-*`, copies `.config/` → `~/.config/`, `.local/share/applications/` (web apps) → `~/.local/share/applications/`, `.local/share/icons/` (Sur icons) → `~/.local/share/icons/` (and builds their `icon-theme.cache` with `gtk-update-icon-cache`), and `.bashrc`, `.bash_profile`, `.profile` → `~`. Details below. |
 | **3b. Shell** | If your login shell isn't bash (CachyOS defaults to fish), offers `chsh -s /bin/bash`. |
 | **4. Theme and profile** | Runs `wasdjy-theme <theme>` (your current theme if you already had one, otherwise **grafito**) and `wasdjy-config --reapply` (keeps your profile; Mac mode on a fresh install). |
 | **5. hyprbars** | Clones `hyprwm/hyprland-plugins` at the tag matching your installed Hyprland (falls back to `vX.Y.0`), applies the four patches in `.config/hypr/`, builds it and copies `hyprbars.so` to `~/.local/lib/hyprland/`. Then offers to remove the apps' own window buttons (GTK `button-layout`, and Brave's "use system title bar", only if Brave is closed). |
-| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname and the clock's locale and date format to the system's date locale (`LC_TIME`, or else `LANG`, from `localectl`), disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group. The default answer depends on the hardware: yes if a ThinkPad is detected via DMI, no otherwise, and `--yes` follows that default); **automatic time zone** (installs the NetworkManager dispatcher script `system/etc/NetworkManager/dispatcher.d/90-timezone` and enables `NetworkManager-dispatcher`: on each connection it sends your public IP to ipinfo.io and sets the time zone it returns; it does nothing while a VPN is active); **password attempts** (installs `system/etc/security/faillock.conf` with `deny = 10`: 10 failed passwords lock the account for 10 minutes, instead of 3; it affects sudo and the lock screen); **power profile** (laptops only: installs `system/etc/udev/rules.d/90-power-profile.rules` and reloads udev; unplugging switches power-profiles-daemon to `power-saver` and plugging in to `balanced`. It only acts on plug/unplug events, so at boot the last profile stays, and if the daemon isn't running the rule just fails silently); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
+| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname and the clock's locale and date format to the system's date locale (`LC_TIME`, or else `LANG`, from `localectl`), disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group. The default answer depends on the hardware: yes if a ThinkPad is detected via DMI, no otherwise, and `--yes` follows that default); **automatic time zone** (installs the NetworkManager dispatcher script `system/etc/NetworkManager/dispatcher.d/90-timezone` and enables `NetworkManager-dispatcher`: on each connection it sends your public IP to ipinfo.io and sets the time zone it returns; it does nothing while a VPN is active); **password attempts** (installs `system/etc/security/faillock.conf` with `deny = 10`: 10 failed passwords lock the account for 10 minutes, instead of 3; it affects sudo and the lock screen); **power profile** (laptops only: installs `system/etc/udev/rules.d/90-power-profile.rules` and reloads udev; unplugging switches power-profiles-daemon to `power-saver` and plugging in to `balanced`. It only acts on plug/unplug events, so at boot the last profile stays, and if the daemon isn't running the rule just fails silently); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.local/state/wasdjy/backup/<timestamp>/system/etc/...`. |
 
 Details of step 3:
 
-- **Backups**: every file it would overwrite is first saved to `~/.dotfiles-old/<YYYYmmdd-HHMMSS>/`, keeping the same
-  relative path (e.g. `~/.dotfiles-old/20261119-120000/.config/hypr/hyprland.lua`). Copying is done with
+- **Backups**: every file it would overwrite is first saved to `~/.local/state/wasdjy/backup/<YYYYmmdd-HHMMSS>/`, keeping the same
+  relative path (e.g. `~/.local/state/wasdjy/backup/20261119-120000/.config/hypr/hyprland.lua`). Copying is done with
   `rsync -a --backup`, so nothing in your `~/.config` is deleted, only overwritten. `hypr/config/monitors.lua`,
   `variables.lua`, `inputs.lua`, `themes/current` and the user files are only copied if you don't have them yet.
 - **Your own changes**: put them in `~/.config/hypr/config/user.lua`, `~/.config/ghostty/user.ghostty` and
   `~/.config/nvim/lua/user.lua`. They are loaded last, so they win over the defaults; the installer creates them
   (with commented examples) on the first run and never overwrites them. Everything else in `~/.config`, Quickshell and the themes
-  included, is overwritten on re-install (with the old copy in `~/.dotfiles-old`).
+  included, is overwritten on re-install (with the old copy in `~/.local/state/wasdjy/backup`).
 - **Monitors**: on a first install (no `monitors.lua` yet) it writes one with a rule per connected output, read
   from `hyprctl monitors` if Hyprland is running or from `/sys/class/drm` otherwise. Scale is a guess from the
   resolution (internal panel ≥ 2560 wide → 1.6, ≥ 3200 → 2; external 4K → 1.5; `auto` if it wouldn't divide evenly),
@@ -196,7 +196,7 @@ Details of step 3:
 If you'd rather copy only some pieces:
 
 ```sh
-git clone https://github.com/artiimor/dotfiles.git ~/.local/share/wasdjy
+git clone https://github.com/artiimor/wasdjy.git ~/.local/share/wasdjy
 cd ~/.local/share/wasdjy
 cp -r .config/* ~/.config/
 cp .bashrc .bash_profile .profile ~/
@@ -566,7 +566,7 @@ cd ~/.local/share/wasdjy && git pull
 ./install.sh            # answer "no" to the steps you don't need
 ```
 
-Re-running is safe: packages are skipped if installed, overwritten files go to a new `~/.dotfiles-old/<timestamp>/`,
+Re-running is safe: packages are skipped if installed, overwritten files go to a new `~/.local/state/wasdjy/backup/<timestamp>/`,
 and step 4 re-applies **your current theme** and profile (not the default). `monitors.lua`, `variables.lua` and
 `inputs.lua` are left alone if they exist; local edits to any other file tracked by this repo are replaced (they end
 up in the backup).
@@ -589,8 +589,8 @@ There's no uninstall script. To go back:
 1. **Restore your old files** from the backup made by the run you want to undo:
 
    ```sh
-   ls ~/.dotfiles-old/                                  # one folder per run
-   cp -a ~/.dotfiles-old/<timestamp>/. ~/               # put the overwritten files back
+   ls ~/.local/state/wasdjy/backup/                                  # one folder per run
+   cp -a ~/.local/state/wasdjy/backup/<timestamp>/. ~/               # put the overwritten files back
    ```
 
    This restores only files that existed before and were overwritten; files the installer *added* stay where they are

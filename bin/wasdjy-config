@@ -311,7 +311,7 @@ def write_files(name, css=True):
 def apply(name, notify=True):
     if name in MAC_PROFILES and not has_macshell():
         print(tr("Warning: macshell is missing (%1); \"%2\" will look like \"default\" in the "
-                 "bar (copy the dotfiles again: install.sh, step 3)", MACSHELL, name), file=sys.stderr)
+                 "bar (install wasdjy again: install.sh, step 3)", MACSHELL, name), file=sys.stderr)
     write_state(name)
     write_files(name)
     restart_shell(name, notify)

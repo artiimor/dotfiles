@@ -6,7 +6,7 @@ import Quickshell.Io
 Singleton {
     id: theme
     // Light look for the "mac-light" desktop profile (wasdjy-config
-    // mac-light in the dotfiles), only in Hyprland. wasdjy-theme switches from mac to mac-light and
+    // mac-light in wasdjy), only in Hyprland. wasdjy-theme switches from mac to mac-light and
     // back without restarting macshell (with an atomic rename): the file is watched.
     property FileView _profile: FileView {
         path: Quickshell.env("HOME") + "/.local/state/desktop-profile"

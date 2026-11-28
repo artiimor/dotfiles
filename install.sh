@@ -1,19 +1,19 @@
 #!/usr/bin/env bash
 # Installs this desktop on a freshly installed CachyOS.
 #
-#   git clone https://github.com/artiimor/dotfiles.git ~/.local/share/wasdjy
+#   git clone https://github.com/artiimor/wasdjy.git ~/.local/share/wasdjy
 #   ~/.local/share/wasdjy/install.sh            asks before each step
 #   ~/.local/share/wasdjy/install.sh --yes      does everything without asking
 #
 # The repo lives in ~/.local/share/wasdjy and its bin/ (wasdjy-theme, wasdjy-config...) goes
-# in the PATH (uwsm/env, .profile). Cloned somewhere else (e.g. ~/dotfiles), step 3 links
+# in the PATH (uwsm/env, .profile). Cloned somewhere else (e.g. ~/src/wasdjy), step 3 links
 # ~/.local/share/wasdjy to it.
 #
 # Steps (each one can be skipped):
 #   1. Desktop packages (pacman) and AUR ones (bzmenu, WhiteSur icons) with makepkg
 #   1b. GPU: missing drivers and NVIDIA variables if it's the primary one (not on hybrids)
 #   2. Extra apps (Firefox, Brave, Spotify, Discord, Proton...)
-#   3. Dotfiles: ~/.local/share/wasdjy, .config (with macshell), .bashrc, webapps, Sur icons -> ~ (whatever gets replaced goes to ~/.dotfiles-old/<date>) and bash as shell
+#   3. Files: ~/.local/share/wasdjy, .config (with macshell), .bashrc, webapps, Sur icons -> ~ (whatever gets replaced goes to ~/.local/state/wasdjy/backup/<date>) and bash as shell
 #   4. Color theme (wasdjy-theme) and Mac Mode / Normal Mode profile (wasdjy-config)
 #   5. hyprbars plugin with the desktop-mode patches (and removes GTK/Brave's own buttons)
 #   6. System (sudo): greetd + ReGreet, Plymouth "sobrio", keyd (ThinkPad), automatic
@@ -21,7 +21,7 @@
 #      based on the power source (udev), services
 #
 # Run it as your user, not as root: it asks for sudo when needed.
-# Safe to re-run: pacman uses --needed, whatever is overwritten goes to ~/.dotfiles-old
+# Safe to re-run: pacman uses --needed, whatever is overwritten goes to ~/.local/state/wasdjy/backup
 # and monitors.lua, variables.lua, inputs.lua, the user.* files and the chosen theme are kept if they already exist.
 
 set -euo pipefail
@@ -106,7 +106,7 @@ if ! command -v pacman >/dev/null; then
 	exit 1
 fi
 
-BACKUP="$HOME/.dotfiles-old/$(date +%Y%m%d-%H%M%S)"
+BACKUP="$HOME/.local/state/wasdjy/backup/$(date +%Y%m%d-%H%M%S)"
 ME="$(id -un)"
 
 # Asks for sudo once and keeps it alive (AUR builds can take a while)
@@ -346,9 +346,9 @@ if ask "$(t "Install the apps?")"; then
 	pacman_install "${APPS[@]}"
 fi
 
-# ---------------------------------------------------------------- 3. dotfiles
+# ---------------------------------------------------------------- 3. files
 
-step "3. Dotfiles"
+step "$(t "3. Configuration files")"
 info "$(t "%1 -> ~/.config, .bashrc, .bash_profile, .profile, webapps, Sur icons" "$REPO/.config")"
 info "$(t "%1 -> %2 (wasdjy-* commands)" "$REPO" "~/.local/share/wasdjy")"
 info "$(t "whatever gets overwritten is saved in %1" "$BACKUP")"
