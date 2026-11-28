@@ -69,14 +69,17 @@ Singleton {
         onExited: root.pending >= 0 ? root.apply() : current.reload()
     }
 
-    // sysfs no avisa de cambios, así que se consulta cada pocos segundos
-    // (por si cambias el brillo con las teclas)
-    Timer {
-        interval: 2000
+    // sysfs no se puede vigilar, pero el kernel avisa de cada cambio del panel con un
+    // uevent "change" (también cuando lo cambia otro, p. ej. brightnessctl a mano):
+    // se relee en cada línea de udevadm en vez de consultar cada pocos segundos
+    Process {
         running: root.available
-        repeat: true
-        // Mientras se aplica un cambio, leerlo daría el valor viejo
-        onTriggered: if (!setter.running) current.reload()
+        command: ["udevadm", "monitor", "-k", "-s", "backlight"]
+        stdout: SplitParser {
+            // Mientras se aplica un cambio no (al arrastrar, percent va por delante);
+            // setter relee al terminar
+            onRead: if (!setter.running) current.reload()
+        }
     }
 
     // blockLoading: si no, `current` puede cargar antes que `max`, percent
