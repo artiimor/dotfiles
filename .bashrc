@@ -8,7 +8,6 @@
 alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 PS1='[\u@\h \W]\$ '
-if [ -f "$HOME/.cargo/env" ]; then . "$HOME/.cargo/env"; fi
 
 # Colores de bat y fzf a juego con kitty (fzf sale del tema activo: ~/.config/themes)
 export BAT_THEME="ansi"
