@@ -205,22 +205,12 @@ Item {
                 : Battery.plugged ? "󰚥"
                 : ["󰂎", "󰁺", "󰁼", "󰁾", "󰂀", "󰂂", "󰁹"][Math.min(6, Math.floor(Battery.percent / 100 * 7))]
             color: Battery.charging ? TopBar.fg
-                : critical ? (blink ? TopBar.fg : Theme.red)
+                : critical ? Theme.red
                 : warning ? Theme.yellow
                 : TopBar.fg
             tooltip: {
                 const time = fixed.formatTime(Battery.charging ? Battery.device?.timeToFull : Battery.device?.timeToEmpty);
                 return `${Battery.percent}%${time ? " · " + time : ""}\n${Math.abs(Battery.device?.changeRate ?? 0).toFixed(1)} W`;
-            }
-
-            // Parpadeo con batería crítica
-            property bool blink: false
-            Timer {
-                interval: 500
-                repeat: true
-                running: batteryIcon.critical
-                onTriggered: batteryIcon.blink = !batteryIcon.blink
-                onRunningChanged: if (!running) batteryIcon.blink = false
             }
         }
 
