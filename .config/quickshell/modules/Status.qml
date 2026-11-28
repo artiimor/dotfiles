@@ -139,6 +139,7 @@ Item {
         // ── Red ───────────────────────────────────────────────
         // Clic: networkmanager_dmenu
         BarIcon {
+            id: netIcon
             cell: Theme.iconCell
             padding: 4
             icon: Net.wired ? "󰈀"
@@ -153,6 +154,14 @@ Item {
             }
 
             onClicked: Quickshell.execDetached(["networkmanager_dmenu"])
+
+            // La velocidad solo se mide mientras se ve el tooltip
+            Binding {
+                target: Net
+                property: "measuring"
+                value: true
+                when: netIcon.hovered
+            }
         }
 
         // ── Bluetooth ─────────────────────────────────────────
@@ -186,7 +195,6 @@ Item {
         }
 
         BarIcon {
-            id: batteryIcon
             cell: Theme.iconCell
             padding: 4
             visible: Battery.present

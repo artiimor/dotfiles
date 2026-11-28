@@ -1,5 +1,6 @@
 // Red: qué conexión hay (wifi o cable), la señal, la IP y la velocidad de
-// bajada/subida (midiendo cuántos bytes pasan por la interfaz cada 2 s).
+// bajada/subida (midiendo cuántos bytes pasan por la interfaz cada segundo,
+// solo mientras alguien la enseña: measuring, el tooltip de la barra).
 pragma Singleton
 
 import QtQuick
@@ -28,6 +29,7 @@ Singleton {
     property string ip: ""       // "192.168.1.10/24"
     property real down: 0        // bytes/s
     property real up: 0
+    property bool measuring: false
 
     // "1.2 MB/s"
     function speed(bytes) {
@@ -64,10 +66,10 @@ Singleton {
         }
     }
 
-    // La IP puede cambiar sin cambiar de interfaz (DHCP): se relee cada 30 s,
-    // o cada 2 s mientras no hay ninguna (recién conectado)
+    // La IP puede cambiar sin cambiar de interfaz (DHCP): se relee cada 5 min
+    // y al empezar a enseñarla, o cada 2 s mientras no hay ninguna (recién conectado)
     Timer {
-        interval: root.ip ? 30000 : 2000
+        interval: root.ip ? 300000 : 2000
         running: root.iface !== ""
         repeat: true
         onTriggered: root.readIp()
@@ -76,9 +78,18 @@ Singleton {
     // ── Velocidad ─────────────────────────────────────────
     property var _last: null
 
+    // Al dejar de medir se olvida la última muestra: si no, la primera medida de
+    // la vez siguiente sería la media de todo el rato sin mirar
+    onMeasuringChanged: {
+        _last = null;
+        down = up = 0;
+        if (measuring && iface)
+            readIp();
+    }
+
     Timer {
-        interval: 2000
-        running: root.iface !== ""
+        interval: 1000
+        running: root.measuring && root.iface !== ""
         repeat: true
         triggeredOnStart: true
         onTriggered: {
