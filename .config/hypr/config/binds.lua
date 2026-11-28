@@ -18,6 +18,13 @@ local function wsFor(i)
 	return (m and m.id or 0) * 10 + i
 end
 
+-- Ir al workspace trayéndolo a este monitor si vive en otro. Al (des)conectar pantallas
+-- los workspaces se quedan donde Hyprland los dejó (p.ej. el 12 en el portátil) y un
+-- focus normal saltaba al otro monitor; on_current_monitor lo mueve aquí
+local function focusHere(id)
+	hl.dispatch(hl.dsp.focus({ workspace = id, on_current_monitor = true }))
+end
+
 -- Un bind por tecla numérica (1..9, 0) con los modificadores `mods` (" + SHIFT", "" ...);
 -- fn(i) devuelve la acción del workspace i y solo el primero lleva descripción (chuleta)
 local function bindDigits(mods, fn, desc)
@@ -65,7 +72,11 @@ hl.bind(mainMod .. " + SHIFT + H", hl.dsp.window.move({ direction = "l" }), { de
 hl.bind(mainMod .. " + SHIFT + J", hl.dsp.window.move({ direction = "d" }), { description = "Move window down" })
 bindDigits(" + SHIFT", function(i)
 	return function()
-		hl.dispatch(hl.dsp.window.move({ workspace = wsFor(i) }))
+		-- mover sin seguir y luego ir con focusHere: si el destino vivía en otro monitor,
+		-- el workspace (con la ventana) viene a este en vez de llevarte allí
+		local id = wsFor(i)
+		hl.dispatch(hl.dsp.window.move({ workspace = id, follow = false }))
+		focusHere(id)
 	end
 end, "Move window to workspace")
 bindDigits(" + SHIFT + ALT", function(i)
@@ -188,7 +199,7 @@ hl.bind(mainMod .. " + CTRL + L", hl.dsp.exec_cmd("loginctl lock-session"), { de
 -- Focus on workspace number
 bindDigits("", function(i)
 	return function()
-		hl.dispatch(hl.dsp.focus({ workspace = wsFor(i) }))
+		focusHere(wsFor(i))
 	end
 end, "Go to workspace")
 
