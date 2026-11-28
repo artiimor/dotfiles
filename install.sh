@@ -11,6 +11,8 @@
 # ~/.local/share/wasdjy to it.
 #
 # Steps (each one can be skipped):
+#   0. CachyOS desktop presets (cachyos-hyprland-settings...): their untouched leftovers in ~
+#      go to the backup and the package is uninstalled
 #   1. Desktop packages (pacman) and AUR ones (bzmenu, WhiteSur icons) with makepkg
 #   1b. GPU: missing drivers and NVIDIA variables if it's the primary one (not on hybrids)
 #   2. Extra apps (Firefox, Brave, Spotify, Discord, Proton...)
@@ -264,6 +266,44 @@ aur_install() {
 	return 0
 }
 
+# CachyOS editions bring their own desktop config: cachyos-hyprland-settings, -kde-, -niri-,
+# -gnome-settings... (all of them provide cachyos-desktop-settings). They put it in /etc/skel,
+# which was copied into your ~ when the user was created (Hyprland, waybar, mako, GTK, Qt,
+# Kvantum...), and KDE/GNOME also add an sddm.conf.d and a system dconf database.
+# Leftovers in ~ still identical to the /etc/skel copy that this repo doesn't ship go to
+# $BACKUP (the ones it ships are replaced, with backup, in step 3); the ones you edited stay,
+# with a warning. Then the package is uninstalled, not its dependencies (waybar, mako...
+# stay: pacman -Qdtq lists the orphans)
+cachyos_presets() {
+	local p f rel pkgs=() moved=() edited=()
+	local -a all
+	mapfile -t all < <(pacman -Qqs '^cachyos-' 2>/dev/null)
+	for p in "${all[@]}"; do
+		# not grep -q: it would exit early and, with pipefail, pacman's SIGPIPE would hide the match
+		LC_ALL=C pacman -Qi "$p" | grep -E '^Provides +:.*\bcachyos-desktop-settings\b' >/dev/null && pkgs+=("$p")
+	done
+	if ((!${#pkgs[@]})); then
+		info "$(t "no CachyOS desktop preset installed")"
+		return 0
+	fi
+	info "$(t "installed: %1 (its config may clash with this one)" "${pkgs[*]}")"
+	ask "$(t "Move its untouched leftovers in ~ to the backup and uninstall it?")" || return 0
+	while IFS= read -r f; do
+		rel="${f#/etc/skel/}"
+		[[ -f "$f" && -f "$HOME/$rel" && ! -L "$HOME/$rel" && ! -e "$REPO/$rel" ]] || continue
+		if cmp -s "$f" "$HOME/$rel"; then
+			mkdir -p "$(dirname "$BACKUP/$rel")" && mv "$HOME/$rel" "$BACKUP/$rel" && moved+=("~/$rel")
+		else
+			edited+=("~/$rel")
+		fi
+	done < <(pacman -Qlq "${pkgs[@]}" | grep '^/etc/skel/.')
+	((${#moved[@]})) && info "$(t "%1 leftovers moved to %2" "${#moved[@]}" "$BACKUP")"
+	((${#edited[@]})) && warn "$(t "edited by you, left in place: %1" "${edited[*]}")"
+	sudo pacman -R --noconfirm "${pkgs[@]}" ||
+		warn "$(t "could not uninstall %1 (does another package require it?)" "${pkgs[*]}")"
+	return 0
+}
+
 # GPU: detects GPUs over PCI (class 0x03xx) and offers the missing drivers.
 # NVIDIA only gets environment variables if it's the primary one (the only one, or the one the
 # firmware used at boot: boot_vga). On a hybrid (iGPU + NVIDIA) forcing them breaks the session.
@@ -325,6 +365,11 @@ gpu_setup() {
 
 # Steps 1, 1b and 2 (packages): not with --update (wasdjy-update runs pacman -Syu itself)
 if ((!UPDATE)); then
+
+	# ---------------------------------------------------------------- 0. CachyOS presets
+
+	step "$(t "0. CachyOS desktop presets")"
+	cachyos_presets
 
 	# ---------------------------------------------------------------- 1. packages
 

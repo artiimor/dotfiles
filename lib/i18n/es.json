@@ -128,5 +128,12 @@
   "git pull failed (local changes or a diverged branch?): nothing was updated": "git pull falló (¿cambios locales o una rama que diverge?): no se ha actualizado nada",
   "migration %1": "migración %1",
   "migration %1 failed: not marked as applied, it will be retried": "la migración %1 falló: no se marca como aplicada, se reintentará",
-  "stopping: fix the migration and run %1 again": "me paro: arregla la migración y vuelve a ejecutar %1"
+  "stopping: fix the migration and run %1 again": "me paro: arregla la migración y vuelve a ejecutar %1",
+  "0. CachyOS desktop presets": "0. Presets de escritorio de CachyOS",
+  "no CachyOS desktop preset installed": "no hay ningún preset de escritorio de CachyOS instalado",
+  "installed: %1 (its config may clash with this one)": "instalado: %1 (su configuración puede chocar con esta)",
+  "Move its untouched leftovers in ~ to the backup and uninstall it?": "¿Mover sus restos sin tocar de ~ a la copia de seguridad y desinstalarlo?",
+  "%1 leftovers moved to %2": "%1 restos movidos a %2",
+  "edited by you, left in place: %1": "editados por ti, se quedan: %1",
+  "could not uninstall %1 (does another package require it?)": "no se pudo desinstalar %1 (¿lo necesita otro paquete?)"
 }
