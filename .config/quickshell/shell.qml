@@ -18,12 +18,12 @@ ShellRoot {
     id: root
 
     // Desktop profile (~/.local/state/desktop-profile, written by
-    // ~/.config/themes/config-set; chosen with Super+Shift+T):
+    // wasdjy-config; chosen with Super+Shift+T):
     //   "mac"      the top bar, notifications and Spotlight come from
-    //              macshell (./macshell; started by autostart.lua / config-set)
+    //              macshell (./macshell; started by autostart.lua / wasdjy-config)
     //   "default"  the bar and notifications from here
     // No file: "mac" if macshell is present. "mac" without macshell = "default".
-    // config-set restarts qs when going from Mac Mode to normal or back: Theme.mac is the
+    // wasdjy-config restarts qs when going from Mac Mode to normal or back: Theme.mac is the
     // start-up one (from mac to mac-light only the colors change, without restarting).
     // Read by Theme (Theme.profile, Theme.mac). Until the check finishes
     // (Theme.profileReady) the bar and notifications from here aren't created

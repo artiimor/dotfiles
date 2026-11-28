@@ -63,7 +63,7 @@ Singleton {
         // Main menu, style and theme types: each row opens the menu `data`
         // (with `openTab`, only that tab, without search box or tab bar)
         // except Style in Mac Mode, which opens macshell's Appearance window,
-        // and contrast, which is changed with contrast-set
+        // and contrast, which is changed with wasdjy-contrast
         menu: { width: 260, prompt: I18n.tr("Menu"), noSearch: true, showSub: true, items: () => [
             { text: I18n.tr("Style"), glyph: String.fromCodePoint(0xF00E3), sub: "›", data: Theme.mac ? "appearance" : "style" }
         ] },
@@ -219,19 +219,19 @@ Singleton {
         } else if (m === "emoji") {
             copyAndPaste(`printf '%s' "$1" | wl-copy`, item.glyph);
         } else if (m === "themes") {
-            // theme-set doesn't restart Quickshell (not even in Mac Mode between light and
+            // wasdjy-theme doesn't restart Quickshell (not even in Mac Mode between light and
             // dark theme): setsid only detaches it from this process
-            Quickshell.execDetached(["setsid", "-f", root.themesDir + (item.font ? "/font-set" : "/theme-set"), item.data]);
+            Quickshell.execDetached(["setsid", "-f", root.binDir + (item.font ? "/wasdjy-font" : "/wasdjy-theme"), item.data]);
         } else if (m === "backgrounds") {
-            // "+": image picker; background-set copies them to the theme and applies the last one
-            Quickshell.execDetached(["setsid", "-f", root.themesDir + "/background-set", item.data === "+" ? "--add" : item.data]);
+            // "+": image picker; wasdjy-background copies them to the theme and applies the last one
+            Quickshell.execDetached(["setsid", "-f", root.binDir + "/wasdjy-background", item.data === "+" ? "--add" : item.data]);
         } else if (m === "configs") {
-            // config-set restarts Quickshell (this process included): setsid so it doesn't die with it
-            Quickshell.execDetached(["setsid", "-f", root.themesDir + "/config-set", item.data]);
+            // wasdjy-config restarts Quickshell (this process included): setsid so it doesn't die with it
+            Quickshell.execDetached(["setsid", "-f", root.binDir + "/wasdjy-config", item.data]);
         } else if (m === "menu") {
             Quickshell.execDetached(["qs", "-p", Quickshell.shellDir + "/macshell", "ipc", "call", "appearance", "open"]);
         } else if (m === "style") {
-            Quickshell.execDetached([root.themesDir + "/contrast-set", "toggle"]);
+            Quickshell.execDetached([root.binDir + "/wasdjy-contrast", "toggle"]);
         }
     }
 
@@ -319,15 +319,15 @@ Singleton {
 
     // ── Color themes ────────────────────────────────────
     // Every folder in ~/.config/themes with a theme.json is a theme; picking
-    // one runs theme-set, which recolors everything (see that script). Each row
+    // one runs wasdjy-theme, which recolors everything (see that script). Each row
     // has its palette (terminal background and text, accent and 6 ANSI colors) to
     // preview it before picking, and a sun or a moon depending on light or dark. They go in
     // two tabs, dark and light; it opens on the active theme's tab. The third,
     // Font, is the monospace font (terminals, hyprbars...), separate from the
-    // theme: set by font-set, and each row is written in its font. Each tab
+    // theme: set by wasdjy-font, and each row is written in its font. Each tab
     // has its own search (see LauncherWindow.qml). From the style menu
     // it opens on a single fixed tab, without search box or tabs (`fixedTab`).
-    readonly property string themesDir: Quickshell.env("HOME") + "/.config/themes"
+    readonly property string binDir: Quickshell.env("HOME") + "/.local/share/wasdjy/bin"
 
     // Nerd Fonts whose name isn't the original font's (license): so
     // they are also found by searching for the original
@@ -350,9 +350,9 @@ Singleton {
 
     Process {
         id: themeList
-        // `theme-set --list`: each line, a JSON { dir, name, cur, light, bg, fg, colors };
-        // after it, `font-set --list`: { font, cur }
-        command: ["sh", "-c", '"$1/theme-set" --list; "$1/font-set" --list', "sh", root.themesDir]
+        // `wasdjy-theme --list`: each line, a JSON { dir, name, cur, light, bg, fg, colors };
+        // after it, `wasdjy-font --list`: { font, cur }
+        command: ["sh", "-c", '"$1/wasdjy-theme" --list; "$1/wasdjy-font" --list', "sh", root.binDir]
         stdout: StdioCollector {
             onStreamFinished: {
                 const list = root.lines(text).map(l => {
@@ -389,10 +389,10 @@ Singleton {
     }
 
     // ── Backgrounds of the current theme ────────────────────────────
-    // `background-set` gives "<background>\t<path>\t<1 if current>"
+    // `wasdjy-background` gives "<background>\t<path>\t<1 if current>"
     Process {
         id: backgroundList
-        command: [root.themesDir + "/background-set"]
+        command: [root.binDir + "/wasdjy-background"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.loaded("backgrounds", root.lines(text).map(l => {
@@ -408,12 +408,12 @@ Singleton {
     }
 
     // ── Configs (desktop profiles) ─────────────────
-    // `config-set --list` gives "<profile>\t<name>\t<1 if current>" (only Mac Mode
+    // `wasdjy-config --list` gives "<profile>\t<name>\t<1 if current>" (only Mac Mode
     // and Normal Mode: Mac light or dark is decided by the color theme); picking
-    // one, config-set changes Hyprland, the bar, icons and Qt (see that script)
+    // one, wasdjy-config changes Hyprland, the bar, icons and Qt (see that script)
     Process {
         id: configList
-        command: [root.themesDir + "/config-set", "--list"]
+        command: [root.binDir + "/wasdjy-config", "--list"]
         stdout: StdioCollector {
             onStreamFinished: {
                 root.loaded("configs", root.lines(text).map(l => {

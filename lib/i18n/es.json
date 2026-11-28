@@ -79,7 +79,7 @@
   "This is for CachyOS/Arch (pacman not found).": "Esto es para CachyOS/Arch (no hay pacman).",
   "URL (e.g. youtube.com)": "URL (p. ej. youtube.com)",
   "Usage: %1": "Uso: %1",
-  "Usage: contrast-set [on|off|toggle]": "Uso: contrast-set [on|off|toggle]",
+  "Usage: wasdjy-contrast [on|off|toggle]": "Uso: wasdjy-contrast [on|off|toggle]",
   "Use bash as your shell (instead of fish)?": "¿Usar bash como shell (en vez de fish)?",
   "Warning: macshell is missing (%1); \"%2\" will look like \"default\" in the bar (copy the dotfiles again: install.sh, step 3)": "Aviso: no está macshell (%1); \"%2\" se verá como \"default\" en la barra (vuelve a copiar los dotfiles: install.sh, paso 3)",
   "Webapp created": "Webapp creada",
@@ -116,5 +116,8 @@
   "No theme is active": "No hay ningún tema activo",
   "Choose wallpapers": "Elegir fondos",
   "Images": "Imágenes",
-  "zenity is not installed": "zenity no está instalado"
+  "zenity is not installed": "zenity no está instalado",
+  "%1 already exists and is not this repo: the wasdjy-* commands will run from there": "%1 ya existe y no es este repo: los comandos wasdjy-* se ejecutarán desde ahí",
+  "%1 -> %2": "%1 -> %2",
+  "%1 -> %2 (wasdjy-* commands)": "%1 -> %2 (comandos wasdjy-*)"
 }

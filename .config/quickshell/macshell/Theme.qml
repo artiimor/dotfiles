@@ -5,8 +5,8 @@ import Quickshell.Io
 
 Singleton {
     id: theme
-    // Light look for the "mac-light" desktop profile (~/.config/themes/config-set
-    // mac-light in the dotfiles), only in Hyprland. theme-set switches from mac to mac-light and
+    // Light look for the "mac-light" desktop profile (wasdjy-config
+    // mac-light in the dotfiles), only in Hyprland. wasdjy-theme switches from mac to mac-light and
     // back without restarting macshell (with an atomic rename): the file is watched.
     property FileView _profile: FileView {
         path: Quickshell.env("HOME") + "/.local/state/desktop-profile"
@@ -17,7 +17,7 @@ Singleton {
     }
     readonly property bool light: _profile.loaded && _profile.text().trim() === "mac-light"
 
-    // "Increase contrast" (like macOS accessibility): ~/.config/themes/contrast-set
+    // "Increase contrast" (like macOS accessibility): wasdjy-contrast
     // writes "1" or "0" to the state file (with an atomic rename; if missing, off).
     // With it, translucent backgrounds become opaque and borders, dim text and layers are more marked.
     property FileView _contrast: FileView {

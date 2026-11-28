@@ -18,7 +18,7 @@ FloatingWindow {
     implicitHeight: 560
     minimumSize: Qt.size(520, 420)
 
-    readonly property string themesDir: Quickshell.env("HOME") + "/.config/themes"
+    readonly property string binDir: Quickshell.env("HOME") + "/.local/share/wasdjy/bin"
 
     // If it's already open (maybe on another workspace) it is recreated so it shows up where you are
     function show() {
@@ -47,23 +47,23 @@ FloatingWindow {
     }
     function lines(text) { return text.split("\n").filter(l => l); }
 
-    // config-set restarts macshell when switching to Normal Mode: setsid so it doesn't die with
+    // wasdjy-config restarts macshell when switching to Normal Mode: setsid so it doesn't die with
     // it. Everything else (including switching between Mac light and dark) doesn't close it: everything is re-read
     // without touching the Dark/Light filter or the scroll position. With `list` and `key` (e.g.
     // "themes", "dir") the selected mark moves to that row at once, without waiting for the re-read
     // The lists are re-read as soon as the script exits (light/dark themes swap the backgrounds,
-    // e.g. the day/night Pepes). config-set may restart macshell, so it stays detached + timer.
+    // e.g. the day/night Pepes). wasdjy-config may restart macshell, so it stays detached + timer.
     function run(script, arg, list, key) {
         if (list) win[list] = win[list].map(x => Object.assign({}, x, { cur: x[key] === arg }));
-        if (script === "config-set") {
-            Quickshell.execDetached(["setsid", "-f", themesDir + "/" + script, arg]);
+        if (script === "wasdjy-config") {
+            Quickshell.execDetached(["setsid", "-f", binDir + "/" + script, arg]);
             refreshSoon.restart();
         } else if (runProc.running) {
             // queued in click order, only the last click of each script
-            const cmd = [themesDir + "/" + script, arg];
+            const cmd = [binDir + "/" + script, arg];
             win.pendingRuns = win.pendingRuns.filter(c => c[0] !== cmd[0]).concat([cmd]);
         } else {
-            runProc.command = [themesDir + "/" + script, arg];
+            runProc.command = [binDir + "/" + script, arg];
             runProc.running = true;
         }
     }
@@ -80,10 +80,10 @@ FloatingWindow {
     }
     Timer { id: refreshSoon; interval: 2000; onTriggered: win.refresh() }
 
-    // `config-set --list`: "<profile>\t<name>\t<1 if current>"
+    // `wasdjy-config --list`: "<profile>\t<name>\t<1 if current>"
     Process {
         id: profileProc
-        command: [win.themesDir + "/config-set", "--list"]
+        command: [win.binDir + "/wasdjy-config", "--list"]
         stdout: StdioCollector {
             onStreamFinished: win.profiles = win.lines(text).map(l => {
                 const f = l.split("\t");
@@ -91,10 +91,10 @@ FloatingWindow {
             })
         }
     }
-    // `theme-set --list`: one JSON per line
+    // `wasdjy-theme --list`: one JSON per line
     Process {
         id: themeProc
-        command: [win.themesDir + "/theme-set", "--list"]
+        command: [win.binDir + "/wasdjy-theme", "--list"]
         stdout: StdioCollector {
             onStreamFinished: {
                 win.themes = win.lines(text).map(l => JSON.parse(l));
@@ -104,10 +104,10 @@ FloatingWindow {
             }
         }
     }
-    // `background-set`: "<background>\t<path>\t<1 if current>"
+    // `wasdjy-background`: "<background>\t<path>\t<1 if current>"
     Process {
         id: bgProc
-        command: [win.themesDir + "/background-set"]
+        command: [win.binDir + "/wasdjy-background"]
         stdout: StdioCollector {
             onStreamFinished: win.backgrounds = win.lines(text).map(l => {
                 const f = l.split("\t");
@@ -115,16 +115,16 @@ FloatingWindow {
             })
         }
     }
-    // `background-set --add`: when the picker closes, re-read (the new background shows up selected)
+    // `wasdjy-background --add`: when the picker closes, re-read (the new background shows up selected)
     Process {
         id: addProc
-        command: [win.themesDir + "/background-set", "--add"]
+        command: [win.binDir + "/wasdjy-background", "--add"]
         onExited: bgProc.running = true
     }
-    // `font-set --list`: one JSON { font, cur } per line
+    // `wasdjy-font --list`: one JSON { font, cur } per line
     Process {
         id: fontProc
-        command: [win.themesDir + "/font-set", "--list"]
+        command: [win.binDir + "/wasdjy-font", "--list"]
         stdout: StdioCollector { onStreamFinished: win.fonts = win.lines(text).map(l => JSON.parse(l)) }
     }
 
@@ -224,7 +224,7 @@ FloatingWindow {
                     Segmented {
                         options: win.profiles.map(p => ({ key: p.key, label: p.name }))
                         current: (win.profiles.find(p => p.cur) ?? { key: "" }).key
-                        onPicked: key => win.run("config-set", key)
+                        onPicked: key => win.run("wasdjy-config", key)
                     }
                 }
                 Divider { Layout.leftMargin: 12; Layout.rightMargin: 12 }
@@ -252,7 +252,7 @@ FloatingWindow {
                         text: modelData.font
                         checkable: true
                         checked: modelData.cur
-                        onTriggered: { win.fontsOpen = false; win.run("font-set", modelData.font, "fonts", "font"); }
+                        onTriggered: { win.fontsOpen = false; win.run("wasdjy-font", modelData.font, "fonts", "font"); }
                     }
                 }
             }
@@ -312,7 +312,7 @@ FloatingWindow {
                                     color: Theme.accent
                                     Glyph { anchors.centerIn: parent; width: 11; height: 11; name: "check"; color: "white" }
                                 }
-                                MouseArea { anchors.fill: parent; onClicked: if (!card.modelData.cur) win.run("theme-set", card.modelData.dir, "themes", "dir") }
+                                MouseArea { anchors.fill: parent; onClicked: if (!card.modelData.cur) win.run("wasdjy-theme", card.modelData.dir, "themes", "dir") }
                             }
                             Text {
                                 width: parent.width
@@ -352,10 +352,10 @@ FloatingWindow {
                                 fillMode: Image.PreserveAspectCrop
                                 asynchronous: true
                             }
-                            MouseArea { anchors.fill: parent; onClicked: if (!bg.modelData.cur) win.run("background-set", bg.modelData.name, "backgrounds", "name") }
+                            MouseArea { anchors.fill: parent; onClicked: if (!bg.modelData.cur) win.run("wasdjy-background", bg.modelData.name, "backgrounds", "name") }
                         }
                     }
-                    // "Add…": image picker (background-set --add copies them to the theme and applies the last one)
+                    // "Add…": image picker (wasdjy-background --add copies them to the theme and applies the last one)
                     Rectangle {
                         width: bgGrid.cellWidth
                         height: width * 0.625

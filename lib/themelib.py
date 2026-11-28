@@ -1,11 +1,11 @@
-# Shared by theme-set, config-set, background-set and font-set: paths, current theme, saved
-# profile, file writing, Quickshell notifications and translation (tr). It isn't a
-# theme (it has no theme.json): they import it, running from this
-# folder (sys.path[0]) and setting sys.dont_write_bytecode = True first so no
-# __pycache__ shows up here.
+# Shared by wasdjy-theme, wasdjy-config, wasdjy-background and wasdjy-font: paths, current theme, saved
+# profile, file writing, Quickshell notifications and translation (tr). The scripts live in
+# ../bin (~/.local/share/wasdjy/bin, in the PATH) and import it after adding this folder to
+# sys.path, setting sys.dont_write_bytecode = True first so no __pycache__ shows up here.
+# The themes themselves (data, editable) stay in ~/.config/themes.
 #
 # Bash scripts (install.sh, quickshell/scripts/webapp...) translate with
-#   python3 ~/.config/themes/themelib.py tr "Text %1" arg
+#   python3 ~/.local/share/wasdjy/lib/themelib.py tr "Text %1" arg
 
 import importlib.util
 import json
@@ -15,18 +15,20 @@ import sys
 from importlib.machinery import SourceFileLoader
 
 HOME = os.path.expanduser("~")
+# The wasdjy-* scripts: ../bin next to this lib/ (realpath: also when run through a symlink)
+BIN = os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "bin")
 CONF = f"{HOME}/.config"
 THEMES = f"{CONF}/themes"
 CURRENT = f"{THEMES}/current"
-PROFILE_STATE = f"{HOME}/.local/state/desktop-profile"  # written by config-set
+PROFILE_STATE = f"{HOME}/.local/state/desktop-profile"  # written by wasdjy-config
 
 QUIET = dict(stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
 # THEMES_NO_RELOAD=1: files are written but nothing outside is notified
 # (Quickshell, Hyprland, terminals, Neovim, gsettings, notifications). For the
 # tests: with a temporary HOME the user's files aren't touched, but gsettings would write
-# to their real dconf. Everything goes through run_quiet(), except theme-set's reload_nvim() and
-# config-set's restart_shell(), which check it themselves
+# to their real dconf. Everything goes through run_quiet(), except wasdjy-theme's reload_nvim() and
+# wasdjy-config's restart_shell(), which check it themselves
 NO_RELOAD = bool(os.environ.get("THEMES_NO_RELOAD"))
 
 
@@ -84,8 +86,8 @@ def theme_light():
         return False
 
 
-# ── Increase contrast (contrast-set) ────────────────────────
-# With the mode on, theme-set writes the terminal colors (Ghostty, btop,
+# ── Increase contrast (wasdjy-contrast) ────────────────────────
+# With the mode on, wasdjy-theme writes the terminal colors (Ghostty, btop,
 # fzf) passed through boost_contrast() and leaves the whole theme like that in CONTRAST_THEME,
 # which Neovim reads instead of themes/current/theme.json (nvim/lua/tema/theme.lua).
 
@@ -191,10 +193,10 @@ def write_atomic(path, text):
 
 
 def load_script(name):
-    # Loads another script from this folder (without .py) as a module, without __pycache__
+    # Loads another wasdjy-* script from BIN (without .py) as a module, without __pycache__
     sys.dont_write_bytecode = True
     mod = name.replace("-", "_")
-    loader = SourceFileLoader(mod, f"{THEMES}/{name}")
+    loader = SourceFileLoader(mod, f"{BIN}/{name}")
     module = importlib.util.module_from_spec(importlib.util.spec_from_loader(mod, loader))
     loader.exec_module(module)
     return module
@@ -208,7 +210,7 @@ def run_quiet(cmd):
 
 
 def qs_theme_reload():
-    # Quickshell re-reads theme.json and asks background-set for the background
+    # Quickshell re-reads theme.json and asks wasdjy-background for the background
     run_quiet(["qs", "ipc", "call", "theme", "reload"])
 
 

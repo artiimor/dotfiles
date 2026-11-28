@@ -4,7 +4,7 @@
 -- Built from the theme's ui.bg / ui.fg, applies the nvimColors.syn syntax if present, paints the
 -- UI (numbers, menus, floats, statusline, search, diagnostics...) with the theme's
 -- palette (ui, term) instead of mini.hues' greys, and leaves the background transparent
--- for kitty. When the theme changes, theme-set calls MiniThemeReload() over the socket;
+-- for kitty. When the theme changes, wasdjy-theme calls MiniThemeReload() over the socket;
 -- theme.json is also re-read on focus gain.
 -- Requires mini.hues (from mini.nvim or the standalone nvim-mini/mini.hues plugin).
 
@@ -258,7 +258,7 @@ vim.api.nvim_create_autocmd("FocusGained", {
     end
   end,
 })
--- theme-set calls MiniThemeReload() over the socket instead of :colorscheme
+-- wasdjy-theme calls MiniThemeReload() over the socket instead of :colorscheme
 _G.MiniThemeReload = function()
   vim.cmd.colorscheme("tema")
   vim.cmd.redraw({ bang = true })

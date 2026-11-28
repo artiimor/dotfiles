@@ -189,11 +189,11 @@ Singleton {
     // display panel and the control center, the only ones showing it (shell.qml)
 
     // ── increase contrast ──
-    // contrast-set (theme scripts) saves the state in a file that Theme watches:
+    // wasdjy-contrast (theme scripts) saves the state in a file that Theme watches:
     // here it's only launched, the state is Theme.contrast
     function toggleContrast() {
         if (!contrastAct.running)
-            contrastAct.exec([Quickshell.env("HOME") + "/.config/themes/contrast-set", "toggle"]);
+            contrastAct.exec([Quickshell.env("HOME") + "/.local/share/wasdjy/bin/wasdjy-contrast", "toggle"]);
     }
     Process { id: contrastAct }
 

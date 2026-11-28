@@ -1,7 +1,7 @@
 -- "tema" colorscheme (colors/tema.lua): the same as the small Neovim, loaded
 -- from ~/.config/nvim/colors/tema.lua (mini.hues from
 -- ~/.config/themes/current/theme.json, transparent background for kitty). When the
--- theme changes, theme-set calls MiniThemeReload() over the socket and it reloads by itself.
+-- theme changes, wasdjy-theme calls MiniThemeReload() over the socket and it reloads by itself.
 -- The other colorschemes are still installed to use by hand (:colorscheme ...);
 -- the theme's "nvim" field is only used if ~/.config/nvim/colors/tema.lua is missing.
 

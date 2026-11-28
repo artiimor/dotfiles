@@ -3,11 +3,11 @@
 # ~/.config/themes/<theme>/backgrounds/ and, always last, "pepes" (the usual meadow:
 # at night in dark themes, by day in light ones).
 #
-#   background-set           list: "<background>\t<path>\t<1 if current>" (Super+Ctrl+B menu)
-#   background-set <name>    sets that background (file name or "pepes")
-#   background-set --next    switches to the next one (Super+Ctrl+Shift+B)
-#   background-set --add     file picker: copies the chosen images to the theme and applies the last one
-#   background-set --path    path of the current one: Theme.qml asks for it on every "theme reload"
+#   wasdjy-background           list: "<background>\t<path>\t<1 if current>" (Super+Ctrl+B menu)
+#   wasdjy-background <name>    sets that background (file name or "pepes")
+#   wasdjy-background --next    switches to the next one (Super+Ctrl+Shift+B)
+#   wasdjy-background --add     file picker: copies the chosen images to the theme and applies the last one
+#   wasdjy-background --path    path of the current one: Theme.qml asks for it on every "theme reload"
 #
 # The choice is saved per theme in ~/.local/state/theme-backgrounds ({theme: background});
 # with no choice (or if it no longer exists), the first one in the list.
@@ -19,7 +19,8 @@ import shutil
 import subprocess
 import sys
 
-sys.dont_write_bytecode = True  # no __pycache__ in ~/.config/themes
+sys.dont_write_bytecode = True  # no __pycache__ in lib/
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "lib"))
 from themelib import HOME, THEMES, current_theme, qs_theme_reload, theme_light, tr
 
 STATE = f"{HOME}/.local/state/theme-backgrounds"

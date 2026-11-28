@@ -3,9 +3,9 @@
 # transparency or blur, thicker and opaque window borders, more marked secondary
 # text and bar borders, and GTK/libadwaita high contrast.
 #
-#   contrast-set            says whether it's on ("on" or "off")
-#   contrast-set on|off     turns it on or off
-#   contrast-set toggle     toggles it (bar button and Control Center tile)
+#   wasdjy-contrast            says whether it's on ("on" or "off")
+#   wasdjy-contrast on|off     turns it on or off
+#   wasdjy-contrast toggle     toggles it (bar button and Control Center tile)
 #
 # Works with both profiles (Mac Mode and Normal Mode) and with any theme.
 # The state is saved in ~/.local/state/increased-contrast ("1" or "0") and read by:
@@ -15,7 +15,7 @@
 #   Quickshell   Theme.qml and macshell/Theme.qml                 (watch the file)
 #
 # Terminals (Ghostty, btop, fzf) and Neovim raise the contrast of their colors:
-# theme-set regenerates them with themelib.boost_contrast() and Neovim applies it on its own when
+# wasdjy-theme regenerates them with themelib.boost_contrast() and Neovim applies it on its own when
 # reading the theme (nvim/lua/tema/theme.lua). Ghostty and Neovim, instantly; btop and
 # fzf, when opened.
 #
@@ -26,7 +26,8 @@
 import os
 import sys
 
-sys.dont_write_bytecode = True  # no __pycache__ in ~/.config/themes
+sys.dont_write_bytecode = True  # no __pycache__ in lib/
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "lib"))
 from themelib import (CONTRAST_STATE as STATE, current_theme, load_script, load_theme,
                       notify, read_state, reload_terminals, run_quiet, tr, write_atomic)
 
@@ -41,7 +42,7 @@ def apply(on):
                "true" if on else "false"])
     name = current_theme()
     if name:
-        theme_set = load_script("theme-set")
+        theme_set = load_script("wasdjy-theme")
         t = load_theme(name)
         theme_set.gen_terminals(name, t)
         reload_terminals()
@@ -58,7 +59,7 @@ def main():
     elif arg in ("on", "off", "toggle"):
         apply(not enabled() if arg == "toggle" else arg == "on")
     else:
-        print(tr("Usage: contrast-set [on|off|toggle]"), file=sys.stderr)
+        print(tr("Usage: wasdjy-contrast [on|off|toggle]"), file=sys.stderr)
         sys.exit(1)
 
 

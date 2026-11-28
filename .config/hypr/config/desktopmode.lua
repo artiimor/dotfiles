@@ -196,7 +196,7 @@ hl.bind("SUPER + ALT + D", function()
 	end
 end, { description = "Desktop mode" })
 
--- When switching between mac and default (config-set runs hyprctl reload) windows that
+-- When switching between mac and default (wasdjy-config runs hyprctl reload) windows that
 -- are already open adapt to their workspace's new mode
 local family = PROFILE_MAC and "mac" or "default"
 if not readLines(appliedFile)[family] then
@@ -366,7 +366,7 @@ if util.exists(HYPRBARS) then
 	hl.plugin.load(HYPRBARS)
 end
 
--- Bar font in Normal Mode: the one chosen with font-set (the line in
+-- Bar font in Normal Mode: the one chosen with wasdjy-font (the line in
 -- hypr/font.conf that isn't a comment) or, if there is none, JetBrains Mono
 local function barFont()
 	for line in pairs(readLines(util.HOME .. "/.config/hypr/font.conf")) do
@@ -385,7 +385,7 @@ if hl.plugin.hyprbars then
 			hyprbars = {
 				bar_height = TITLEBAR,
 				-- mac: colors, font and sizes of Plasma's Sur-Gris decoration;
-				-- default: the color theme's background and text and the font-set font
+				-- default: the color theme's background and text and the wasdjy-font font
 				-- mac-light: macOS light grey with dark text
 				bar_color = PROFILE_LIGHT and "rgba(ececedff)" or PROFILE_MAC and "rgba(2d2d2dff)" or THEME_BG,
 				-- With CONTRAST (increase contrast) the text is pure black or white and there is a

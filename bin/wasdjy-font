@@ -1,10 +1,10 @@
 #!/usr/bin/env python3
 # Monospace font for the whole desktop, separate from the color theme (not in
-# theme.json: changing theme or `theme-set --reapply` don't touch it).
+# theme.json: changing theme or `wasdjy-theme --reapply` don't touch it).
 #
-#   font-set              lists the fonts (* = the current one)
-#   font-set <family>     applies it, e.g. font-set "JetBrainsMono Nerd Font"
-#   font-set --list       for the Quickshell menu (Super+T, Font tab): one
+#   wasdjy-font              lists the fonts (* = the current one)
+#   wasdjy-font <family>     applies it, e.g. wasdjy-font "JetBrainsMono Nerd Font"
+#   wasdjy-font --list       for the Quickshell menu (Super+T, Font tab): one
 #                         JSON line per font, { font, cur }
 #
 # The fonts are the installed monospace Nerd Fonts, one per family (without
@@ -19,17 +19,19 @@
 # a fallback if Quickshell isn't running) keeps JetBrains Mono.
 # The Quickshell UI and Mac Mode keep their sans font (Theme.qml).
 #
-# Paths and utilities shared with theme-set: themelib.py.
+# Paths and utilities shared with wasdjy-theme: themelib.py.
 
 import json
+import os
 import subprocess
 import sys
 
-sys.dont_write_bytecode = True  # no __pycache__ in ~/.config/themes
+sys.dont_write_bytecode = True  # no __pycache__ in lib/
+sys.path.insert(0, os.path.join(os.path.dirname(os.path.dirname(os.path.realpath(__file__))), "lib"))
 from themelib import CONF, HOME, notify, read_state, reload_terminals, run_quiet, tr, write
 
 STATE = f"{HOME}/.local/state/font"
-HEADER = "Generado por font-set: no editar, elige la fuente con font-set (Super+T, Fuente)"
+HEADER = "Generado por wasdjy-font: no editar, elige la fuente con wasdjy-font (Super+T, Fuente)"
 
 
 def installed():

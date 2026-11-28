@@ -65,7 +65,7 @@ if PROFILE_MAC then
     })
 end
 
--- Increase contrast (CONTRAST, see profile.lua and themes/contrast-set): thicker
+-- Increase contrast (CONTRAST, see profile.lua and wasdjy-contrast): thicker
 -- border, the active one in the theme's text color and the inactive one too, at 60 %, so
 -- window outlines are always visible (the theme's inactive grey gets lost
 -- on light backgrounds)

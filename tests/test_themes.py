@@ -1,10 +1,10 @@
-# theme.json validation: keys read by theme-set, Quickshell (Theme.qml) and
+# theme.json validation: keys read by wasdjy-theme, Quickshell (Theme.qml) and
 # nvim/colors/tema.lua, color format and that every theme appears in the READMEs.
 import re
 
 from conftest import REPO, SYN_GROUPS, THEMES, THEMES_DIR, load_theme
 
-# Required keys per section (taken from the theme-set generators, Theme.qml
+# Required keys per section (taken from the wasdjy-theme generators, Theme.qml
 # and tema.lua; every theme has them). term.colors and hypr.border are lists
 REQUIRED = {
     "ui": ["accent", "accent2", "accentDim", "bg", "border", "butter", "cyan", "fg",
@@ -15,8 +15,8 @@ REQUIRED = {
              "selection_foreground", "colors"],
     "gtk": ["accent", "accentBg", "accentFg", "card", "fg", "headerbar", "view", "window"],
 }
-# #rrggbb everywhere; #rrggbbaa only in hypr.* (theme-set's hypr() accepts it).
-# In ui no: Quickshell would read #aarrggbb and theme-set's rgb() ignores the alpha
+# #rrggbb everywhere; #rrggbbaa only in hypr.* (wasdjy-theme's hypr() accepts it).
+# In ui no: Quickshell would read #aarrggbb and wasdjy-theme's rgb() ignores the alpha
 HEX = re.compile(r"#[0-9a-fA-F]{6}")
 HEX_ALPHA = re.compile(r"#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?")
 

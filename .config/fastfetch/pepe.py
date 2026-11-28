@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # Colored ASCII Pepes for fastfetch, made from images.
-# Generates pepe-<name>.txt; theme-set makes the theme-tinted version
+# Generates pepe-<name>.txt; wasdjy-theme makes the theme-tinted version
 # (fastfetch/themed/), and config.jsonc uses the wizard one.
 #
 # Idea: the dark lines of the drawing and the silhouette edge become

@@ -1,8 +1,8 @@
 -- Desktop profile ("config"): "mac", "mac-light" or "default". Chosen with
--- Super+Shift+T (Mac Mode / Normal Mode) or `~/.config/themes/config-set mac|default`,
+-- Super+Shift+T (Mac Mode / Normal Mode) or `wasdjy-config mac|default`,
 -- which saves it in ~/.local/state/desktop-profile and runs `hyprctl reload`. Mac Mode
 -- saves "mac-light" if the color theme is light ("light": true in its theme.json),
--- and theme-set switches between "mac" and "mac-light" when moving to a light or dark theme.
+-- and wasdjy-theme switches between "mac" and "mac-light" when moving to a light or dark theme.
 --
 --   mac        macshell bar (quickshell/macshell) with Spotlight and PowerMenu, windows
 --              rounded with shadow, Sur-Gris hyprbars (grey, Noto Sans, 32 px);
@@ -15,7 +15,7 @@
 -- without macshell installed behave like "default".
 -- Used by autostart.lua, binds.lua, decorations.lua and desktopmode.lua
 --
--- CONTRAST: "Increase contrast" (`~/.config/themes/contrast-set on|off|toggle`, which
+-- CONTRAST: "Increase contrast" (`wasdjy-contrast on|off|toggle`, which
 -- saves it in ~/.local/state/increased-contrast as "1" or "0" and runs `hyprctl reload`).
 -- decorations.lua uses it for thicker, opaque borders, and desktopmode.lua
 -- for the hyprbars text and buttons

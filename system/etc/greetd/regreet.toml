@@ -20,7 +20,7 @@ poweroff = [ "systemctl", "poweroff" ]
 greeting_msg = "cachyos"
 
 # install.sh replaces locale with the system date locale (localectl: "es_ES", "de_DE"...)
-# and format with its translation (.config/themes/i18n/<language>.json); here, in English
+# and format with its translation (lib/i18n/<language>.json); here, in English
 [widget.clock]
 format = "%A, %B %d  ·  %H:%M"
 resolution = "500ms"

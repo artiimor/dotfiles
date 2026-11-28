@@ -43,7 +43,7 @@ o.fillchars = "eob: " -- no ~ at the end of the buffer
 
 -- Colors: colors/tema.lua (mini.hues from theme.json) -----------------
 -- LazyVim uses the same colorscheme. Transparent background for kitty; when
--- the theme changes with theme-set it reloads by itself (MiniThemeReload / on focus gain).
+-- the theme changes with wasdjy-theme it reloads by itself (MiniThemeReload / on focus gain).
 vim.cmd.colorscheme("tema")
 
 -- mini.* ------------------------------------------------------------------------

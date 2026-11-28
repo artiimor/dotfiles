@@ -4,7 +4,7 @@
 -- loads it with dofile by absolute path. read() always returns a table ({} on failure).
 -- TEMA_THEME_JSON (optional) points to another theme.json: useful to test a theme without
 -- changing the active one, e.g. TEMA_THEME_JSON=~/.config/themes/snow/theme.json nvim
--- With "Increase contrast" (contrast-set), theme-set leaves the higher-contrast theme in
+-- With "Increase contrast" (wasdjy-contrast), wasdjy-theme leaves the higher-contrast theme in
 -- ~/.local/state/increased-contrast.json and that one is read (except with TEMA_THEME_JSON).
 local M = {}
 

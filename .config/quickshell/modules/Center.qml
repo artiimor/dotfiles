@@ -76,7 +76,7 @@ Item {
             padding: 4
             color: Theme.contrast ? Theme.yellow : TopBar.muted
             tooltip: Theme.contrast ? I18n.tr("Increase contrast: on") : I18n.tr("Increase contrast: off")
-            onClicked: Quickshell.execDetached([Quickshell.env("HOME") + "/.config/themes/contrast-set", "toggle"])
+            onClicked: Quickshell.execDetached([Quickshell.env("HOME") + "/.local/share/wasdjy/bin/wasdjy-contrast", "toggle"])
         }
     }
 }

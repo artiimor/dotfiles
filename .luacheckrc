@@ -12,7 +12,7 @@ files[".config/hypr"] = {
 	},
 }
 
--- Neovim (LuaJIT); MiniThemeReload is defined by colors/tema.lua for theme-set
+-- Neovim (LuaJIT); MiniThemeReload is defined by colors/tema.lua for wasdjy-theme
 local nvim = { std = "luajit", globals = { "vim", "MiniThemeReload" } }
 files[".config/nvim"] = nvim
 files[".config/nvim-lazyvim"] = nvim

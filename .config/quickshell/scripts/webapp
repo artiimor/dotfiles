@@ -12,7 +12,7 @@ APPS="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
 ICONS="$APPS/icons"
 menu() { "$(dirname "$0")/dmenu-qs" -c -p "$1"; }
 # Translation (see themelib.py): t "Text %1" arg
-t() { python3 "$(dirname "$0")/../../themes/themelib.py" tr "$@"; }
+t() { python3 "$HOME/.local/share/wasdjy/lib/themelib.py" tr "$@"; }
 say() { notify-send -a Webapps "$@"; }
 fail() { say -u critical "$(t "Could not do it")" "$1"; exit 1; }
 

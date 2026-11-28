@@ -1,4 +1,4 @@
--- Generado por theme-set a partir de themes/grafito/theme.json: no editar
+-- Generado por wasdjy-theme a partir de themes/grafito/theme.json: no editar
 -- Used by decorations.lua, misc.lua and desktopmode.lua
 
 THEME_BORDER   = { "rgba(c4c6c9ff)" }

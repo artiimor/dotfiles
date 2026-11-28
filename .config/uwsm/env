@@ -1,5 +1,7 @@
 # One variable per line, `export K=V`: hypr/config/environment.lua reads this file
 # so the "Hyprland" session without uwsm gets the same ones. TERM isn't set here: each terminal sets it.
+# wasdjy scripts (wasdjy-theme, wasdjy-config...): the repo lives in ~/.local/share/wasdjy
+export PATH="$HOME/.local/share/wasdjy/bin:$PATH"
 export BROWSER=brave
 # Claude Code without the spinner in the title: it changed it several times per second and made
 # hyprbars/Hyprland redraw constantly

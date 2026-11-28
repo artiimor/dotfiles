@@ -6,11 +6,11 @@ import re
 
 import pytest
 
-from conftest import CONFIG, REPO, THEMES_DIR
+from conftest import BIN, CONFIG, LIB, REPO
 
 QS = CONFIG / "quickshell"
 MAC = QS / "macshell"
-I18N_DIRS = [QS / "i18n", MAC / "i18n", THEMES_DIR / "i18n"]
+I18N_DIRS = [QS / "i18n", MAC / "i18n", LIB / "i18n"]
 JSONS = sorted(p for d in I18N_DIRS for p in d.glob("*.json"))
 
 # Double-quoted literal, with escapes (\n, \")
@@ -58,11 +58,10 @@ def bind_texts():
 
 
 def python_texts():
-    # tr("...") with a literal as first argument in the themes scripts
+    # tr("...") with a literal as first argument in the bin/ scripts and themelib.py
     out = set()
-    for name in ["theme-set", "config-set", "background-set", "font-set", "contrast-set",
-                 "themelib.py"]:
-        for node in ast.walk(ast.parse((THEMES_DIR / name).read_text())):
+    for path in [*sorted(BIN.glob("wasdjy-*")), LIB / "themelib.py"]:
+        for node in ast.walk(ast.parse(path.read_text())):
             if (isinstance(node, ast.Call) and getattr(node.func, "id", None) == "tr"
                     and node.args and isinstance(node.args[0], ast.Constant)):
                 out.add(node.args[0].value)
@@ -84,7 +83,7 @@ def bash_texts():
 CASES = {
     "quickshell": (QS / "i18n/es.json", qml_texts(QS, MAC) | bind_texts()),
     "macshell": (MAC / "i18n/es.json", qml_texts(MAC)),
-    "themes": (THEMES_DIR / "i18n/es.json", python_texts() | bash_texts()),
+    "themes": (LIB / "i18n/es.json", python_texts() | bash_texts()),
 }
 
 

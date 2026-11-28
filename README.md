@@ -10,7 +10,7 @@ Designed by me and implemented with help from [Claude Code](https://claude.com/c
 [Omarchy](https://omarchy.org) inspired the desktop mode, the theme switcher and the per-theme backgrounds.
 
 ```sh
-git clone https://github.com/artiimor/dotfiles.git ~/dotfiles && ~/dotfiles/install.sh
+git clone https://github.com/artiimor/dotfiles.git ~/.local/share/wasdjy && ~/.local/share/wasdjy/install.sh
 ```
 
 ## Contents
@@ -99,14 +99,14 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
   the battery indicator only shows when UPower reports a laptop battery, and brightness (bar, sliders, OSD, keys) only when
   there is a panel in `/sys/class/backlight`, in both profiles. On a laptop, a notification warns at 15% battery and a
   critical one at 5% (both profiles).
-- **Two desktop profiles**, *Mac mode* and *Normal mode*, switchable live with **Super+Shift+T** (`config-set`).
+- **Two desktop profiles**, *Mac mode* and *Normal mode*, switchable live with **Super+Shift+T** (`wasdjy-config`).
 - **Per-workspace desktop mode** (**Super+Alt+D**): floating windows, minimize, a dock and macOS-style edge snapping.
 - **macOS-style titlebars** (close / minimize / maximize) on floating windows, using a patched `hyprbars` plugin.
-- **Color theme switcher** (**Super+T**, `theme-set`): one `theme.json` per theme recolors Hyprland, Quickshell, hyprlock,
+- **Color theme switcher** (**Super+T**, `wasdjy-theme`): one `theme.json` per theme recolors Hyprland, Quickshell, hyprlock,
   Ghostty, btop, fzf, GTK, Qt/KDE, fastfetch and running Neovim instances at once. 18 themes, 4 of them light.
-- **Monospace font picker** (**Super+T**, "Font" tab, `font-set`) for Ghostty and the Normal mode titlebars.
-- **Increase contrast** (`contrast-set`, Control Center tile in Mac mode, bar button in Normal mode): opaque, thicker borders, no blur, purer text, GTK high contrast and stronger terminal/Neovim colors.
-- **Per-theme backgrounds** (**Super+Ctrl+B**, `background-set`), remembered per theme.
+- **Monospace font picker** (**Super+T**, "Font" tab, `wasdjy-font`) for Ghostty and the Normal mode titlebars.
+- **Increase contrast** (`wasdjy-contrast`, Control Center tile in Mac mode, bar button in Normal mode): opaque, thicker borders, no blur, purer text, GTK high contrast and stronger terminal/Neovim colors.
+- **Per-theme backgrounds** (**Super+Ctrl+B**, `wasdjy-background`), remembered per theme.
 - **Main menu** (**Super+M**), like Omarchy's. For now it has *Style*: theme, font, background, profile and increase
   contrast in one place; in Mac mode Super+M opens macshell's Appearance window directly. Navigate with the arrows or hjkl:
   Right / l opens a submenu, Left / h goes back.
@@ -128,10 +128,16 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 ## Installation
 
 ```sh
-git clone https://github.com/artiimor/dotfiles.git ~/dotfiles
-~/dotfiles/install.sh          # asks before each step (Enter = yes)
-~/dotfiles/install.sh --yes    # does everything without asking (-y also works)
+git clone https://github.com/artiimor/dotfiles.git ~/.local/share/wasdjy
+~/.local/share/wasdjy/install.sh          # asks before each step (Enter = yes)
+~/.local/share/wasdjy/install.sh --yes    # does everything without asking (-y also works)
 ```
+
+The repo stays in `~/.local/share/wasdjy` (like Omarchy): its `bin/` holds the `wasdjy-*` commands
+(`wasdjy-theme`, `wasdjy-config`, `wasdjy-background`, `wasdjy-font`, `wasdjy-contrast`) and is added to the `PATH`
+by `~/.config/uwsm/env` (Hyprland session) and `~/.profile` (TTY/ssh). Cloned somewhere else, step 3 links
+`~/.local/share/wasdjy` to your clone. The old names (`~/.config/themes/theme-set`…) are kept for now as
+symlinks to the new ones.
 
 The script is safe to re-run: `pacman` uses `--needed`, overwritten files are backed up, and your own
 `monitors.lua`, `variables.lua`, `inputs.lua`, user files (below) and chosen theme are kept if they already exist.
@@ -147,9 +153,9 @@ When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 | **1. Desktop packages** | `pacman -Syu`, then installs the desktop, terminal, font and login/boot package groups (see the list below). Packages missing from your repos (e.g. CachyOS-only ones on plain Arch) are reported and tried from the AUR; if a batch conflicts, it retries one by one. `bzmenu` and `whitesur-icon-theme` come from the AUR via `paru`/`yay` if present, otherwise `makepkg`. |
 | **1b. GPU** | Detects the graphics cards from PCI (`/sys/bus/pci/devices`). Intel: offers `intel-media-driver` (VA-API). NVIDIA: if `nvidia-utils` is already installed (CachyOS does it with `chwd`) nothing is installed; on CachyOS without drivers it offers `chwd -a`; on plain Arch it offers `nvidia-open-dkms nvidia-utils egl-wayland libva-nvidia-driver` plus the headers of each installed kernel that are in your repos (`nvidia-open` needs Turing/RTX 20 or newer, so this question defaults to no and is asked even with `--yes`). If NVIDIA is the primary GPU (the only one, or the boot GPU) and `nvidia-utils` is installed, it writes `LIBVA_DRIVER_NAME`, `__GLX_VENDOR_LIBRARY_NAME` and `NVD_BACKEND` to `~/.config/uwsm/env.d/gpu`; on hybrid laptops (Intel/AMD iGPU + NVIDIA) it doesn't, since forcing them breaks the session. The file is regenerated on every run. |
 | **2. Extra apps** (optional) | `firefox brave-bin spotify-launcher discord proton-pass proton-vpn-gtk-app claude-code github-cli`, installed the same way as step 1. |
-| **3. Dotfiles** | Copies `.config/` → `~/.config/`, `.local/share/applications/` (web apps) → `~/.local/share/applications/`, `.local/share/icons/` (Sur icons) → `~/.local/share/icons/` (and builds their `icon-theme.cache` with `gtk-update-icon-cache`), and `.bashrc`, `.bash_profile`, `.profile` → `~`. Details below. |
+| **3. Dotfiles** | Links `~/.local/share/wasdjy` to the repo if it was cloned elsewhere, replaces the old `~/.config/themes/*-set` copies with symlinks to `bin/wasdjy-*`, copies `.config/` → `~/.config/`, `.local/share/applications/` (web apps) → `~/.local/share/applications/`, `.local/share/icons/` (Sur icons) → `~/.local/share/icons/` (and builds their `icon-theme.cache` with `gtk-update-icon-cache`), and `.bashrc`, `.bash_profile`, `.profile` → `~`. Details below. |
 | **3b. Shell** | If your login shell isn't bash (CachyOS defaults to fish), offers `chsh -s /bin/bash`. |
-| **4. Theme and profile** | Runs `theme-set <theme>` (your current theme if you already had one, otherwise **grafito**) and `config-set --reapply` (keeps your profile; Mac mode on a fresh install). |
+| **4. Theme and profile** | Runs `wasdjy-theme <theme>` (your current theme if you already had one, otherwise **grafito**) and `wasdjy-config --reapply` (keeps your profile; Mac mode on a fresh install). |
 | **5. hyprbars** | Clones `hyprwm/hyprland-plugins` at the tag matching your installed Hyprland (falls back to `vX.Y.0`), applies the four patches in `.config/hypr/`, builds it and copies `hyprbars.so` to `~/.local/lib/hyprland/`. Then offers to remove the apps' own window buttons (GTK `button-layout`, and Brave's "use system title bar", only if Brave is closed). |
 | **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname and the clock's locale and date format to the system's date locale (`LC_TIME`, or else `LANG`, from `localectl`), disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group. The default answer depends on the hardware: yes if a ThinkPad is detected via DMI, no otherwise, and `--yes` follows that default); **automatic time zone** (installs the NetworkManager dispatcher script `system/etc/NetworkManager/dispatcher.d/90-timezone` and enables `NetworkManager-dispatcher`: on each connection it sends your public IP to ipinfo.io and sets the time zone it returns; it does nothing while a VPN is active); **password attempts** (installs `system/etc/security/faillock.conf` with `deny = 10`: 10 failed passwords lock the account for 10 minutes, instead of 3; it affects sudo and the lock screen); **power profile** (laptops only: installs `system/etc/udev/rules.d/90-power-profile.rules` and reloads udev; unplugging switches power-profiles-daemon to `power-saver` and plugging in to `balanced`. It only acts on plug/unplug events, so at boot the last profile stays, and if the daemon isn't running the rule just fails silently); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
 
@@ -173,7 +179,7 @@ Details of step 3:
 - **Cursor**: downloads the black macOS cursor ([apple_cursor](https://github.com/ful1e5/apple_cursor) v2.0.1) into
   `~/.local/share/icons/macOS` and checks its SHA-256. If the download fails it switches GTK, `uwsm/env` and `hypr/config/environment.lua`
   to Adwaita instead. It also writes `~/.icons/default/index.theme` (for X11 apps) and sets the GNOME cursor setting.
-- Makes `theme-set`, `config-set`, `background-set`, `font-set` and the Quickshell scripts executable, and runs `xdg-user-dirs-update`.
+- Makes `wasdjy-theme`, `wasdjy-config`, `wasdjy-background`, `wasdjy-font` and the Quickshell scripts executable, and runs `xdg-user-dirs-update`.
 
 ### Packages
 
@@ -190,10 +196,13 @@ Details of step 3:
 If you'd rather copy only some pieces:
 
 ```sh
-cp -r ~/dotfiles/.config/* ~/.config/
-cp ~/dotfiles/.bashrc ~/dotfiles/.bash_profile ~/dotfiles/.profile ~/
-~/.config/themes/theme-set grafito          # or any other theme: generates the color files
-~/.config/themes/config-set default         # or "mac"
+git clone https://github.com/artiimor/dotfiles.git ~/.local/share/wasdjy
+cd ~/.local/share/wasdjy
+cp -r .config/* ~/.config/
+cp .bashrc .bash_profile .profile ~/
+export PATH="$HOME/.local/share/wasdjy/bin:$PATH"   # already in uwsm/env and .profile for later sessions
+wasdjy-theme grafito          # or any other theme: generates the color files
+wasdjy-config default         # or "mac"
 ```
 
 Then replace the `@HOME@` placeholder yourself:
@@ -204,10 +213,10 @@ Then replace the `@HOME@` placeholder yourself:
 **Super+Shift+T** opens the "Config" menu with *Mac mode* and *Normal mode* (the active one has a check mark). From a terminal:
 
 ```sh
-~/.config/themes/config-set mac       # Mac mode (Mac light if the color theme is light)
-~/.config/themes/config-set default   # Normal mode (also accepts "normal")
-~/.config/themes/config-set           # list the profiles (* = active)
-~/.config/themes/config-set --reapply # re-apply the current one
+wasdjy-config mac       # Mac mode (Mac light if the color theme is light)
+wasdjy-config default   # Normal mode (also accepts "normal")
+wasdjy-config           # list the profiles (* = active)
+wasdjy-config --reapply # re-apply the current one
 ```
 
 It applies in a couple of seconds without logging out: reloads Hyprland, restarts Quickshell and rewrites the GTK, Qt
@@ -234,9 +243,9 @@ titlebars (they keep the macOS gray), and the Quickshell menus, OSD, polkit dial
 Light or dark is decided by the **color theme** (`"light": true` in its `theme.json`), not by the profile:
 
 - In Mac mode, a light theme switches to the internal profile **`mac-light`**: light macshell and titlebars, Sur icons,
-  light GTK (`adw-gtk3` + `prefer-light` with a fixed light `gtk.css` that `theme-set` doesn't overwrite) and the
-  `mac-light` Qt colors. A dark theme switches back to `mac`. `theme-set` does this automatically when you change
-  themes, and `config-set mac` with a light theme already saves `mac-light`. `config-set mac-light` forces it by hand
+  light GTK (`adw-gtk3` + `prefer-light` with a fixed light `gtk.css` that `wasdjy-theme` doesn't overwrite) and the
+  `mac-light` Qt colors. A dark theme switches back to `mac`. `wasdjy-theme` does this automatically when you change
+  themes, and `wasdjy-config mac` with a light theme already saves `mac-light`. `wasdjy-config mac-light` forces it by hand
   until the next theme change or `--reapply`.
 - In Normal mode, a light theme makes GTK light (`adw-gtk3` + `prefer-light`, with the theme's `gtk.css`) and uses
   Papirus-Light icons; everything else already takes the theme's colors.
@@ -256,9 +265,9 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 ([font](#font)); it opens on the active theme's tab with that theme selected. Switch tabs by clicking, with Tab / Shift+Tab or with ←/→. Each tab has its own search (just type; it is kept per tab), and fonts also match their original name (e.g. "Cascadia" finds CaskaydiaCove). From a terminal:
 
 ```sh
-~/.config/themes/theme-set              # list themes (* = active)
-~/.config/themes/theme-set miami        # apply a theme (its folder name)
-~/.config/themes/theme-set --reapply    # regenerate the current theme after editing its theme.json
+wasdjy-theme              # list themes (* = active)
+wasdjy-theme miami        # apply a theme (its folder name)
+wasdjy-theme --reapply    # regenerate the current theme after editing its theme.json
 ```
 
 | Folder | Name | Type | Neovim colorscheme |
@@ -282,7 +291,7 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 | `terminal-clasico` | Terminal Clásico (macOS Terminal "Basic" + classic Vim syntax) | **light** | vim |
 | `tokyo-night` | Tokyo Night | dark | tokyonight |
 
-`~/.config/themes/current` is a symlink to the active theme. What `theme-set` writes and when each app picks it up:
+`~/.config/themes/current` is a symlink to the active theme. What `wasdjy-theme` writes and when each app picks it up:
 
 | App | File | Applies |
 |---|---|---|
@@ -290,7 +299,7 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 | Hyprland | `hypr/config/theme.lua` | immediately |
 | Ghostty | `ghostty/themes/current` | immediately |
 | Neovim | shared `tema` colorscheme (also used by `lazyvim`): mini.hues from `ui.bg`/`ui.fg`, syntax from `nvimColors.syn`, and the whole UI (line numbers, cursorline, selection, menus, floats, statusline, search, diagnostics, diff) from the theme's `ui`/`term` palette, optionally overridden by `nvimColors.ui`; sent to running instances over their socket | immediately |
-| Background | asked from `background-set` | immediately |
+| Background | asked from `wasdjy-background` | immediately |
 | btop | `btop/themes/current.theme` | next launch |
 | GTK | `gtk-3.0/gtk.css`, `gtk-4.0/gtk.css` (not in `mac-light`) | next launch of the app |
 | Qt / KDE | `qt6ct/colors/current.conf`, `kdeglobals` | next launch of the app |
@@ -298,7 +307,7 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 | fastfetch | `fastfetch/themed/pepe-*.txt` | new terminals |
 | hyprlock | `hypr/hyprlock-colors.conf` | next lock (fallback only) |
 
-Generated files start with `Generado por theme-set`: don't edit them, edit the theme's `theme.json` and run `--reapply`.
+Generated files start with `Generado por wasdjy-theme`: don't edit them, edit the theme's `theme.json` and run `--reapply`.
 The login screen (ReGreet, macOS-style dark gray) and Plymouth ("sobrio") are outside the theme system.
 
 **Creating a theme**: copy a folder (`cp -r ~/.config/themes/miami ~/.config/themes/my-theme`), change `name` and the
@@ -308,7 +317,7 @@ The meaning of each `theme.json` section is documented in [`.config/themes/READM
 ### Font
 
 The monospace font is separate from the color theme: pick it in the **Font** tab of Super+T (each row is written in
-its font) or with `~/.config/themes/font-set "<family>"` (no argument lists the installed Nerd Fonts). It applies at once
+its font) or with `wasdjy-font "<family>"` (no argument lists the installed Nerd Fonts). It applies at once
 to Ghostty and the hyprbars titlebars in Normal mode, and is saved in `~/.local/state/font`. The Quickshell UI
 (Inter, or Noto Sans in Mac mode) keeps its own font. Details in [`.config/themes/README.md`](.config/themes/README.md#fuente).
 
@@ -318,7 +327,7 @@ Like macOS's *Increase contrast*: thicker, opaque window borders, no blur, pure 
 secondary text and bar borders in Quickshell, GTK/libadwaita high contrast, and slightly stronger colors in the
 terminals and Neovim. It works with any theme and both profiles.
 Toggle it from the **Increase Contrast** tile of the Control Center (Mac mode), the contrast button in the bar next to
-Night light and Keep awake (Normal mode), or with `~/.config/themes/contrast-set on|off|toggle` (no argument prints
+Night light and Keep awake (Normal mode), or with `wasdjy-contrast on|off|toggle` (no argument prints
 `on`/`off`). It's saved in `~/.local/state/increased-contrast`. Details in
 [`.config/themes/README.md`](.config/themes/README.md#increase-contrast).
 
@@ -336,10 +345,10 @@ No theme in the repo ships backgrounds yet, so out of the box you get the Pepes.
 | **Super+Ctrl+Shift+B** | Next background of the current theme |
 
 ```sh
-~/.config/themes/background-set              # list: name, path, 1 if active
-~/.config/themes/background-set foo.jpg      # set a background by file name ("pepes" for the default)
-~/.config/themes/background-set --next       # next one
-~/.config/themes/background-set --path       # path of the active one
+wasdjy-background              # list: name, path, 1 if active
+wasdjy-background foo.jpg      # set a background by file name ("pepes" for the default)
+wasdjy-background --next       # next one
+wasdjy-background --path       # path of the active one
 ```
 
 **Adding backgrounds**: choose **"＋ Add wallpapers…"** at the bottom of the Super+Ctrl+B picker; it creates and opens the
@@ -481,8 +490,10 @@ the installer (or copy `system/etc/keyd/thinkpad.conf` to `/etc/keyd/` and enabl
 ## Repository structure
 
 ```text
-dotfiles/
+wasdjy/                           (~/.local/share/wasdjy)
 ├── install.sh                    installer (see above)
+├── bin/                          wasdjy-theme, wasdjy-config, wasdjy-background, wasdjy-font, wasdjy-contrast (in the PATH)
+├── lib/                          themelib.py (shared by bin/) and its i18n/
 ├── .bashrc .bash_profile .profile
 ├── .config/
 │   ├── hypr/
@@ -492,7 +503,7 @@ dotfiles/
 │   │   │   ├── binds.lua         keybindings
 │   │   │   ├── desktopmode.lua   floating workspaces, minimize, snapping, hyprbars setup
 │   │   │   ├── keyd.lua          runtime keyd remap
-│   │   │   ├── theme.lua         colors (generated by theme-set)
+│   │   │   ├── theme.lua         colors (generated by wasdjy-theme)
 │   │   │   ├── variables.lua     default apps, monitor names, workspaces per monitor
 │   │   │   ├── inputs.lua        keyboard layout, touchpad gestures
 │   │   │   ├── monitors.lua  workspaces.lua  windowrules.lua
@@ -500,7 +511,7 @@ dotfiles/
 │   │   ├── hyprbars-*.patch      local patches for the hyprbars plugin
 │   │   └── hypridle.conf  hyprlock.conf  hyprsunset.conf  xdph.conf
 │   ├── quickshell/               shell.qml, Bar.qml, Theme.qml, modules/, services/, components/, scripts/
-│   ├── themes/                   one folder per theme + theme-set, config-set, background-set, font-set, contrast-set
+│   ├── themes/                   one folder per theme (theme.json, backgrounds/)
 │   ├── backgrounds/              default wallpapers (Pepes) and the script that made them
 │   ├── uwsm/env                  session environment (Qt, cursor, Electron); install.sh adds env.d/gpu (NVIDIA)
 │   ├── ghostty/ nvim/ nvim-lazyvim/ btop/ fastfetch/ starship.toml micro/
@@ -546,12 +557,12 @@ keeping the keys and the `%1`, `%2`… placeholders:
 
 - `.config/quickshell/i18n/` (bar, launcher, menus, notifications, lock screen)
 - `.config/quickshell/macshell/i18n/` (Mac mode)
-- `.config/themes/i18n/` (theme scripts, `webapp`, night light tooltip, `install.sh` and the login screen clock format)
+- `lib/i18n/` (`wasdjy-*` scripts, `webapp`, night light tooltip, `install.sh` and the login screen clock format)
 
 ## Updating and re-applying
 
 ```sh
-cd ~/dotfiles && git pull
+cd ~/.local/share/wasdjy && git pull
 ./install.sh            # answer "no" to the steps you don't need
 ```
 
@@ -563,8 +574,8 @@ up in the backup).
 To only regenerate things without copying anything:
 
 ```sh
-~/.config/themes/theme-set --reapply     # colors
-~/.config/themes/config-set --reapply    # profile (icons, Qt, GTK, Hyprland reload, Quickshell restart)
+wasdjy-theme --reapply     # colors
+wasdjy-config --reapply    # profile (icons, Qt, GTK, Hyprland reload, Quickshell restart)
 hyprctl reload                           # Hyprland config
 ```
 
@@ -618,7 +629,7 @@ The Neovim tests need mini.nvim (the vim.pack copy or a checkout in `MINI_PATH`)
 | Missing icons in Mac mode | Sur inherits from WhiteSur: check that `whitesur-icon-theme` (AUR) is installed. |
 | Super shortcuts do nothing, or Alt and Super are swapped on a non-ThinkPad keyboard | `hypr/config/keyd.lua` rebinds keyd at startup, only when `/etc/keyd/thinkpad.conf` exists. If you don't want the swap, remove that file and run `keyd bind reset`; if you run keyd with your own configs that include `thinkpad.conf`, remove `require("config.keyd")` from `hyprland.lua`. If you're not in the `keyd` group, log out and back in after the installer adds you. |
 | Bar, launcher or wallpaper missing | Start Quickshell by hand to see errors: `qs` (and `qs -p ~/.config/quickshell/macshell` in Mac mode). |
-| Colors look wrong or half-applied | `~/.config/themes/theme-set --reapply`, then reopen GTK/Qt apps and btop. |
+| Colors look wrong or half-applied | `wasdjy-theme --reapply`, then reopen GTK/Qt apps and btop. |
 | Qt apps ignore the theme | They need `QT_QPA_PLATFORMTHEME=qt6ct` (set in `uwsm/env` and `environment.lua`); log in through the uwsm session. |
 | Cursor is Adwaita instead of macOS | The download failed during install. Download [apple_cursor](https://github.com/ful1e5/apple_cursor/releases) into `~/.local/share/icons/macOS` and set `XCURSOR_THEME="macOS"` in `uwsm/env`, `environment.lua` and the GTK `settings.ini` files. |
 | Lock screen closed and the screen is red | `misc.allow_session_lock_restore` is enabled: run `qs ipc call lock lock` from a TTY, or `hyprlock`. |

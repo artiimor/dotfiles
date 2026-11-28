@@ -1,16 +1,20 @@
 #!/usr/bin/env bash
 # Installs this desktop on a freshly installed CachyOS.
 #
-#   git clone https://github.com/artiimor/dotfiles.git ~/dotfiles
-#   ~/dotfiles/install.sh            asks before each step
-#   ~/dotfiles/install.sh --yes      does everything without asking
+#   git clone https://github.com/artiimor/dotfiles.git ~/.local/share/wasdjy
+#   ~/.local/share/wasdjy/install.sh            asks before each step
+#   ~/.local/share/wasdjy/install.sh --yes      does everything without asking
+#
+# The repo lives in ~/.local/share/wasdjy and its bin/ (wasdjy-theme, wasdjy-config...) goes
+# in the PATH (uwsm/env, .profile). Cloned somewhere else (e.g. ~/dotfiles), step 3 links
+# ~/.local/share/wasdjy to it.
 #
 # Steps (each one can be skipped):
 #   1. Desktop packages (pacman) and AUR ones (bzmenu, WhiteSur icons) with makepkg
 #   1b. GPU: missing drivers and NVIDIA variables if it's the primary one (not on hybrids)
 #   2. Extra apps (Firefox, Brave, Spotify, Discord, Proton...)
-#   3. Dotfiles: .config (with macshell), .bashrc, webapps, Sur icons -> ~ (whatever gets replaced goes to ~/.dotfiles-old/<date>) and bash as shell
-#   4. Color theme (theme-set) and Mac Mode / Normal Mode profile (config-set)
+#   3. Dotfiles: ~/.local/share/wasdjy, .config (with macshell), .bashrc, webapps, Sur icons -> ~ (whatever gets replaced goes to ~/.dotfiles-old/<date>) and bash as shell
+#   4. Color theme (wasdjy-theme) and Mac Mode / Normal Mode profile (wasdjy-config)
 #   5. hyprbars plugin with the desktop-mode patches (and removes GTK/Brave's own buttons)
 #   6. System (sudo): greetd + ReGreet, Plymouth "sobrio", keyd (ThinkPad), automatic
 #      time zone, more password attempts before lockout (faillock), power profile
@@ -23,16 +27,17 @@
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+WASDJY="$HOME/.local/share/wasdjy"
 # Color theme: the one you already have (not lost when re-running the install), otherwise grafito
 THEME="$(basename "$(readlink "$HOME/.config/themes/current" 2>/dev/null)" 2>/dev/null)"
 [[ -f "$REPO/.config/themes/$THEME/theme.json" ]] || THEME="grafito"
 YES=0
 [[ "${1:-}" == "--yes" || "${1:-}" == "-y" ]] && YES=1
 
-# Messages are translated with the repo's themelib.py (~/.config/themes may
+# Messages are translated with the repo's lib/themelib.py (~/.local/share/wasdjy may
 # not exist yet): t "Text %1" arg. Without python3, in English with the %N replaced here
 t() {
-	python3 "$REPO/.config/themes/themelib.py" tr "$@" 2>/dev/null && return
+	python3 "$REPO/lib/themelib.py" tr "$@" 2>/dev/null && return
 	local s="$1" i=1 a
 	shift
 	for a; do s="${s//"%$i"/"$a"}" i=$((i + 1)); done
@@ -62,7 +67,7 @@ TERMINAL=(
 )
 FONTS=(
 	ttf-jetbrains-mono-nerd otf-geist-mono-nerd inter-font cantarell-fonts
-	# More monospace Nerd Fonts for font-set (Super+T, Font)
+	# More monospace Nerd Fonts for wasdjy-font (Super+T, Font)
 	ttf-firacode-nerd ttf-hack-nerd ttf-cascadia-code-nerd ttf-sourcecodepro-nerd
 	ttf-ubuntu-mono-nerd otf-commit-mono-nerd ttf-mononoki-nerd ttf-ibmplex-mono-nerd
 	ttf-0xproto-nerd ttf-martian-mono-nerd ttf-roboto-mono-nerd
@@ -145,6 +150,37 @@ pacman_install() {
 		done
 	fi
 	((${#missing[@]})) && { warn "$(t "not in your repos: %1" "${missing[*]}")"; aur_install "${missing[@]}"; }
+	return 0
+}
+
+# ~/.local/share/wasdjy -> this repo, if it was cloned somewhere else. A symlink pointing
+# elsewhere is replaced; a real folder (another clone) is left alone with a warning
+link_repo() {
+	[[ "$(realpath "$WASDJY" 2>/dev/null)" == "$(realpath "$REPO")" ]] && return 0
+	if [[ -e "$WASDJY" && ! -L "$WASDJY" ]]; then
+		warn "$(t "%1 already exists and is not this repo: the wasdjy-* commands will run from there" "$WASDJY")"
+		return 0
+	fi
+	mkdir -p "${WASDJY%/*}"
+	ln -sfn "$REPO" "$WASDJY"
+	info "$(t "%1 -> %2" "~/.local/share/wasdjy" "$REPO")"
+}
+
+# Old names (~/.config/themes/theme-set...), still used by binds or scripts of your own:
+# symlinks to bin/wasdjy-*. The old copies (and their themelib.py and i18n/) go to $BACKUP.
+# Temporary, while migrating: they will be removed in a future version
+OLD_SCRIPTS=(theme config background font contrast)
+compat_links() {
+	local d="$HOME/.config/themes" n f
+	mkdir -p "$d"
+	for f in "$d/themelib.py" "$d/i18n"; do
+		[[ -e "$f" && ! -L "$f" ]] && mkdir -p "$BACKUP/.config/themes" && mv "$f" "$BACKUP/.config/themes/"
+	done
+	for n in "${OLD_SCRIPTS[@]}"; do
+		f="$d/$n-set"
+		[[ -e "$f" && ! -L "$f" ]] && mkdir -p "$BACKUP/.config/themes" && mv "$f" "$BACKUP/.config/themes/"
+		ln -sfn "$WASDJY/bin/wasdjy-$n" "$f"
+	done
 	return 0
 }
 
@@ -314,9 +350,11 @@ fi
 
 step "3. Dotfiles"
 info "$(t "%1 -> ~/.config, .bashrc, .bash_profile, .profile, webapps, Sur icons" "$REPO/.config")"
+info "$(t "%1 -> %2 (wasdjy-* commands)" "$REPO" "~/.local/share/wasdjy")"
 info "$(t "whatever gets overwritten is saved in %1" "$BACKUP")"
 if ask "$(t "Copy them?")"; then
 	command -v rsync >/dev/null || sudo pacman -S --needed --noconfirm rsync
+	link_repo
 	# monitors.lua: if it doesn't exist yet (first install) it is generated with the detected screens
 	mon="$HOME/.config/hypr/config/monitors.lua"
 	[[ -e "$mon" ]] && mon=""
@@ -333,7 +371,8 @@ if ask "$(t "Copy them?")"; then
 	# -c: like copy_tree, but a backup is only kept if the content changes (not the date)
 	rsync -ac --backup --backup-dir="$BACKUP" "$REPO"/{.bashrc,.bash_profile,.profile} "$HOME/"
 	fix_home
-	chmod +x "$HOME/.config/themes/theme-set" "$HOME/.config/themes/config-set" "$HOME/.config/themes/background-set" "$HOME/.config/themes/font-set" "$HOME/.config/themes/contrast-set" "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
+	compat_links
+	chmod +x "$REPO/bin/"* "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
 	# Cursor: the black macOS arrow (apple_cursor, not in the Arch repos).
 	# If it can't be downloaded Adwaita stays. ~/.icons/default is for X11 apps
 	cursor=Adwaita
@@ -376,13 +415,14 @@ fi
 # ---------------------------------------------------------------- 4. theme
 
 step "$(t "4. Color theme")"
-if [[ -x "$HOME/.config/themes/theme-set" ]] && ask "$(t "Apply the %1 theme?" "$THEME")"; then
-	"$HOME/.config/themes/theme-set" "$THEME" || warn "$(t "%1 failed; run it again inside Hyprland" theme-set)"
+# From the repo itself: the PATH doesn't have bin/ until the next login
+if [[ -d "$HOME/.config/themes" ]] && ask "$(t "Apply the %1 theme?" "$THEME")"; then
+	"$REPO/bin/wasdjy-theme" "$THEME" || warn "$(t "%1 failed; run it again inside Hyprland" wasdjy-theme)"
 fi
 # Desktop profile (Super+Shift+T): the one you already had; on a fresh install, "mac".
 # Adjusts GTK/Qt icons and qt6ct to that profile (the repo ships them as in "mac")
-if [[ -x "$HOME/.config/themes/config-set" ]]; then
-	"$HOME/.config/themes/config-set" --reapply || warn "$(t "%1 failed; run it again inside Hyprland" config-set)"
+if [[ -d "$HOME/.config/themes" ]]; then
+	"$REPO/bin/wasdjy-config" --reapply || warn "$(t "%1 failed; run it again inside Hyprland" wasdjy-config)"
 fi
 
 # ---------------------------------------------------------------- 5. hyprbars

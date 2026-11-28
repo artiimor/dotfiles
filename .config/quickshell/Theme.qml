@@ -1,5 +1,5 @@
 // Colors of the active theme: read from ~/.config/themes/current/theme.json
-// ("ui" section). Change theme: Super+Ctrl+T or `~/.config/themes/theme-set <theme>`,
+// ("ui" section). Change theme: Super+Ctrl+T or `wasdjy-theme <theme>`,
 // which notifies with `qs ipc call theme reload` and everything is recolored at once.
 // The fallback values below are Miami night's.
 // Used from any file as Theme.accent, Theme.barHeight...
@@ -33,14 +33,14 @@ Singleton {
         }
     }
 
-    // Desktop profile (written by config-set): in "mac" and "mac-light" (Mac Mode
+    // Desktop profile (written by wasdjy-config): in "mac" and "mac-light" (Mac Mode
     // with a dark or light theme; with macshell installed) the windows from here that are
     // still used (launcher and its menus, OSD, polkit, dock) copy macshell's look
     // instead of the color theme.
     // No file: "mac" if macshell is present. "mac" without macshell = "default".
-    // Watched because theme-set switches between "mac" and "mac-light" without restarting qs
+    // Watched because wasdjy-theme switches between "mac" and "mac-light" without restarting qs
     // (macLight changes at once). But mac (which bar and notifications exist)
-    // keeps its start-up value: going from Mac Mode to normal or back, config-set
+    // keeps its start-up value: going from Mac Mode to normal or back, wasdjy-config
     // restarts qs, and if it changed earlier the bar and notification server from here
     // would appear while macshell is still alive
     FileView {
@@ -77,7 +77,7 @@ Singleton {
     readonly property bool macLight: mac && profile === "mac-light"
 
     // Increase contrast ("1" in ~/.local/state/increased-contrast; changed by
-    // themes/contrast-set): opaque backgrounds, marked borders and lighter muted text.
+    // wasdjy-contrast): opaque backgrounds, marked borders and lighter muted text.
     // The script writes the file with rename: FileView watches the folder
     FileView {
         id: contrastFile
@@ -159,12 +159,12 @@ Singleton {
 
     // Wallpaper (also used, sharp and barely darkened, on the lock screen)
     readonly property string wallpaper: "file://" + Quickshell.env("HOME") + "/.config/backgrounds/wallpaper.jpg"
-    // Desktop only: the theme's background (Super+Ctrl+B, themes/background-set);
+    // Desktop only: the theme's background (Super+Ctrl+B, wasdjy-background);
     // by default the meadow with all the pepes in color
     property string desktopWallpaper: "file://" + Quickshell.env("HOME") + "/.config/backgrounds/wallpaper-desktop.jpg"
     Process {
         id: backgroundProc
-        command: [Quickshell.env("HOME") + "/.config/themes/background-set", "--path"]
+        command: [Quickshell.env("HOME") + "/.local/share/wasdjy/bin/wasdjy-background", "--path"]
         running: true
         stdout: StdioCollector {
             onStreamFinished: if (text.trim()) root.desktopWallpaper = "file://" + text.trim()

@@ -143,7 +143,7 @@ hl.bind(mainMod .. " + period", hl.dsp.exec_cmd("qs ipc call launcher emoji"), {
 hl.bind(mainMod .. " + T", hl.dsp.exec_cmd("qs ipc call launcher themes"), { description = "Color theme" })
 hl.bind(mainMod .. " + SHIFT + T", hl.dsp.exec_cmd("qs ipc call launcher configs"), { description = "Config (Mac mode / Normal mode)" })
 hl.bind(mainMod .. " + CTRL + B", hl.dsp.exec_cmd("qs ipc call launcher backgrounds"), { description = "Wallpaper" })
-hl.bind(mainMod .. " + CTRL + SHIFT + B", hl.dsp.exec_cmd("~/.config/themes/background-set --next"), { description = "Next wallpaper" })
+hl.bind(mainMod .. " + CTRL + SHIFT + B", hl.dsp.exec_cmd("~/.local/share/wasdjy/bin/wasdjy-background --next"), { description = "Next wallpaper" })
 hl.bind(mainMod .. " + slash", hl.dsp.exec_cmd("qs ipc call launcher keys"), { description = "Shortcut cheat sheet" })
 -- Main menu, like Omarchy's (Style → theme, font, background...); in Mac Mode it
 -- opens macshell's Appearance window directly

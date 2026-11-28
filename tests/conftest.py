@@ -6,6 +6,8 @@ import pytest
 
 REPO = Path(__file__).resolve().parent.parent
 CONFIG = REPO / ".config"
+BIN = REPO / "bin"  # wasdjy-* scripts (~/.local/share/wasdjy/bin)
+LIB = REPO / "lib"  # themelib.py and its i18n/
 THEMES_DIR = CONFIG / "themes"
 # current is a symlink to the active theme: it isn't one more theme
 THEMES = sorted(p.parent.name for p in THEMES_DIR.glob("*/theme.json") if not p.parent.is_symlink())
