@@ -223,10 +223,8 @@ Singleton {
             // dark theme): setsid only detaches it from this process
             Quickshell.execDetached(["setsid", "-f", root.themesDir + (item.font ? "/font-set" : "/theme-set"), item.data]);
         } else if (m === "backgrounds") {
-            // "+": opens the theme's backgrounds folder in Dolphin (current is a link to the theme)
-            Quickshell.execDetached(item.data === "+"
-                ? ["sh", "-c", `mkdir -p "$1" && exec uwsm-app -- xdg-open "$1"`, "sh", root.themesDir + "/current/backgrounds"]
-                : [root.themesDir + "/background-set", item.data]);
+            // "+": image picker; background-set copies them to the theme and applies the last one
+            Quickshell.execDetached(["setsid", "-f", root.themesDir + "/background-set", item.data === "+" ? "--add" : item.data]);
         } else if (m === "configs") {
             // config-set restarts Quickshell (this process included): setsid so it doesn't die with it
             Quickshell.execDetached(["setsid", "-f", root.themesDir + "/config-set", item.data]);

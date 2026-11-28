@@ -112,5 +112,9 @@
   "shell changed to bash: takes effect on your next login": "shell cambiado a bash: se nota al volver a iniciar sesión",
   "the plymouth hook is missing from /etc/mkinitcpio.conf (and 'splash' from the kernel command line): without them it won't show": "falta el hook plymouth en /etc/mkinitcpio.conf (y 'splash' en la línea del kernel): sin eso no se verá",
   "this doesn't look like a ThinkPad: skipping keyd": "no parece un ThinkPad: se salta keyd",
-  "whatever gets overwritten is saved in %1": "lo que se sobrescriba se guarda en %1"
+  "whatever gets overwritten is saved in %1": "lo que se sobrescriba se guarda en %1",
+  "No theme is active": "No hay ningún tema activo",
+  "Choose wallpapers": "Elegir fondos",
+  "Images": "Imágenes",
+  "zenity is not installed": "zenity no está instalado"
 }

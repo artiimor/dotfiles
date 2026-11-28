@@ -93,6 +93,12 @@ FloatingWindow {
             })
         }
     }
+    // `background-set --add`: when the picker closes, re-read (the new background shows up selected)
+    Process {
+        id: addProc
+        command: [win.themesDir + "/background-set", "--add"]
+        onExited: bgProc.running = true
+    }
     // `font-set --list`: one JSON { font, cur } per line
     Process {
         id: fontProc
@@ -327,7 +333,7 @@ FloatingWindow {
                             MouseArea { anchors.fill: parent; onClicked: if (!bg.modelData.cur) win.run("background-set", bg.modelData.name, "backgrounds", "name") }
                         }
                     }
-                    // "Add…": opens the theme's backgrounds folder (current is a link to the theme)
+                    // "Add…": image picker (background-set --add copies them to the theme and applies the last one)
                     Rectangle {
                         width: bgGrid.cellWidth
                         height: width * 0.625
@@ -342,8 +348,7 @@ FloatingWindow {
                             id: addMouse
                             anchors.fill: parent
                             hoverEnabled: true
-                            onClicked: Quickshell.execDetached(["sh", "-c", `mkdir -p "$1" && exec uwsm-app -- xdg-open "$1"`,
-                                "sh", win.themesDir + "/current/backgrounds"])
+                            onClicked: addProc.running = true
                         }
                     }
                 }

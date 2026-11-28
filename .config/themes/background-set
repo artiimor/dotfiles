@@ -5,13 +5,17 @@
 #   background-set           list: "<background>\t<path>\t<1 if current>" (Super+Ctrl+B menu)
 #   background-set <name>    sets that background (file name or "pepes")
 #   background-set --next    switches to the next one (Super+Ctrl+Shift+B)
+#   background-set --add     file picker: copies the chosen images to the theme and applies the last one
 #   background-set --path    path of the current one: Theme.qml asks for it on every "theme reload"
 #
 # The choice is saved per theme in ~/.local/state/theme-backgrounds ({theme: background});
 # with no choice (or if it no longer exists), the first one in the list.
 
+import filecmp
 import json
 import os
+import shutil
+import subprocess
 import sys
 
 sys.dont_write_bytecode = True  # no __pycache__ in ~/.config/themes
@@ -49,6 +53,39 @@ def choose(theme, name):
     qs_theme_reload()
 
 
+def add(theme):
+    # zenity picker (several at once); each image is copied to the theme's backgrounds
+    # (renamed if the name is taken by a different image) and the last one is applied
+    if not theme:
+        sys.exit(tr("No theme is active"))
+    try:
+        r = subprocess.run(["zenity", "--file-selection", "--multiple", "--separator=\n",
+                            f"--title={tr('Choose wallpapers')}",
+                            f"--filename={HOME}/Pictures/",
+                            "--file-filter=" + tr("Images") + " | " + " ".join("*" + e for e in EXTS)],
+                           capture_output=True, text=True)
+    except FileNotFoundError:
+        sys.exit(tr("zenity is not installed"))
+    d = f"{THEMES}/{theme}/backgrounds"
+    os.makedirs(d, exist_ok=True)
+    last = None
+    for src in filter(None, r.stdout.split("\n")):
+        if not src.lower().endswith(EXTS) or not os.path.isfile(src):
+            continue
+        base, ext = os.path.splitext(os.path.basename(src))
+        name, n = base + ext, 1
+        while os.path.exists(f"{d}/{name}"):
+            if filecmp.cmp(src, f"{d}/{name}", shallow=False):  # already there
+                break
+            n += 1
+            name = f"{base}-{n}{ext}"
+        else:
+            shutil.copy2(src, f"{d}/{name}")
+        last = name
+    if last:
+        choose(theme, last)
+
+
 def main():
     theme = current_theme() or ""  # no theme: only the Pepes
     bgs = backgrounds(theme)
@@ -62,6 +99,8 @@ def main():
             print(f"{n}\t{p}\t{int(n == cur)}")
     elif arg == "--path":
         print(bgs[cur])
+    elif arg == "--add":
+        add(theme)
     elif arg == "--next":
         choose(theme, names[(names.index(cur) + 1) % len(names)])
     elif arg in bgs:
