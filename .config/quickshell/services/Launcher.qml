@@ -129,6 +129,8 @@ Singleton {
         startIndex = 0;
         const d = modes[m];
         prompt = d.prompt;
+        if (m === "emoji")
+            emojiFile.preload = true; // read it the first time (reload() isn't enough without preload)
         if (d.proc) {
             items = [];
             d.proc.running = true;
@@ -266,10 +268,13 @@ Singleton {
     }
 
     // ── Emojis ────────────────────────────────────────────
-    // Read once from emoji-test.txt, without skin tone variants
+    // Read from emoji-test.txt the first time the mode opens (show), without
+    // skin tone variants
     property var emojis: []
     FileView {
+        id: emojiFile
         path: "/usr/share/unicode/emoji/emoji-test.txt"
+        preload: false
         onLoaded: {
             const out = [];
             for (const line of text().split("\n")) {
