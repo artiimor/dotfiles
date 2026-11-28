@@ -59,6 +59,7 @@
   "On": "Activado",
   "Plymouth boot theme \"sobrio\" (neutral grey)?": "¿Tema de arranque Plymouth \"sobrio\" (gris neutro)?",
   "Power saver profile on battery and balanced when plugged in?": "¿Perfil de ahorro con batería y equilibrado al enchufar?",
+  "Reduce RAM use (huge pages on request, smaller GPU page pool)?": "¿Reducir el uso de RAM (huge pages solo a petición, reserva de páginas de la GPU más pequeña)?",
   "Reboot and log into the Hyprland (uwsm) session.": "Reinicia y entra en la sesión Hyprland (uwsm).",
   "Remove the window buttons drawn by GTK and Brave (keeping only the hyprbars ones)?": "¿Quitar los botones de ventana propios de GTK y Brave (se quedan solo los de hyprbars)?",
   "Remove webapp": "Quitar webapp",

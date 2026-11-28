@@ -136,6 +136,15 @@ install_sys() {
 	sudo install -Dm644 "$1" "$2"
 }
 
+regen_initramfs() {
+	info "$(t "regenerating the initramfs...")"
+	if command -v limine-mkinitcpio >/dev/null; then
+		sudo limine-mkinitcpio
+	else
+		sudo mkinitcpio -P
+	fi
+}
+
 # Installs with pacman whatever is in the repos; for the rest it warns (e.g. packages
 # only in CachyOS on plain Arch) and tries an AUR helper if there is one
 pacman_install() {
@@ -514,12 +523,7 @@ if ask "$(t "Plymouth boot theme \"sobrio\" (neutral grey)?")"; then
 	sudo plymouth-set-default-theme sobrio
 	grep -qw plymouth /etc/mkinitcpio.conf 2>/dev/null ||
 		warn "$(t "the plymouth hook is missing from /etc/mkinitcpio.conf (and 'splash' from the kernel command line): without them it won't show")"
-	info "$(t "regenerating the initramfs...")"
-	if command -v limine-mkinitcpio >/dev/null; then
-		sudo limine-mkinitcpio
-	else
-		sudo mkinitcpio -P
-	fi
+	regen_initramfs
 fi
 
 # keyd: thinkpad.conf is for the ThinkPad internal keyboard. Detected via DMI: on a
@@ -566,6 +570,15 @@ if grep -qsx Battery /sys/class/power_supply/*/type &&
 	ask "$(t "Power saver profile on battery and balanced when plugged in?")"; then
 	install_sys "$S/etc/udev/rules.d/90-power-profile.rules" /etc/udev/rules.d/90-power-profile.rules
 	sudo udevadm control --reload
+fi
+
+# Less RAM: huge pages only on request and a smaller GPU page pool (see the file headers).
+# The ttm module loads from the initramfs, so its option needs a new one (applies on reboot)
+if ask "$(t "Reduce RAM use (huge pages on request, smaller GPU page pool)?")"; then
+	install_sys "$S/etc/tmpfiles.d/wasdjy-memory.conf" /etc/tmpfiles.d/wasdjy-memory.conf
+	sudo systemd-tmpfiles --create /etc/tmpfiles.d/wasdjy-memory.conf
+	install_sys "$S/etc/modprobe.d/wasdjy-ttm.conf" /etc/modprobe.d/wasdjy-ttm.conf
+	regen_initramfs
 fi
 
 if ask "$(t "Enable services (NetworkManager, bluetooth, power-profiles-daemon)?")"; then
