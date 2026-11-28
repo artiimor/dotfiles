@@ -1,21 +1,21 @@
--- Colorscheme "tema" (colors/tema.lua): el mismo que el Neovim chiquito, cargado
--- desde ~/.config/nvim/colors/tema.lua (mini.hues a partir de
--- ~/.config/themes/current/theme.json, fondo transparente para kitty). Al cambiar
--- de tema, theme-set llama a MiniThemeReload() por el socket y se recarga solo.
--- Los demás colorschemes siguen instalados para usarlos a mano (:colorscheme ...);
--- el campo "nvim" del tema solo se usa si falta ~/.config/nvim/colors/tema.lua.
+-- "tema" colorscheme (colors/tema.lua): the same as the small Neovim, loaded
+-- from ~/.config/nvim/colors/tema.lua (mini.hues from
+-- ~/.config/themes/current/theme.json, transparent background for kitty). When the
+-- theme changes, theme-set calls MiniThemeReload() over the socket and it reloads by itself.
+-- The other colorschemes are still installed to use by hand (:colorscheme ...);
+-- the theme's "nvim" field is only used if ~/.config/nvim/colors/tema.lua is missing.
 
--- theme.json con el lector compartido del Neovim chiquito (por ruta absoluta: el
--- runtimepath de LazyVim no incluye ~/.config/nvim/lua); sin él, {} (oscuro, sin ajustes)
+-- theme.json with the small Neovim's shared reader (by absolute path: the
+-- LazyVim runtimepath doesn't include ~/.config/nvim/lua); without it, {} (dark, no tweaks)
 local okm, theme_mod = pcall(dofile, vim.fn.expand("~/.config/nvim/lua/tema/theme.lua"))
 local theme = okm and theme_mod.read() or {}
 
--- Claro u oscuro según el tema ("light": true en theme.json), antes de cargar el
--- colorscheme: rose-pine, gruvbox, everforest y tokyonight eligen variante con esto
+-- Light or dark depending on the theme ("light": true in theme.json), before loading the
+-- colorscheme: rose-pine, gruvbox, everforest and tokyonight pick their variant with this
 vim.o.background = theme.light and "light" or "dark"
 
--- Kanagawa: los fondos de flotantes, menús, gutter y statusline salen del tema
--- activo, para que no se queden con el negro de su paleta.
+-- Kanagawa: the backgrounds of floats, menus, gutter and statusline come from the
+-- active theme, so they don't keep their palette's black.
 local function kanagawa_ui()
   local u = theme.ui
   if not u then
@@ -36,8 +36,8 @@ local function kanagawa_ui()
   }
 end
 
--- "nvimColors" (opcional en theme.json): pisa colores ui/syn de Kanagawa, p. ej.
--- para subir el contraste de la sintaxis.
+-- "nvimColors" (optional in theme.json): overrides Kanagawa ui/syn colors, e.g.
+-- to raise the syntax contrast.
 local function kanagawa_theme()
   local extra = theme.nvimColors or {}
   return {
@@ -47,12 +47,12 @@ local function kanagawa_theme()
 end
 
 return {
-  -- mini.hues suelto (LazyVim no trae mini.nvim entero); lo pide colors/tema.lua
+  -- standalone mini.hues (LazyVim doesn't ship the whole mini.nvim); requested by colors/tema.lua
   { "nvim-mini/mini.hues", lazy = true },
   {
     "catppuccin/nvim",
     name = "catppuccin",
-    lazy = true, -- solo es el fallback de colors/tema.lua; lazy.nvim lo carga al pedirlo
+    lazy = true, -- only the fallback of colors/tema.lua; lazy.nvim loads it on request
     opts = {
       flavour = "mocha",
       transparent_background = true,

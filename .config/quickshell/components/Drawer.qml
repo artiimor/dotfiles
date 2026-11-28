@@ -1,6 +1,6 @@
-// Cajón: una fila que se despliega (de 0 a su ancho) mientras el ratón esté en
-// la zona fija del módulo (su padre) o en el propio cajón.
-// Es lo que hace "drawer" en Waybar: el reloj y la flecha de sistema lo usan.
+// Drawer: a row that slides out (from 0 to its width) while the mouse is on
+// the fixed area of the module (its parent) or on the drawer itself.
+// It's what "drawer" does in Waybar: the clock and the system arrow use it.
 import QtQuick
 import qs
 
@@ -8,7 +8,7 @@ Item {
     id: root
 
     readonly property bool open: hover.hovered || zoneHover.hovered
-    // true: crece hacia la izquierda (anclado por la derecha), el contenido sale pegado al borde fijo
+    // true: grows to the left (anchored on the right), the content comes out against the fixed edge
     property bool fromRight: false
     default property alias content: row.data
 

@@ -1,9 +1,9 @@
-// Pantalla de bloqueo: sustituye a hyprlock. Aquí está la lógica (bloquear,
-// comprobar la contraseña con PAM); el aspecto está en modules/LockSurface.qml.
+// Lock screen: replaces hyprlock. The logic lives here (locking,
+// checking the password with PAM); the look is in modules/LockSurface.qml.
 //
-// Se bloquea con `qs ipc call lock lock` (lo hace hypridle al ejecutar
-// `loginctl lock-session`, que es lo que usan Super+Ctrl+L y el menú de energía).
-// A propósito NO hay forma de desbloquear desde fuera: solo con la contraseña.
+// Locked with `qs ipc call lock lock` (hypridle does it when running
+// `loginctl lock-session`, which is what Super+Ctrl+L and the power menu use).
+// On purpose there is NO way to unlock from outside: only with the password.
 pragma Singleton
 
 import QtQuick
@@ -17,7 +17,7 @@ Singleton {
 
     property bool locked: false
 
-    // Lo que hay escrito en el campo de contraseña (compartido entre pantallas)
+    // What is typed in the password field (shared between screens)
     property string password: ""
     property bool checking: false
     property bool failed: false
@@ -40,12 +40,12 @@ Singleton {
         pam.start();
     }
 
-    // PAM con la misma configuración que usaba hyprlock (/etc/pam.d/login)
+    // PAM with the same configuration hyprlock used (/etc/pam.d/login)
     PamContext {
         id: pam
         config: "login"
 
-        // PAM pide la contraseña: se la damos
+        // PAM asks for the password: we give it
         onPamMessage: {
             if (responseRequired)
                 respond(root.password);
@@ -72,7 +72,7 @@ Singleton {
         }
     }
 
-    // Bloq Mayús: Qt no lo sabe, se pregunta a Hyprland al pulsar teclas
+    // Caps Lock: Qt doesn't know it, Hyprland is asked on key presses
     function checkCapsLock() { caps.running = true; }
     Process {
         id: caps

@@ -1,6 +1,6 @@
-// Centro: reloj con la fecha. Al pasar el ratón se despliegan luz nocturna,
-// cafeína y aumentar contraste a su derecha (sin moverlo: el cajón cuelga por
-// fuera del ancho del reloj); debajo del reloj aparece el calendario.
+// Center: clock with the date. On hover, night light,
+// caffeine and increase contrast slide out to its right (without moving it: the drawer hangs
+// outside the clock's width); the calendar appears below the clock.
 import QtQuick
 import Quickshell
 import qs
@@ -10,7 +10,7 @@ import qs.services
 Item {
     id: root
 
-    // Solo cuenta el reloj, así anchors.centerIn lo deja siempre en el centro
+    // Only the clock counts, so anchors.centerIn always keeps it centered
     implicitWidth: clockIcon.implicitWidth
     implicitHeight: Theme.barHeight
 
@@ -25,7 +25,7 @@ Item {
         pixelSize: Theme.fontSize
         color: TopBar.accent
         clickable: false
-        // p. ej. "jue 19  14:32" (en español aunque el sistema esté en inglés)
+        // e.g. "jue 19  14:32" (in Spanish even if the system is in English)
         icon: "󰥔  " + clock.date.toLocaleString(Qt.locale(), "ddd d  HH:mm")
 
         onScrolledUp: calendar.shift(-1)
@@ -69,7 +69,7 @@ Item {
             onClicked: Idle.inhibited = !Idle.inhibited
         }
 
-        // Aumentar contraste: Theme.contrast se actualiza solo al cambiar el archivo
+        // Increase contrast: Theme.contrast updates by itself when the file changes
         BarIcon {
             icon: "󰆗"
             cell: Theme.iconCell

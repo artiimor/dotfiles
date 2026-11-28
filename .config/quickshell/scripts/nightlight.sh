@@ -1,27 +1,27 @@
 #!/usr/bin/env bash
-# Luz nocturna para la barra de Quickshell, habla con hyprsunset por IPC
-#   sin argumentos: estado en JSON: class ("on" | "off" | "unavailable"),
-#                   temperature y next (epoch del próximo cambio del horario).
-#                   Los textos los pone (y traduce) Quickshell
-#   toggle:         activa/desactiva
-#   up / down:      más fría / más cálida
+# Night light for the Quickshell bar, talks to hyprsunset over IPC
+#   no arguments:   state as JSON: class ("on" | "off" | "unavailable"),
+#                   temperature and next (epoch of the next schedule change).
+#                   The texts are set (and translated) by Quickshell
+#   toggle:         turn on/off
+#   up / down:      cooler / warmer
 #
-# hyprsunset no deja consultar si está en "identity" (apagado), así que el
-# apagado manual se guarda en $state. Vale hasta el siguiente cambio del
-# horario de ~/.config/hypr/hyprsunset.conf, que manda sobre el botón.
+# hyprsunset can't be asked whether it is in "identity" (off), so
+# turning it off by hand is saved in $state. It lasts until the next change of the
+# schedule in ~/.config/hypr/hyprsunset.conf, which overrides the button.
 
 warm=4000
 step=250
 state="${XDG_RUNTIME_DIR:-/tmp}/nightlight-off"
 conf="$HOME/.config/hypr/hyprsunset.conf"
 
-# Quickshell (services/NightLight.qml) vuelve a leer el estado tras cada acción
+# Quickshell (services/NightLight.qml) reads the state again after each action
 
 current() {
     hyprctl hyprsunset temperature 2>/dev/null | grep -oE '^[0-9]+$'
 }
 
-# Epoch del último y del próximo cambio de perfil del horario: "último próximo"
+# Epoch of the last and next profile change of the schedule: "last next"
 profile_changes() {
     local now last=0 next=0 t ts day
     now=$(date +%s)

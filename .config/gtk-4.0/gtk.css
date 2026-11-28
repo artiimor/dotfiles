@@ -18,7 +18,7 @@
     --dialog-fg-color: #f2f3f5;
 }
 
-/* Lo mismo con nombres antiguos, para libadwaita < 1.6 */
+/* The same with the old names, for libadwaita < 1.6 */
 @define-color accent_color #e2d29a;
 @define-color accent_bg_color #a3a7ad;
 @define-color accent_fg_color #0f1012;

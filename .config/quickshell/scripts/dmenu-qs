@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
-# dmenu hecho con Quickshell: lee opciones por stdin y escribe la elegida por
-# stdout (sale con 1 si cancelas). Lo usan networkmanager_dmenu, bzmenu y webapp.
+# dmenu made with Quickshell: reads options from stdin and writes the chosen one to
+# stdout (exits with 1 if you cancel). Used by networkmanager_dmenu, bzmenu and webapp.
 #
-#   printf 'uno\ndos\n' | dmenu-qs -p "Elige"
-#   dmenu-qs -P -p "Contraseña" < /dev/null      (oculta lo que escribes)
-#   dmenu-qs -c -p "URL" < /dev/null             (en el centro, no bajo la barra)
+#   printf 'one\ntwo\n' | dmenu-qs -p "Pick"
+#   dmenu-qs -P -p "Password" < /dev/null      (hides what you type)
+#   dmenu-qs -c -p "URL" < /dev/null             (centered, not under the bar)
 #
-# networkmanager_dmenu solo pasa el prompt y la opción de contraseña a los
-# lanzadores que conoce, así que se le llama a través del enlace "wmenu" de
-# esta carpeta, que acepta las mismas opciones (-p, -P).
+# networkmanager_dmenu only passes the prompt and the password option to the
+# launchers it knows, so it is called through the "wmenu" link in
+# this folder, which accepts the same options (-p, -P).
 
 prompt=""
 password=false
@@ -30,9 +30,9 @@ mkfifo "$dir/out"
 
 qs ipc call launcher dmenu "$dir" "$prompt" "$password" "$center" >/dev/null || exit 1
 
-# Si Quickshell se recarga o se reinicia mientras esperas, el lanzador nuevo no
-# sabe de esta petición y nadie escribiría en el fifo: a los 10 min se da por
-# cancelada, para no dejar el script colgado para siempre
+# If Quickshell reloads or restarts while you wait, the new launcher doesn't
+# know about this request and nobody would write to the fifo: after 10 min it is
+# considered cancelled, so the script isn't left hanging forever
 result=$(timeout 600 cat "$dir/out")
 [ -n "$result" ] || exit 1
 printf '%s\n' "$result"

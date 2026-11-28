@@ -1,15 +1,15 @@
-# IPC de Quickshell: cada `qs ipc call <target> <función>` del repo tiene su
-# `IpcHandler { target: "<target>" ... function <función>(` en la config a la que va.
-# Con `-p .../macshell` va a macshell (.config/quickshell/macshell); si no, a la raíz
-# (.config/quickshell sin macshell).
+# Quickshell IPC: every `qs ipc call <target> <function>` in the repo has its
+# `IpcHandler { target: "<target>" ... function <function>(` in the config it goes to.
+# With `-p .../macshell` it goes to macshell (.config/quickshell/macshell); otherwise, to the root one
+# (.config/quickshell without macshell).
 #
-# Qué llamadas se encuentran (regex, sin parsear de verdad; se saltan las líneas de comentario):
-#   - Texto: `qs [-p <ruta>] ipc call <target> <función>` (Lua, conf de hypr, bash, QML).
-#   - Listas: ["qs", "-p", Quickshell.shellDir + "/macshell", "ipc", "call", ...] (QML y
-#     Python): se juntan sus literales con espacios y se mira como texto.
-#   - binds.lua: `shellCmd("<target> <función>", "<orden propia>")` y `macshell .. "<target> <función>"`
-#     van a macshell (la orden propia la encuentra el caso de texto).
-# Se saltan las llamadas cuya función es una variable (p. ej. `"launcher", mode`).
+# Which calls are found (regex, no real parsing; comment lines are skipped):
+#   - Text: `qs [-p <path>] ipc call <target> <function>` (Lua, hypr conf, bash, QML).
+#   - Lists: ["qs", "-p", Quickshell.shellDir + "/macshell", "ipc", "call", ...] (QML and
+#     Python): their literals are joined with spaces and checked as text.
+#   - binds.lua: `shellCmd("<target> <function>", "<own command>")` and `macshell .. "<target> <function>"`
+#     go to macshell (the own command is found by the text case).
+# Calls whose function is a variable are skipped (e.g. `"launcher", mode`).
 import re
 
 from conftest import CONFIG, REPO
@@ -27,7 +27,7 @@ LUA_MAC = re.compile(r'(?:shellCmd\(|\bmacshell \.\. )"(\w+) (\w+)')
 
 
 def calls():
-    # (archivo, macshell?, target, función) de cada llamada
+    # (file, macshell?, target, function) of each call
     out = []
     for path in FILES:
         text = "\n".join(l for l in path.read_text().splitlines()
@@ -40,7 +40,7 @@ def calls():
 
 
 def handlers(qmls):
-    # target -> funciones de los IpcHandler de esos QML (bloque por conteo de llaves)
+    # target -> functions of the IpcHandlers in those QML files (block by brace counting)
     out = {}
     for path in qmls:
         text = path.read_text()
@@ -60,7 +60,7 @@ def test_ipc_calls():
     mac = handlers(MAC.glob("**/*.qml"))
     root = handlers(p for p in QS.glob("**/*.qml") if MAC not in p.parents)
     found = calls()
-    # Si la regex se rompe, que no pase sin mirar nada
+    # If the regex breaks, don't pass without checking anything
     assert len(found) > 20, found
     assert any(m for _, m, _, _ in found) and not all(m for _, m, _, _ in found)
     bad = [f"{p.relative_to(REPO)}: {'macshell ' if m else ''}{t} {f}"

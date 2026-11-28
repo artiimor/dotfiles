@@ -4,23 +4,23 @@ import QtQuick
 import Quickshell
 import Quickshell.Wayland
 
-// Ventana a pantalla completa con una tarjeta (centrada en horizontal) que aparece con fundido y escala
-// (Spotlight, menú de apagado). Los hijos van dentro de la tarjeta; su tamaño, posición
-// y color se ponen desde fuera con `card.*`. Clic fuera de la tarjeta la cierra.
+// Fullscreen window with a card (horizontally centered) that appears with a fade and scale
+// (Spotlight, power menu). Children go inside the card; its size, position
+// and color are set from outside with `card.*`. Clicking outside the card closes it.
 PanelWindow {
     id: win
 
     property bool open: false
-    signal shown()   // tras cada show(), para que cada ventana reinicie lo suyo
+    signal shown()   // after every show(), so each window resets its own state
     function toggle() { open ? close() : show(); }
     function show() { open = true; shown(); }
     function close() { open = false; }
 
     readonly property int blurRadius: 22
-    property real closedScale: 0.97   // escala de la tarjeta al cerrarse
+    property real closedScale: 0.97   // card scale when closing
     property int fadeMs: 140
     property int scaleMs: 160
-    property real dim: 0              // oscurecido del escritorio al abrir (0 = nada)
+    property real dim: 0              // desktop dimming on open (0 = none)
 
     property alias card: cardRect
     default property alias content: cardRect.data
@@ -53,6 +53,6 @@ PanelWindow {
         Behavior on opacity { NumberAnimation { duration: win.fadeMs } }
         Behavior on scale { NumberAnimation { duration: win.scaleMs; easing.type: Easing.OutCubic } }
 
-        MouseArea { anchors.fill: parent }   // no cerrar al hacer clic dentro
+        MouseArea { anchors.fill: parent }   // don't close when clicking inside
     }
 }

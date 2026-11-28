@@ -1,31 +1,31 @@
--- Perfil del escritorio ("config"): "mac", "mac-light" o "default". Se elige con
--- Super+Shift+T (Modo Mac / Modo normal) o `~/.config/themes/config-set mac|default`,
--- que lo guarda en ~/.local/state/desktop-profile y hace `hyprctl reload`. Modo Mac
--- guarda "mac-light" si el tema de colores es claro ("light": true en su theme.json),
--- y theme-set cambia entre "mac" y "mac-light" al pasar a un tema claro u oscuro.
+-- Desktop profile ("config"): "mac", "mac-light" or "default". Chosen with
+-- Super+Shift+T (Mac Mode / Normal Mode) or `~/.config/themes/config-set mac|default`,
+-- which saves it in ~/.local/state/desktop-profile and runs `hyprctl reload`. Mac Mode
+-- saves "mac-light" if the color theme is light ("light": true in its theme.json),
+-- and theme-set switches between "mac" and "mac-light" when moving to a light or dark theme.
 --
---   mac        barra macshell (quickshell/macshell) con Spotlight y PowerMenu, ventanas
---              redondeadas con sombra, hyprbars Sur-Gris (gris, Noto Sans, 32 px);
---              todos los workspaces flotantes salvo los que pases a tiling (Super+Alt+D)
---   mac-light  lo mismo en claro (macshell, hyprbars, GTK y Qt claros), con un tema claro
---   default    Modo normal: la barra y el lanzador de Quickshell de siempre, esquinas rectas,
---              hyprbars con el color del tema (28 px); tiling salvo Super+Alt+D
+--   mac        macshell bar (quickshell/macshell) with Spotlight and PowerMenu, windows
+--              rounded with shadow, Sur-Gris hyprbars (grey, Noto Sans, 32 px);
+--              every workspace floating except the ones you switch to tiling (Super+Alt+D)
+--   mac-light  the same in light (light macshell, hyprbars, GTK and Qt), with a light theme
+--   default    Normal Mode: the usual Quickshell bar and launcher, square corners,
+--              hyprbars in the theme color (28 px); tiling except Super+Alt+D
 --
--- Sin archivo de estado: "mac" si está macshell, si no "default". Y "mac"/"mac-light"
--- sin macshell instalado se comportan como "default".
--- Lo usan autostart.lua, binds.lua, decorations.lua y desktopmode.lua
+-- No state file: "mac" if macshell is present, otherwise "default". And "mac"/"mac-light"
+-- without macshell installed behave like "default".
+-- Used by autostart.lua, binds.lua, decorations.lua and desktopmode.lua
 --
--- CONTRAST: "Aumentar contraste" (`~/.config/themes/contrast-set on|off|toggle`, que lo
--- guarda en ~/.local/state/increased-contrast como "1" o "0" y hace `hyprctl reload`).
--- decorations.lua lo usa para bordes más gruesos y opacos, y desktopmode.lua
--- para el texto y los botones de hyprbars
+-- CONTRAST: "Increase contrast" (`~/.config/themes/contrast-set on|off|toggle`, which
+-- saves it in ~/.local/state/increased-contrast as "1" or "0" and runs `hyprctl reload`).
+-- decorations.lua uses it for thicker, opaque borders, and desktopmode.lua
+-- for the hyprbars text and buttons
 
 local util = require("config.util")
 local HOME = util.HOME
 local MACSHELL = HOME .. "/.config/quickshell/macshell/shell.qml"
 local exists = util.exists
 
--- Primera palabra de un archivo de ~/.local/state, o nil si no existe
+-- First word of a file in ~/.local/state, or nil if it doesn't exist
 local function readState(name)
 	local f = io.open(HOME .. "/.local/state/" .. name)
 	if not f then

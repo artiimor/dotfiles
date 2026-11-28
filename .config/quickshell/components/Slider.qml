@@ -1,6 +1,6 @@
-// Barra deslizante sencilla (0–1). Arrastra, haz clic o usa la rueda.
+// Simple slider (0–1). Drag, click or use the wheel.
 //   Slider { value: 0.5; onMoved: v => ... }
-// Con enabled: false solo se dibuja (el OSD)
+// With enabled: false it is only drawn (the OSD)
 import QtQuick
 import qs
 
@@ -8,7 +8,7 @@ Item {
     id: root
 
     property real value: 0
-    // false: el relleno se ve apagado (p. ej. silenciado), pero sigue respondiendo
+    // false: the fill looks dimmed (e.g. muted), but it still responds
     property bool active: true
     signal moved(real value)
 
@@ -36,7 +36,7 @@ Item {
                 GradientStop { position: 1; color: Theme.accent }
             }
 
-            // Al arrastrar, sin animación: el relleno va pegado al ratón
+            // While dragging, no animation: the fill follows the mouse
             Behavior on width {
                 enabled: !mouse.pressed
                 NumberAnimation { duration: 100 }
@@ -50,8 +50,8 @@ Item {
         cursorShape: Qt.PointingHandCursor
         onPressed: m => root.moved(root.clamp(m.x / width))
         onPositionChanged: m => { if (pressed) root.moved(root.clamp(m.x / width)); }
-        // 120 = un paso de rueda = 5 %; el touchpad manda pasos más pequeños.
-        // Por encima del 100 %, ver Theme.wheelStep
+        // 120 = one wheel step = 5 %; the touchpad sends smaller steps.
+        // Above 100 %, see Theme.wheelStep
         onWheel: w => {
             const v = Theme.wheelStep(root.value, w.angleDelta.y / 120 * 0.05);
             if (v !== root.value)

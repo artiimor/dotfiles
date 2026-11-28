@@ -1,11 +1,11 @@
--- Lectura del tema activo (~/.config/themes/current/theme.json), compartida por los
--- dos Neovim. El chiquito la carga con dofile desde colors/tema.lua; LazyVim
--- (NVIM_APPNAME=nvim-lazyvim, sin ~/.config/nvim/lua en el runtimepath) también la
--- carga con dofile por ruta absoluta. read() siempre devuelve una tabla ({} si falla).
--- TEMA_THEME_JSON (opcional) apunta a otro theme.json: sirve para probar un tema sin
--- cambiar el activo, p. ej. TEMA_THEME_JSON=~/.config/themes/snow/theme.json nvim
--- Con "Aumentar contraste" (contrast-set), theme-set deja el tema con más contraste en
--- ~/.local/state/increased-contrast.json y se lee ese (salvo con TEMA_THEME_JSON).
+-- Reads the active theme (~/.config/themes/current/theme.json), shared by both
+-- Neovims. The small one loads it with dofile from colors/tema.lua; LazyVim
+-- (NVIM_APPNAME=nvim-lazyvim, without ~/.config/nvim/lua in the runtimepath) also
+-- loads it with dofile by absolute path. read() always returns a table ({} on failure).
+-- TEMA_THEME_JSON (optional) points to another theme.json: useful to test a theme without
+-- changing the active one, e.g. TEMA_THEME_JSON=~/.config/themes/snow/theme.json nvim
+-- With "Increase contrast" (contrast-set), theme-set leaves the higher-contrast theme in
+-- ~/.local/state/increased-contrast.json and that one is read (except with TEMA_THEME_JSON).
 local M = {}
 
 local contrast = vim.fn.expand("~/.local/state/increased-contrast.json")

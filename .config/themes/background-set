@@ -1,20 +1,20 @@
 #!/usr/bin/env python3
-# Fondo de pantalla del tema actual (como en Omarchy): los de
-# ~/.config/themes/<tema>/backgrounds/ y, siempre al final, "pepes" (el prado de siempre).
+# Wallpaper of the current theme (like in Omarchy): the ones in
+# ~/.config/themes/<theme>/backgrounds/ and, always last, "pepes" (the usual meadow).
 #
-#   background-set           lista: "<fondo>\t<ruta>\t<1 si es el actual>" (menú Super+Ctrl+B)
-#   background-set <fondo>   pone ese fondo (nombre de archivo o "pepes")
-#   background-set --next    pasa al siguiente (Super+Ctrl+Shift+B)
-#   background-set --path    ruta del actual: la pide Theme.qml en cada "theme reload"
+#   background-set           list: "<background>\t<path>\t<1 if current>" (Super+Ctrl+B menu)
+#   background-set <name>    sets that background (file name or "pepes")
+#   background-set --next    switches to the next one (Super+Ctrl+Shift+B)
+#   background-set --path    path of the current one: Theme.qml asks for it on every "theme reload"
 #
-# El elegido se guarda por tema en ~/.local/state/theme-backgrounds ({tema: fondo});
-# sin elegir (o si ya no existe), el primero de la lista.
+# The choice is saved per theme in ~/.local/state/theme-backgrounds ({theme: background});
+# with no choice (or if it no longer exists), the first one in the list.
 
 import json
 import os
 import sys
 
-sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
+sys.dont_write_bytecode = True  # no __pycache__ in ~/.config/themes
 from themelib import HOME, THEMES, current_theme, qs_theme_reload, tr
 
 STATE = f"{HOME}/.local/state/theme-backgrounds"
@@ -23,7 +23,7 @@ EXTS = (".jpg", ".jpeg", ".png", ".webp", ".bmp", ".gif")
 
 
 def backgrounds(theme):
-    # {fondo: ruta}, en orden: los del tema y al final los Pepes
+    # {background: path}, in order: the theme's ones and the Pepes last
     d = f"{THEMES}/{theme}/backgrounds"
     try:
         files = sorted(f for f in os.listdir(d) if f.lower().endswith(EXTS))
@@ -50,7 +50,7 @@ def choose(theme, name):
 
 
 def main():
-    theme = current_theme() or ""  # sin tema: solo los Pepes
+    theme = current_theme() or ""  # no theme: only the Pepes
     bgs = backgrounds(theme)
     names = list(bgs)
     cur = load().get(theme)

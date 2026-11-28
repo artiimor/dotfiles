@@ -1,4 +1,4 @@
-# Fixtures comunes de los tests: rutas del repo y lista de temas.
+# Common test fixtures: repo paths and theme list.
 import json
 from pathlib import Path
 
@@ -7,10 +7,10 @@ import pytest
 REPO = Path(__file__).resolve().parent.parent
 CONFIG = REPO / ".config"
 THEMES_DIR = CONFIG / "themes"
-# current es un symlink al tema activo: no es un tema más
+# current is a symlink to the active theme: it isn't one more theme
 THEMES = sorted(p.parent.name for p in THEMES_DIR.glob("*/theme.json") if not p.parent.is_symlink())
 
-# Mismo mapeo que `groups` en nvim/colors/tema.lua: clave de nvimColors.syn -> grupos
+# Same mapping as `groups` in nvim/colors/tema.lua: nvimColors.syn key -> groups
 SYN_GROUPS = {
     "string": "String", "number": "Number", "constant": "Constant", "identifier": "Identifier",
     "parameter": "@variable.parameter", "fun": "Function", "statement": "Statement",
@@ -26,5 +26,5 @@ def load_theme(name):
 
 @pytest.fixture(params=THEMES)
 def theme(request):
-    # (nombre, contenido de theme.json) de cada tema
+    # (name, theme.json content) of each theme
     return request.param, load_theme(request.param)

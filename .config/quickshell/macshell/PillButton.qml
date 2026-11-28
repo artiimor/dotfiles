@@ -1,7 +1,7 @@
 import QtQuick
 
-// Botón con texto (píldora). Por defecto se ajusta al texto; si se le da un
-// ancho mayor, el texto va centrado y se recorta si no cabe.
+// Button with text (pill). By default it fits the text; if given a
+// larger width, the text is centered and elided if it doesn't fit.
 Rectangle {
     id: b
     property string text: ""
@@ -24,6 +24,6 @@ Rectangle {
         color: b.danger ? "#ff6961" : Theme.text
         font.pointSize: b.pointSize
     }
-    // MouseArea y no TapHandler: así el clic no llega también a lo que hay debajo
+    // MouseArea and not TapHandler: this way the click doesn't also reach what's underneath
     MouseArea { id: mouse; anchors.fill: parent; hoverEnabled: true; onClicked: b.tapped() }
 }

@@ -1,32 +1,32 @@
 #!/usr/bin/env python3
-# Aumentar contraste (como "Increase contrast" de Accesibilidad en macOS): sin
-# transparencias ni blur, bordes de ventana más gruesos y opacos, texto secundario
-# y bordes de la barra más marcados, y el alto contraste de GTK/libadwaita.
+# Increase contrast (like macOS Accessibility's "Increase contrast"): no
+# transparency or blur, thicker and opaque window borders, more marked secondary
+# text and bar borders, and GTK/libadwaita high contrast.
 #
-#   contrast-set            dice si está activo ("on" u "off")
-#   contrast-set on|off     lo activa o lo quita
-#   contrast-set toggle     lo cambia (botón de la barra y tile del Control Center)
+#   contrast-set            says whether it's on ("on" or "off")
+#   contrast-set on|off     turns it on or off
+#   contrast-set toggle     toggles it (bar button and Control Center tile)
 #
-# Funciona con los dos perfiles (Modo Mac y Modo normal) y con cualquier tema.
-# El estado se guarda en ~/.local/state/increased-contrast ("1" o "0") y lo leen:
+# Works with both profiles (Mac Mode and Normal Mode) and with any theme.
+# The state is saved in ~/.local/state/increased-contrast ("1" or "0") and read by:
 #
-#   Hyprland     hypr/config/profile.lua → CONTRAST (bordes,      (hyprctl reload)
-#                blur y hyprbars en decorations.lua y desktopmode.lua)
-#   Quickshell   Theme.qml y macshell/Theme.qml                   (vigilan el archivo)
+#   Hyprland     hypr/config/profile.lua → CONTRAST (borders,      (hyprctl reload)
+#                blur and hyprbars in decorations.lua and desktopmode.lua)
+#   Quickshell   Theme.qml and macshell/Theme.qml                 (watch the file)
 #
-# Las terminales (Ghostty, btop, fzf) y Neovim suben el contraste de sus colores:
-# theme-set los regenera con themelib.boost_contrast() y Neovim lo aplica él solo al
-# leer el tema (nvim/lua/tema/theme.lua). Ghostty y Neovim, al momento; btop y
-# fzf, al abrirlos.
+# Terminals (Ghostty, btop, fzf) and Neovim raise the contrast of their colors:
+# theme-set regenerates them with themelib.boost_contrast() and Neovim applies it on its own when
+# reading the theme (nvim/lua/tema/theme.lua). Ghostty and Neovim, instantly; btop and
+# fzf, when opened.
 #
-# Además pone org.gnome.desktop.a11y.interface high-contrast, que el portal
-# (xdg-desktop-portal-gtk) publica como org.freedesktop.appearance contrast: las
-# apps GTK4/libadwaita cambian al momento. Las Qt no cambian.
+# It also sets org.gnome.desktop.a11y.interface high-contrast, which the portal
+# (xdg-desktop-portal-gtk) publishes as org.freedesktop.appearance contrast:
+# GTK4/libadwaita apps switch instantly. Qt apps don't.
 
 import os
 import sys
 
-sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
+sys.dont_write_bytecode = True  # no __pycache__ in ~/.config/themes
 from themelib import (CONTRAST_STATE as STATE, current_theme, load_script, load_theme,
                       notify, read_state, reload_terminals, run_quiet, tr, write_atomic)
 

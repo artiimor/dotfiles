@@ -1,6 +1,6 @@
-// Órdenes a Hyprland. Su config es Lua, así que cada orden es una expresión
-// hl.dsp.…, p. ej. hl.dsp.window.bring_to_top(). (Ojo: sin llaves en este
-// comentario, o Quickshell deja de ver el pragma Singleton)
+// Commands to Hyprland. Its config is Lua, so each command is an
+// hl.dsp.… expression, e.g. hl.dsp.window.bring_to_top(). (Careful: no braces in this
+// comment, or Quickshell stops seeing the Singleton pragma)
 pragma Singleton
 
 import QtQuick
@@ -8,9 +8,9 @@ import Quickshell
 import Quickshell.Hyprland
 
 Singleton {
-    // Una orden va por el socket de Hyprland, sin lanzar procesos. Varias van
-    // juntas con hyprctl --batch, que las aplica en orden (por separado podrían
-    // llegar desordenadas)
+    // A single command goes through the Hyprland socket, without spawning processes. Several go
+    // together with hyprctl --batch, which applies them in order (separately they could
+    // arrive out of order)
     function dispatch(...cmds) {
         if (cmds.length === 1)
             Hyprland.dispatch(cmds[0]);

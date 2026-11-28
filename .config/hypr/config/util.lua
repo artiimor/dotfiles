@@ -1,13 +1,13 @@
--- Utilidades compartidas por varios ficheros de config (se cargan con
--- `local util = require("config.util")`). No van en monitors/variables/inputs
--- porque install.sh no sobrescribe esos.
+-- Utilities shared by several config files (loaded with
+-- `local util = require("config.util")`). They don't go in monitors/variables/inputs
+-- because install.sh doesn't overwrite those.
 local M = {}
 
 M.HOME = os.getenv("HOME")
--- Config de macshell (barra del perfil "mac", en quickshell/macshell)
+-- macshell config (the "mac" profile bar, in quickshell/macshell)
 M.MACSHELL_DIR = M.HOME .. "/.config/quickshell/macshell"
 
--- true si el fichero existe (se puede abrir)
+-- true if the file exists (can be opened)
 function M.exists(path)
 	local f = io.open(path)
 	if f then
@@ -17,8 +17,8 @@ function M.exists(path)
 	return false
 end
 
--- Clases de terminal, sin anclas: misc.lua (swallow_regex) la usa entre
--- paréntesis y windowrules.lua con ^( )$
+-- Terminal classes, without anchors: misc.lua (swallow_regex) uses it inside
+-- parentheses and windowrules.lua with ^( )$
 M.TERMINAL_CLASSES = "kitty|ghostty|com\\.mitchellh\\.ghostty|[Kk]onsole|Alacritty|gnome-terminal|xfce[0-9]?-terminal"
 
 return M

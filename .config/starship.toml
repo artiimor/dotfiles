@@ -1,11 +1,11 @@
-# Prompt de bash. Colores ANSI, así sigue la paleta del tema activo (themes/):
-# blue = lavanda #a99bd6, purple = rosa suave #e89bd0, cyan = #86d4dc, bright-black = #6b6789
+# Bash prompt. ANSI colors, so it follows the active theme's palette (themes/):
+# blue = lavender #a99bd6, purple = soft pink #e89bd0, cyan = #86d4dc, bright-black = #6b6789
 
 "$schema" = 'https://starship.rs/config-schema.json'
 
 add_newline = true
 
-# Todo en una línea: carpeta, git, lenguaje y ❯
+# All on one line: folder, git, language and ❯
 format = """
 $username$hostname$directory$git_branch$git_state$git_status\
 $python$rust$nodejs$lua$cmd_duration$jobs$character"""

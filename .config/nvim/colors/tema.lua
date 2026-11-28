@@ -1,20 +1,20 @@
--- Colorscheme "tema": mini.hues a partir del tema activo (~/.config/themes/current/theme.json).
--- Lo usan los dos Neovim: el chiquito (~/.config/nvim, `nvim`) y LazyVim
--- (~/.config/nvim-lazyvim, `lazyvim`), que lo carga desde aquí con su colors/tema.lua.
--- Sale de ui.bg / ui.fg del tema, pone la sintaxis de nvimColors.syn si existe, pinta la
--- interfaz (números, menús, flotantes, statusline, búsqueda, diagnósticos...) con la paleta
--- del tema (ui, term) en vez de los grises de mini.hues, y deja el fondo transparente
--- para kitty. Al cambiar de tema, theme-set llama a MiniThemeReload() por el socket;
--- además se relee theme.json al recuperar el foco.
--- Necesita mini.hues (de mini.nvim o el plugin suelto nvim-mini/mini.hues).
+-- "tema" colorscheme: mini.hues from the active theme (~/.config/themes/current/theme.json).
+-- Used by both Neovims: the small one (~/.config/nvim, `nvim`) and LazyVim
+-- (~/.config/nvim-lazyvim, `lazyvim`), which loads it from here with its colors/tema.lua.
+-- Built from the theme's ui.bg / ui.fg, applies the nvimColors.syn syntax if present, paints the
+-- UI (numbers, menus, floats, statusline, search, diagnostics...) with the theme's
+-- palette (ui, term) instead of mini.hues' greys, and leaves the background transparent
+-- for kitty. When the theme changes, theme-set calls MiniThemeReload() over the socket;
+-- theme.json is also re-read on focus gain.
+-- Requires mini.hues (from mini.nvim or the standalone nvim-mini/mini.hues plugin).
 
--- Lectura de theme.json: ../lua/tema/theme.lua relativo a este archivo. Con dofile y no
--- require porque LazyVim también ejecuta este archivo y su runtimepath no incluye
+-- Reading theme.json: ../lua/tema/theme.lua relative to this file. dofile and not
+-- require because LazyVim also runs this file and its runtimepath doesn't include
 -- ~/.config/nvim/lua.
 local here = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h")
 local read_theme = dofile(here .. "/../lua/tema/theme.lua").read
 
--- Clave del tema: cambia si cambia cualquier color que se usa aquí
+-- Theme key: changes if any color used here changes
 local function theme_key(t)
   return vim.json.encode({ t.ui or {}, t.term or {}, t.nvimColors or {}, t.light or false })
 end
@@ -23,23 +23,23 @@ local t = read_theme()
 local ui = t.ui or {}
 vim.g.tema_key = theme_key(t)
 
--- Sin colors_name antes de tocar 'background', para que no se vuelva a cargar este archivo
+-- No colors_name before touching 'background', so this file isn't loaded again
 vim.g.colors_name = nil
 vim.o.background = t.light and "light" or "dark"
 local hues = {
   background = ui.bg or "#141518",
   foreground = ui.fg or "#c8ccd4",
-  saturation = "lowmedium", -- sobrio; prueba "medium" si lo ves muy apagado
+  saturation = "lowmedium", -- sober; try "medium" if it looks too dull
   accent = "bg",
 }
 require("mini.hues").setup(hues)
 
--- transparencia: que se vea el fondo de kitty
+-- transparency: let kitty's background show through
 for _, g in ipairs({ "Normal", "NormalNC", "SignColumn", "LineNr", "EndOfBuffer", "FoldColumn" }) do
   vim.api.nvim_set_hl(0, g, vim.tbl_extend("force", vim.api.nvim_get_hl(0, { name = g }), { bg = "NONE" }))
 end
 
--- sintaxis: usa nvimColors.syn del tema si existe (mini.hues sola queda casi gris)
+-- syntax: uses the theme's nvimColors.syn if present (mini.hues alone is almost grey)
 local syn = (t.nvimColors or {}).syn or {}
 local groups = {
   string = { "String", "@string" },
@@ -68,17 +68,17 @@ for key, names in pairs(groups) do
   end
 end
 
--- interfaz: los grises y acentos salen de la paleta del tema, no de mini.hues.
--- nvimColors.ui (opcional) pisa cualquiera de estas claves: panel (menús, flotantes,
--- statusline), sel (fila elegida), cursorline, visual, nontext, whitespace,
--- special, border (por defecto ui.border al 25 %), dim, accent, accent2, muted, red, yellow, ok, info, hint.
--- Lo que falte en el tema sale de la paleta de mini.hues (p).
+-- UI: greys and accents come from the theme palette, not from mini.hues.
+-- nvimColors.ui (optional) overrides any of these keys: panel (menus, floats,
+-- statusline), sel (selected row), cursorline, visual, nontext, whitespace,
+-- special, border (ui.border at 25 % by default), dim, accent, accent2, muted, red, yellow, ok, info, hint.
+-- Whatever the theme lacks comes from the mini.hues palette (p).
 if t.ui then
   local term = t.term or {}
   local o = (t.nvimColors or {}).ui or {}
   local p = require("mini.hues").make_palette(hues)
   local tbg = (term.background or p.bg):lower()
-  -- el primero que se distingue del fondo de la terminal (Normal es transparente)
+  -- the first one that stands out from the terminal background (Normal is transparent)
   local function visible(...)
     for i = 1, select("#", ...) do
       local c = select(i, ...)
@@ -87,7 +87,7 @@ if t.ui then
       end
     end
   end
-  -- mezcla a con b (f = parte de a): borde de flotantes y fondos de diff
+  -- blends a with b (f = share of a): float border and diff backgrounds
   local function blend(a, b, f)
     local function ch(h, i)
       return tonumber(h:sub(i, i + 1), 16)
@@ -111,9 +111,9 @@ if t.ui then
   }) do
     c[k] = o[k] or v
   end
-  -- números de línea: siempre negro en los temas claros y blanco en los oscuros
+  -- line numbers: always black in light themes and white in dark ones
   c.linenr = t.light and "#000000" or "#ffffff"
-  -- borde de los flotantes: ui.border al 25 % sobre el panel, como las islas de Quickshell
+  -- float border: ui.border at 25 % over the panel, like the Quickshell islands
   c.border = o.border or (ui.border and blend(ui.border, c.panel, 0.25)) or p.bg_mid2
   local mode = function(bg) return { fg = c.bg, bg = bg, bold = true } end
   local float = { fg = c.fg, bg = c.panel }
@@ -209,7 +209,7 @@ if t.ui then
     MiniPickPreviewRegion = { fg = c.accent, bg = c.sel },
     MiniPickIconDirectory = { fg = c.accent },
     MiniPickIconFile = { fg = c.fg },
-    -- el resto de flotantes de mini.* (archivos, avisos, pistas) como los demás
+    -- the rest of the mini.* floats (files, notifications, clues) like the others
     MiniFilesNormal = float,
     MiniFilesBorder = { fg = c.border, bg = c.panel },
     MiniFilesBorderModified = { fg = c.yellow, bg = c.panel },
@@ -233,7 +233,7 @@ if t.ui then
     MiniDiffSignChange = { fg = c.yellow },
     MiniDiffSignDelete = { fg = c.red },
   }
-  -- diagnósticos: texto, subrayado, texto virtual, signo y flotante
+  -- diagnostics: text, underline, virtual text, sign and float
   for name, col in pairs({ Error = c.red, Warn = c.yellow, Info = c.info, Hint = c.hint, Ok = c.ok }) do
     hl["Diagnostic" .. name] = { fg = col }
     hl["DiagnosticUnderline" .. name] = { sp = col, undercurl = true }
@@ -249,7 +249,7 @@ end
 
 vim.g.colors_name = "tema"
 
--- Recarga: al recuperar el foco solo si el tema ha cambiado y seguimos con "tema"
+-- Reload: on focus gain only if the theme changed and we're still on "tema"
 vim.api.nvim_create_autocmd("FocusGained", {
   group = vim.api.nvim_create_augroup("tema_colorscheme", { clear = true }),
   callback = function()
@@ -258,12 +258,12 @@ vim.api.nvim_create_autocmd("FocusGained", {
     end
   end,
 })
--- theme-set llama a MiniThemeReload() por el socket en vez de :colorscheme
+-- theme-set calls MiniThemeReload() over the socket instead of :colorscheme
 _G.MiniThemeReload = function()
   vim.cmd.colorscheme("tema")
   vim.cmd.redraw({ bang = true })
 end
--- (solo la primera vez: no se puede redefinir mientras se está ejecutando)
+-- (only the first time: it can't be redefined while it's running)
 if vim.fn.exists("*MiniThemeReload") == 0 then
   vim.cmd([[
 function MiniThemeReload() abort

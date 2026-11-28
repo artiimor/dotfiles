@@ -3,13 +3,13 @@ import QtQuick
 import Quickshell
 import Quickshell.Io
 
-// Traducciones. Los textos van en inglés en el código y tr() los busca en
-// i18n/<idioma>.json (idioma de LC_ALL > LC_MESSAGES > LANG). Sin archivo o
-// sin la clave se queda el inglés. Marcadores %1, %2…
+// Translations. Texts are in English in the code and tr() looks them up in
+// i18n/<language>.json (language from LC_ALL > LC_MESSAGES > LANG). With no file or
+// no key the English text stays. Placeholders %1, %2…
 Singleton {
     id: root
     readonly property string lang: (Quickshell.env("LC_ALL") || Quickshell.env("LC_MESSAGES") || Quickshell.env("LANG") || "").split(/[_.@]/)[0]
-    // blockAllReads: text() lee el archivo ya, así el primer pase de bindings sale traducido
+    // blockAllReads: text() reads the file right away, so the first binding pass comes out translated
     readonly property var dict: JSON.parse(file.text() || "{}")
 
     FileView {
@@ -25,9 +25,9 @@ Singleton {
         return r;
     }
 
-    // Formato de fecha sin año, sacado del formato largo de Qt.locale() (LC_TIME, el mismo
-    // que pone los nombres): "dddd, d 'de' MMMM" con es_ES, "dddd, MMMM d" con en_US.
-    // weekday: con el día de la semana; short: abreviado y sin comas ("ddd MMM d")
+    // Date format without year, taken from the long format of Qt.locale() (LC_TIME, the same
+    // one that provides the names): "dddd, d 'de' MMMM" with es_ES, "dddd, MMMM d" with en_US.
+    // weekday: with the day of the week; short: abbreviated and without commas ("ddd MMM d")
     function dateFormat(weekday, short) {
         let f = Qt.locale().dateFormat(Locale.LongFormat).replace(/[\s,.]*('[^']*'\s*)?y+[^\w']*/, "");
         if (!weekday)

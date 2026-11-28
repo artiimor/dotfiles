@@ -1,10 +1,10 @@
-// Servidor de notificaciones: sustituye a swaync. Guarda el historial,
-// decide qué sale como popup y lleva el "no molestar" y el panel.
+// Notification server: replaces swaync. Keeps the history,
+// decides what shows as a popup and handles "do not disturb" and the panel.
 //
-// Desde fuera (atajos de Hyprland):
-//   qs ipc call notifs toggle   abrir/cerrar el panel
-//   qs ipc call notifs dnd      no molestar
-//   qs ipc call notifs clear    borrar todas
+// From outside (Hyprland shortcuts):
+//   qs ipc call notifs toggle   open/close the panel
+//   qs ipc call notifs dnd      do not disturb
+//   qs ipc call notifs clear    clear all
 pragma Singleton
 
 import QtQuick
@@ -17,30 +17,30 @@ import qs.components
 Singleton {
     id: root
 
-    // Historial (las más nuevas al final)
+    // History (newest at the end)
     readonly property var list: server.trackedNotifications.values
     readonly property int count: list.length
 
-    // Las que se están mostrando ahora como popup (las más nuevas primero)
+    // The ones currently shown as popups (newest first)
     property var popups: []
 
     property bool dnd: false
     property bool centerOpen: false
 
-    // Hora de llegada de cada notificación (por id), para "hace 5 min". Se cambia
-    // sin avisar: se apunta antes de que exista la tarjeta que la lee. Al recargar
-    // qs las notificaciones siguen (keepOnReload) pero esto se pierde, y las que
-    // ya estaban no enseñan la hora hasta que llegan otras nuevas
+    // Arrival time of each notification (by id), for "5 min ago". Changed
+    // without notifying: recorded before the card reading it exists. On reloading
+    // qs the notifications stay (keepOnReload) but this is lost, and the ones
+    // already there don't show the time until new ones arrive
     property var times: ({})
 
-    // Reloj que avanza cada minuto para refrescar los "hace X min"
+    // Clock ticking every minute to refresh the "X min ago"
     readonly property date now: clock.date
     SystemClock {
         id: clock
         precision: SystemClock.Minutes
     }
 
-    // Que el clic fuera del panel que lo cierra no lo reabra si era en la campana
+    // So the click outside the panel that closes it doesn't reopen it if it was on the bell
     ReopenGuard { id: guard }
     function togglePanel() {
         if (centerOpen || guard.canOpen())
@@ -54,8 +54,8 @@ Singleton {
     }
     onCenterOpenChanged: if (centerOpen) popups = []
 
-    // Historial agrupado por app, como en swaync: [{ app, notifs }]
-    // Los grupos y las notificaciones de cada grupo van de más nueva a más vieja
+    // History grouped by app, like in swaync: [{ app, notifs }]
+    // Groups and the notifications in each group go from newest to oldest
     readonly property var groups: {
         const map = new Map();
         for (const n of list.slice().reverse()) {
@@ -67,7 +67,7 @@ Singleton {
         return [...map].map(([app, notifs]) => ({ app, notifs }));
     }
 
-    // Grupos desplegados en el panel (por nombre de app)
+    // Groups expanded in the panel (by app name)
     property var expanded: ({})
     function toggleGroup(app) {
         const e = Object.assign({}, expanded);
@@ -103,16 +103,16 @@ Singleton {
         imageSupported: true
 
         onNotification: n => {
-            // Antes de tracked: al entrar en el historial ya se crea su tarjeta
+            // Before tracked: entering the history already creates its card
             root.times[n.id] = new Date();
-            // Sin esto la notificación se descarta en cuanto se cierra el popup
+            // Without this the notification is discarded as soon as the popup closes
             n.tracked = true;
             n.closed.connect(() => {
                 root.hidePopup(n);
                 delete root.times[n.id];
             });
 
-            // Con "no molestar" solo salen las críticas
+            // With "do not disturb" only critical ones show
             const show = !root.centerOpen && (!root.dnd || n.urgency === NotificationUrgency.Critical);
             if (show)
                 root.popups = [n, ...root.popups.filter(p => p !== n)];

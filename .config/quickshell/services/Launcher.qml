@@ -1,22 +1,22 @@
-// Lanzador/menús: sustituye a wofi. Aquí está la lógica (qué lista se
-// muestra y qué pasa al elegir); el aspecto está en modules/LauncherWindow.qml.
+// Launcher/menus: replaces wofi. The logic lives here (which list is
+// shown and what happens on selection); the look is in modules/LauncherWindow.qml.
 //
-// Modos (también desde Hyprland con `qs ipc call launcher <modo>`):
-//   apps        lanzador de aplicaciones          (Super+Espacio)
-//   power       bloquear, suspender, apagar...    (Super+Esc, botón ⏻)
-//   clipboard   historial de cliphist             (Super+Ctrl+V)
-//   emoji       selector de emojis                (Super+.)
-//   profiles    perfil de energía                 (clic en el icono de la barra)
-//   themes      tema de colores y fuente          (Super+T)
-//   backgrounds fondo de pantalla del tema actual (Super+Ctrl+B)
-//   configs     perfil del escritorio: Modo Mac / Modo normal  (Super+Shift+T)
-//   keys        chuleta de atajos de Hyprland     (Super+?)
-//   menu        menú principal, como el de Omarchy (Super+M)
-//   style       estilo: tema, fuente, fondo, config y contraste (desde menu)
-//   themeTypes  temas oscuros o claros (desde style)
-//               (los submenús se abren en la misma ventana; ←/h vuelve al anterior)
-//   dmenu       menú genérico para scripts: lo usa scripts/dmenu-qs
-//               (wifi con networkmanager_dmenu, bluetooth con bzmenu, webapp)
+// Modes (also from Hyprland with `qs ipc call launcher <mode>`):
+//   apps        application launcher              (Super+Space)
+//   power       lock, suspend, shut down...       (Super+Esc, ⏻ button)
+//   clipboard   cliphist history                  (Super+Ctrl+V)
+//   emoji       emoji picker                      (Super+.)
+//   profiles    power profile                     (click on the bar icon)
+//   themes      color theme and font              (Super+T)
+//   backgrounds wallpaper of the current theme    (Super+Ctrl+B)
+//   configs     desktop profile: Mac Mode / Normal Mode  (Super+Shift+T)
+//   keys        Hyprland shortcut cheat sheet     (Super+?)
+//   menu        main menu, like Omarchy's         (Super+M)
+//   style       style: theme, font, background, config and contrast (from menu)
+//   themeTypes  dark or light themes (from style)
+//               (submenus open in the same window; ←/h goes back to the previous one)
+//   dmenu       generic menu for scripts: used by scripts/dmenu-qs
+//               (wifi with networkmanager_dmenu, bluetooth with bzmenu, webapp)
 pragma Singleton
 
 import QtQuick
@@ -31,20 +31,20 @@ Singleton {
     property bool open: false
     property string mode: ""
     property string prompt: ""
-    property bool password: false  // dmenu: ocultar lo que escribes
+    property bool password: false  // dmenu: hide what you type
     property var items: []         // [{ text, icon, glyph, sub, data }]
-    signal shown()                 // cada vez que se abre un modo o llega una pregunta de dmenu
+    signal shown()                 // every time a mode opens or a dmenu question arrives
 
-    // Cada modo: ancho de la ventana (como estaba en wofi), título, de dónde salen
-    // las filas (`items`, una función que se queda enlazada, o `proc`, un proceso
-    // que las rellena al terminar), si va sin buscador (menús cortos), si
-    // enseña la descripción corta (`sub`) a la derecha y sus pestañas (`tabs`:
-    // cada fila dice en cuál va con `tab`, su índice; cada pestaña tiene su
-    // búsqueda y su texto de ayuda en `tabPrompts`). Los que no tienen ancho
-    // propio (profiles, y dmenu sin -c) salen arriba a la derecha, junto a la
-    // barra, con 320 px; los demás, centrados.
+    // Each mode: window width (as it was in wofi), title, where the
+    // rows come from (`items`, a function that stays bound, or `proc`, a process
+    // that fills them when it finishes), whether it has no search box (short menus), whether
+    // it shows the short description (`sub`) on the right and its tabs (`tabs`:
+    // each row says which one it goes in with `tab`, its index; each tab has its own
+    // search and its hint text in `tabPrompts`). Those without their own
+    // width (profiles, and dmenu without -c) show up top right, next to the
+    // bar, at 320 px; the rest, centered.
     readonly property var modes: ({
-        // Sin título: la lupa ya dice que es un buscador
+        // No title: the magnifier already says it's a search box
         apps: { width: 360, prompt: "", items: () => root.apps, showSub: true },
         clipboard: { width: 640, prompt: I18n.tr("Clipboard"), proc: cliphist },
         emoji: { width: 420, prompt: "Emoji", items: () => root.emojis },
@@ -60,10 +60,10 @@ Singleton {
         backgrounds: { width: 420, prompt: I18n.tr("Background"), noSearch: true, proc: backgroundList },
         configs: { width: 260, prompt: "Config", noSearch: true, proc: configList },
         keys: { width: 520, prompt: I18n.tr("Shortcuts"), proc: binds, showSub: true },
-        // Menú principal, estilo y tipos de tema: cada fila abre el menú `data`
-        // (con `openTab`, solo esa pestaña, sin buscador ni barra de pestañas)
-        // salvo Estilo en Modo Mac, que abre la ventana Appearance de macshell,
-        // y el contraste, que se cambia con contrast-set
+        // Main menu, style and theme types: each row opens the menu `data`
+        // (with `openTab`, only that tab, without search box or tab bar)
+        // except Style in Mac Mode, which opens macshell's Appearance window,
+        // and contrast, which is changed with contrast-set
         menu: { width: 260, prompt: I18n.tr("Menu"), noSearch: true, showSub: true, items: () => [
             { text: I18n.tr("Style"), glyph: String.fromCodePoint(0xF00E3), sub: "›", data: Theme.mac ? "appearance" : "style" }
         ] },
@@ -96,17 +96,17 @@ Singleton {
     readonly property bool showSub: !!modeInfo.showSub
     readonly property var tabs: modeInfo.tabs ?? []
     readonly property string tabPrompt: (modeInfo.tabPrompts ?? [])[tab] ?? ""
-    property int tab: 0  // pestaña visible (índice en `tabs`)
-    property int openTab: -1  // pestaña pedida al abrir (menú de estilo); -1, la de siempre
-    readonly property bool fixedTab: openTab >= 0  // solo esa pestaña: sin buscador ni barra de pestañas
-    property int startIndex: 0  // fila elegida al abrir; al volver, la de la que se salió
+    property int tab: 0  // visible tab (index in `tabs`)
+    property int openTab: -1  // tab requested on open (style menu); -1, the usual one
+    readonly property bool fixedTab: openTab >= 0  // only that tab: no search box and no tab bar
+    property int startIndex: 0  // row selected on open; when going back, the one you left from
 
-    // Menús de los que se ha venido ({ mode, index }), para volver con ←/h.
-    // Se vacía al abrir un modo con toggle (atajo o IPC) o llegar un dmenu
+    // Menus we came from ({ mode, index }), to go back with ←/h.
+    // Cleared when a mode is opened with toggle (shortcut or IPC) or a dmenu arrives
     property var history: []
 
-    // Abre un modo, o lo cierra si ya estaba abierto (como `pkill wofi || wofi`).
-    // El menú principal también se cierra si está abierto uno de sus submenús
+    // Opens a mode, or closes it if it was already open (like `pkill wofi || wofi`).
+    // The main menu also closes if one of its submenus is open
     function toggle(m, float) {
         if (open && floatLaunch === !!float && (mode === m || (m === "menu" && history.length))) {
             close();
@@ -116,7 +116,7 @@ Singleton {
         }
     }
 
-    // Modo "apps" con floatLaunch (Super+Alt+Espacio): la app elegida se abre flotante
+    // "apps" mode with floatLaunch (Super+Alt+Space): the chosen app opens floating
     property bool floatLaunch: false
 
     function show(m, float, t) {
@@ -144,12 +144,12 @@ Singleton {
         open = false;
     }
 
-    // Si la fila abre un submenú en la misma ventana (menú, estilo y tipos de tema)
+    // Whether the row opens a submenu in the same window (menu, style and theme types)
     function opensMenu(item) {
         return ["menu", "style", "themeTypes"].includes(mode) && !!item && !!modes[item.data];
     }
 
-    // Vuelve al menú anterior, en la fila de la que se salió
+    // Goes back to the previous menu, on the row you left from
     function back() {
         const h = history[history.length - 1];
         history = history.slice(0, -1);
@@ -157,44 +157,44 @@ Singleton {
         startIndex = h.index;
     }
 
-    // Filas que llegan de un proceso o archivo: se descartan si mientras tanto
-    // se ha cerrado o cambiado de modo (si no, pisarían la lista del nuevo)
+    // Rows coming from a process or file: discarded if in the meantime
+    // it was closed or the mode changed (otherwise they would overwrite the new one's list)
     function loaded(m, list) {
         if (open && mode === m)
             items = list;
     }
 
-    // Líneas no vacías de la salida de un comando
+    // Non-empty lines of a command's output
     function lines(text) {
         return text.split("\n").filter(l => l);
     }
 
-    // Se llama al pulsar Enter o hacer clic. `typed` es lo escrito en el buscador.
+    // Called on Enter or click. `typed` is what was typed in the search box.
     function choose(item, typed) {
         const m = mode;
         if (m === "dmenu") {
-            // Como dmenu: si no hay coincidencia, devuelve lo escrito
+            // Like dmenu: if there is no match, returns what was typed
             answerDmenu(item ? item.text : typed);
             open = false;
             return;
         }
         if (!item)
             return;
-        // Menú, estilo y tipos de tema: el submenú se abre en la misma ventana, sin cerrarla
+        // Menu, style and theme types: the submenu opens in the same window, without closing it
         if (opensMenu(item)) {
             history = history.concat({ mode: m, index: items.indexOf(item) });
             show(item.data, false, item.openTab);
             return;
         }
         open = false;
-        // keys: solo es para mirar, elegir una fila cierra la chuleta
+        // keys: only for looking, picking a row closes the cheat sheet
 
         if (m === "apps") {
             const e = item.data;
             const cmd = e.runInTerminal ? ["ghostty", "-e", ...e.command] : e.command;
             if (root.floatLaunch) {
-                // Lo lanza Hyprland con la regla float (sigue al proceso a través de uwsm-app),
-                // centrada y al 65% de la pantalla como en el modo escritorio (no maximizada)
+                // Launched by Hyprland with the float rule (follows the process through uwsm-app),
+                // centered and at 65% of the screen like in desktop mode (not maximized)
                 const q = a => "'" + String(a).replace(/'/g, "'\\''") + "'";
                 const sh = ["uwsm-app", "--", ...cmd].map(q).join(" ");
                 Hypr.dispatch(`hl.dsp.exec_cmd(${JSON.stringify(sh)}, { float = true, size = { "monitor_w*0.65", "monitor_h*0.65" }, center = true })`);
@@ -217,16 +217,16 @@ Singleton {
         } else if (m === "emoji") {
             copyAndPaste(`printf '%s' "$1" | wl-copy`, item.glyph);
         } else if (m === "themes") {
-            // theme-set no reinicia Quickshell (tampoco en Modo Mac entre tema claro y
-            // oscuro): setsid solo lo separa de este proceso
+            // theme-set doesn't restart Quickshell (not even in Mac Mode between light and
+            // dark theme): setsid only detaches it from this process
             Quickshell.execDetached(["setsid", "-f", root.themesDir + (item.font ? "/font-set" : "/theme-set"), item.data]);
         } else if (m === "backgrounds") {
-            // "+": abre en Dolphin la carpeta de fondos del tema (current es un enlace al tema)
+            // "+": opens the theme's backgrounds folder in Dolphin (current is a link to the theme)
             Quickshell.execDetached(item.data === "+"
                 ? ["sh", "-c", `mkdir -p "$1" && exec uwsm-app -- xdg-open "$1"`, "sh", root.themesDir + "/current/backgrounds"]
                 : [root.themesDir + "/background-set", item.data]);
         } else if (m === "configs") {
-            // config-set reinicia Quickshell (este proceso incluido): setsid para que no muera con él
+            // config-set restarts Quickshell (this process included): setsid so it doesn't die with it
             Quickshell.execDetached(["setsid", "-f", root.themesDir + "/config-set", item.data]);
         } else if (m === "menu") {
             Quickshell.execDetached(["qs", "-p", Quickshell.shellDir + "/macshell", "ipc", "call", "appearance", "open"]);
@@ -235,8 +235,8 @@ Singleton {
         }
     }
 
-    // Copia y pega en la ventana activa (con Shift+Insert, que funciona en
-    // casi todas las apps). La espera es para que el foco vuelva a la ventana.
+    // Copies and pastes into the active window (with Shift+Insert, which works in
+    // almost every app). The wait is so focus returns to the window.
     function copyAndPaste(copyCmd, arg) {
         Quickshell.execDetached(["sh", "-c",
             copyCmd + ` && sleep 0.15 && hyprctl dispatch "hl.dsp.send_shortcut({ mods = 'SHIFT', key = 'Insert' })" >/dev/null`,
@@ -244,9 +244,9 @@ Singleton {
     }
 
     // ── Apps ──────────────────────────────────────────────
-    // Quickshell lee los .desktop poco a poco la primera vez que se piden, y
-    // los actualiza si instalas algo. Por eso es un binding que se recalcula
-    // solo, y se pide al arrancar para que esté lista al abrir el lanzador.
+    // Quickshell reads the .desktop files gradually the first time they are requested, and
+    // updates them if you install something. That's why it's a binding that recomputes
+    // itself, and it is requested at start-up so it's ready when the launcher opens.
     readonly property var apps: DesktopEntries.applications.values
         .filter(e => !e.noDisplay)
         .sort((a, b) => a.name.localeCompare(b.name))
@@ -257,7 +257,7 @@ Singleton {
         id: cliphist
         command: ["cliphist", "list"]
         stdout: StdioCollector {
-            // Cada línea: "<id>\t<vista previa>"
+            // Each line: "<id>\t<preview>"
             onStreamFinished: root.loaded("clipboard", root.lines(text).map(l => ({
                 text: l.slice(l.indexOf("\t") + 1).replace(/\s+/g, " ").slice(0, 200),
                 data: l
@@ -266,7 +266,7 @@ Singleton {
     }
 
     // ── Emojis ────────────────────────────────────────────
-    // Se lee una vez de emoji-test.txt, sin variantes de tono de piel
+    // Read once from emoji-test.txt, without skin tone variants
     property var emojis: []
     FileView {
         path: "/usr/share/unicode/emoji/emoji-test.txt"
@@ -283,9 +283,9 @@ Singleton {
         }
     }
 
-    // ── Chuleta de atajos ─────────────────────────────────
-    // Sale de `hyprctl binds`: solo los atajos con { description = "..." } en
-    // hypr/config/*.lua, así que está siempre al día con la config.
+    // ── Shortcut cheat sheet ─────────────────────────────────
+    // Comes from `hyprctl binds`: only the shortcuts with { description = "..." } in
+    // hypr/config/*.lua, so it's always up to date with the config.
     Process {
         id: binds
         command: ["hyprctl", "binds", "-j"]
@@ -294,7 +294,7 @@ Singleton {
                 const mods = [[64, "Super"], [4, "Ctrl"], [8, "Alt"], [1, "Shift"]];
                 const keyName = k => {
                     if (k === "code:10")
-                        return "1-0"; // los bucles de workspaces solo describen el 1
+                        return "1-0"; // the workspace loops only describe 1
                     const m = k.match(/^code:(\d+)$/);
                     if (m && +m[1] >= 11 && +m[1] <= 19)
                         return String((+m[1] - 9) % 10);
@@ -314,20 +314,20 @@ Singleton {
         }
     }
 
-    // ── Temas de color ────────────────────────────────────
-    // Cada carpeta de ~/.config/themes con un theme.json es un tema; al elegir
-    // uno se ejecuta theme-set, que recolorea todo (ver ese script). Cada fila
-    // lleva su paleta (fondo y texto del terminal, acento y 6 colores ANSI) para
-    // verla antes de elegir, y un sol o una luna según sea claro u oscuro. Van en
-    // dos pestañas, oscuros y claros; se abre en la del tema activo. La tercera,
-    // Fuente, es la fuente monoespaciada (terminales, hyprbars...), aparte del
-    // tema: la pone font-set, y cada fila se escribe con su fuente. Cada pestaña
-    // tiene su propia búsqueda (ver LauncherWindow.qml). Desde el menú de estilo
-    // se abre en una sola pestaña fija, sin buscador ni pestañas (`fixedTab`).
+    // ── Color themes ────────────────────────────────────
+    // Every folder in ~/.config/themes with a theme.json is a theme; picking
+    // one runs theme-set, which recolors everything (see that script). Each row
+    // has its palette (terminal background and text, accent and 6 ANSI colors) to
+    // preview it before picking, and a sun or a moon depending on light or dark. They go in
+    // two tabs, dark and light; it opens on the active theme's tab. The third,
+    // Font, is the monospace font (terminals, hyprbars...), separate from the
+    // theme: set by font-set, and each row is written in its font. Each tab
+    // has its own search (see LauncherWindow.qml). From the style menu
+    // it opens on a single fixed tab, without search box or tabs (`fixedTab`).
     readonly property string themesDir: Quickshell.env("HOME") + "/.config/themes"
 
-    // Nerd Fonts cuyo nombre no es el de la fuente original (licencia): para
-    // encontrarlas también buscando el original
+    // Nerd Fonts whose name isn't the original font's (license): so
+    // they are also found by searching for the original
     readonly property var fontAliases: ({
         BlexMono: "IBM Plex Mono",
         CaskaydiaCove: "Cascadia Code",
@@ -340,15 +340,15 @@ Singleton {
         Hurmit: "Hermit"
     })
 
-    // Marca del elemento actual en temas, fondos y configs
+    // Mark of the current item in themes, backgrounds and configs
     function curMark(isCur) {
         return isCur ? "  " + String.fromCodePoint(0xF012C) : "";
     }
 
     Process {
         id: themeList
-        // `theme-set --list`: cada línea, un JSON { dir, name, cur, light, bg, fg, colors };
-        // detrás, `font-set --list`: { font, cur }
+        // `theme-set --list`: each line, a JSON { dir, name, cur, light, bg, fg, colors };
+        // after it, `font-set --list`: { font, cur }
         command: ["sh", "-c", '"$1/theme-set" --list; "$1/font-set" --list', "sh", root.themesDir]
         stdout: StdioCollector {
             onStreamFinished: {
@@ -368,16 +368,16 @@ Singleton {
                     }
                     return {
                         text: t.name + root.curMark(t.cur),
-                        // Sol (claro) o luna (oscuro)
+                        // Sun (light) or moon (dark)
                         glyph: String.fromCodePoint(t.light ? 0xF0599 : 0xF0594),
                         palette: { bg: t.bg, fg: t.fg, colors: t.colors },
                         tab: t.light ? 1 : 0,
-                        cur: t.cur, // la ventana la deja elegida al abrir
+                        cur: t.cur, // the window selects it on open
                         keywords: t.dir,
                         data: t.dir
                     };
                 });
-                // Solo si sigue abierto el menú de temas (con ←/h se puede haber vuelto ya al de estilo)
+                // Only if the theme menu is still open (with ←/h you may already be back in the style one)
                 if (root.open && root.mode === "themes")
                     root.tab = root.openTab >= 0 ? root.openTab : list.find(i => i.cur && !i.font)?.tab ?? 0;
                 root.loaded("themes", list);
@@ -385,8 +385,8 @@ Singleton {
         }
     }
 
-    // ── Fondos del tema actual ────────────────────────────
-    // `background-set` da "<fondo>\t<ruta>\t<1 si es el actual>"
+    // ── Backgrounds of the current theme ────────────────────────────
+    // `background-set` gives "<background>\t<path>\t<1 if current>"
     Process {
         id: backgroundList
         command: [root.themesDir + "/background-set"]
@@ -404,10 +404,10 @@ Singleton {
         }
     }
 
-    // ── Configs (perfiles del escritorio) ─────────────────
-    // `config-set --list` da "<perfil>\t<nombre>\t<1 si es el actual>" (solo Modo Mac
-    // y Modo normal: Mac claro u oscuro lo decide el tema de colores); al elegir
-    // uno, config-set cambia Hyprland, la barra, iconos y Qt (ver ese script)
+    // ── Configs (desktop profiles) ─────────────────
+    // `config-set --list` gives "<profile>\t<name>\t<1 if current>" (only Mac Mode
+    // and Normal Mode: Mac light or dark is decided by the color theme); picking
+    // one, config-set changes Hyprland, the bar, icons and Qt (see that script)
     Process {
         id: configList
         command: [root.themesDir + "/config-set", "--list"]
@@ -425,10 +425,10 @@ Singleton {
         }
     }
 
-    // ── dmenu (para scripts) ──────────────────────────────
-    // scripts/dmenu-qs deja las opciones en <dir>/items y espera la respuesta
-    // en el fifo <dir>/out. Cadena vacía = cancelado.
-    // Con `center` (dmenu-qs -c, lo usa webapp) sale centrado y más ancho.
+    // ── dmenu (for scripts) ──────────────────────────────
+    // scripts/dmenu-qs leaves the options in <dir>/items and waits for the answer
+    // in the fifo <dir>/out. Empty string = cancelled.
+    // With `center` (dmenu-qs -c, used by webapp) it shows centered and wider.
     property string dmenuDir: ""
     property var dmenuInfo: ({})
 

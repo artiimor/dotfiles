@@ -1,11 +1,11 @@
--- Grupos de resaltado comunes a los colorschemes propios (colors/basalt.lua,
--- colors/miami.lua). Cada uno solo define su paleta y llama a apply(nombre, paleta).
--- Fondo transparente como el resto de temas (se ve el de la terminal).
+-- Highlight groups shared by our own colorschemes (colors/basalt.lua,
+-- colors/miami.lua). Each one only defines its palette and calls apply(name, palette).
+-- Transparent background like the other themes (the terminal's shows through).
 --
--- Paleta: fg bright light grey dim muted faint line surface sel ink
+-- Palette: fg bright light grey dim muted faint line surface sel ink
 --         red yellow green blue cyan  diff_add diff_change diff_delete diff_text
---         term (16 colores ANSI)
--- Roles de sintaxis (opcionales, con valor por defecto):
+--         term (16 ANSI colors)
+-- Syntax roles (optional, with a default value):
 --         keyword func string const type op comment  keyword_bold
 local M = {}
 
@@ -72,7 +72,7 @@ function M.apply(name, c)
     SpellBad = { sp = c.red, undercurl = true },
     SpellCap = { sp = c.yellow, undercurl = true },
 
-    -- Sintaxis (treesitter enlaza sus @grupos a estos por defecto)
+    -- Syntax (treesitter links its @groups to these by default)
     Comment = { fg = r.comment, italic = true },
     Constant = { fg = r.const },
     String = { fg = r.string },
@@ -106,7 +106,7 @@ function M.apply(name, c)
     ["@markup.link"] = { fg = c.blue, underline = true },
     ["@markup.raw"] = { link = "String" },
 
-    -- Diagnósticos, diff y git
+    -- Diagnostics, diff and git
     DiagnosticError = { fg = c.red },
     DiagnosticWarn = { fg = c.yellow },
     DiagnosticInfo = { fg = c.blue },
@@ -140,7 +140,7 @@ function M.apply(name, c)
     vim.api.nvim_set_hl(0, group, hl)
   end
 
-  -- Terminal integrada con la paleta de la terminal del tema
+  -- Integrated terminal with the theme's terminal palette
   for i, col in ipairs(c.term) do
     vim.g["terminal_color_" .. (i - 1)] = col
   end

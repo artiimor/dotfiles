@@ -1,4 +1,4 @@
-# Miami night suave (los mismos colores que themes/miami/theme.json)
+# Soft Miami night (the same colors as themes/miami/theme.json)
 theme[main_bg]="#221d33"
 theme[main_fg]="#d9d6e6"
 theme[title]="#a99bd6"

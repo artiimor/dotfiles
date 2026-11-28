@@ -1,7 +1,7 @@
-# shellcheck: tests/run.sh lo lanza con -S warning (sin avisos de estilo).
-# .bashrc, .profile y los archivos de entorno no llevan shebang
+# shellcheck: tests/run.sh runs it with -S warning (no style warnings).
+# .bashrc, .profile and the environment files have no shebang
 shell=bash
-# Los source de rutas variables (~/.cargo/env, temas...) no se pueden seguir
+# Sources of variable paths (~/.cargo/env, themes...) can't be followed
 disable=SC1090,SC1091
-# Textos visibles con comillas tipográficas y "~/..." a propósito
+# Visible texts with typographic quotes and "~/..." on purpose
 disable=SC1111,SC2088

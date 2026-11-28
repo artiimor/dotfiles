@@ -1,5 +1,5 @@
-// Música (MPRIS): solo aparece cuando hay un reproductor.
-// Clic: pausa · Rueda: cambiar canción
+// Music (MPRIS): only shows when there is a player.
+// Click: pause · Wheel: change song
 import QtQuick
 import qs
 import qs.components
@@ -12,7 +12,7 @@ Island {
     visible: Player.player !== null
 
     BarIcon {
-        // Mismo criterio que Waybar: muestra el botón de lo que hará el clic
+        // Same rule as Waybar: shows the button for what the click will do
         icon: (Player.playing ? "󰏤" : "󰐊") + "  " + root.trackText()
         padding: 14
         pixelSize: Theme.fontSize

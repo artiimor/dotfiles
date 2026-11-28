@@ -4,14 +4,14 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell
 
-// Dibuja el menú de bandeja (DBus) de una app con nuestro aspecto. Los submenús se abren en el sitio.
+// Draws an app's tray menu (DBus) with our look. Submenus open in place.
 ColumnLayout {
     id: tm
     required property var item          // SystemTrayItem
     signal done()
-    property var stack: []              // submenús abiertos
+    property var stack: []              // open submenus
     readonly property var current: stack.length ? stack[stack.length - 1] : item.menu
-    // el popup se reutiliza al hacer clic derecho en otro icono: empezar en su nivel superior
+    // the popup is reused when right-clicking another icon: start at its top level
     onItemChanged: stack = []
 
     implicitWidth: 240

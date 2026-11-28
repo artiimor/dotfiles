@@ -1,18 +1,18 @@
-# Una variable por línea, `export K=V`: hypr/config/environment.lua lee este archivo
-# para que la sesión "Hyprland" sin uwsm tenga las mismas. TERM no se fija aquí: lo pone cada terminal.
+# One variable per line, `export K=V`: hypr/config/environment.lua reads this file
+# so the "Hyprland" session without uwsm gets the same ones. TERM isn't set here: each terminal sets it.
 export BROWSER=brave
-# Claude Code sin spinner en el título: lo cambiaba varias veces por segundo y hacía
-# redibujar hyprbars/Hyprland sin parar
+# Claude Code without the spinner in the title: it changed it several times per second and made
+# hyprbars/Hyprland redraw constantly
 export CLAUDE_CODE_DISABLE_TERMINAL_TITLE=1
 export QT_QPA_PLATFORM="wayland;xcb"
-# Qt con qt6ct: estilo Breeze, iconos Sur-Transparente y colores mac-dark (qt6ct/colors/mac-dark.conf).
-# Las apps KDE (Dolphin) leen además ~/.config/kdeglobals. Plasma ya no está instalado.
+# Qt with qt6ct: Breeze style, Sur-Transparente icons and mac-dark colors (qt6ct/colors/mac-dark.conf).
+# KDE apps (Dolphin) also read ~/.config/kdeglobals. Plasma is no longer installed.
 export QT_QPA_PLATFORMTHEME="qt6ct"
 export ELECTRON_OZONE_PLATFORM_HINT=auto
 export HYPRCURSOR_SIZE=24
-export XCURSOR_THEME="macOS"  # flecha negra de macOS (apple_cursor; lo instala install.sh)
+export XCURSOR_THEME="macOS"  # black macOS arrow (apple_cursor; installed by install.sh)
 export XCURSOR_SIZE=24
 
 
-# NVIDIA: install.sh detecta la gráfica y, si NVIDIA es la principal, escribe
-# sus variables en env.d/gpu (no en este archivo). En un portátil híbrido no las pone.
+# NVIDIA: install.sh detects the GPU and, if NVIDIA is the primary one, writes
+# its variables to env.d/gpu (not to this file). On a hybrid laptop it doesn't set them.

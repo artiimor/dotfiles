@@ -1,11 +1,11 @@
-# Validación de los theme.json: claves que leen theme-set, Quickshell (Theme.qml) y
-# nvim/colors/tema.lua, formato de los colores y que cada tema salga en los README.
+# theme.json validation: keys read by theme-set, Quickshell (Theme.qml) and
+# nvim/colors/tema.lua, color format and that every theme appears in the READMEs.
 import re
 
 from conftest import REPO, SYN_GROUPS, THEMES, THEMES_DIR, load_theme
 
-# Claves obligatorias por sección (sacadas de los generadores de theme-set, Theme.qml
-# y tema.lua; todos los temas las tienen). term.colors y hypr.border son listas
+# Required keys per section (taken from the theme-set generators, Theme.qml
+# and tema.lua; every theme has them). term.colors and hypr.border are lists
 REQUIRED = {
     "ui": ["accent", "accent2", "accentDim", "bg", "border", "butter", "cyan", "fg",
            "launcherBg", "launcherSel", "mint", "muted", "ok", "peach", "pink", "red",
@@ -15,8 +15,8 @@ REQUIRED = {
              "selection_foreground", "colors"],
     "gtk": ["accent", "accentBg", "accentFg", "card", "fg", "headerbar", "view", "window"],
 }
-# #rrggbb en todas partes; #rrggbbaa solo en hypr.* (hypr() de theme-set la admite).
-# En ui no: Quickshell leería #aarrggbb y rgb() de theme-set ignora el alfa
+# #rrggbb everywhere; #rrggbbaa only in hypr.* (theme-set's hypr() accepts it).
+# In ui no: Quickshell would read #aarrggbb and theme-set's rgb() ignores the alpha
 HEX = re.compile(r"#[0-9a-fA-F]{6}")
 HEX_ALPHA = re.compile(r"#[0-9a-fA-F]{6}([0-9a-fA-F]{2})?")
 
@@ -25,7 +25,7 @@ THEMES_README = (THEMES_DIR / "README.md").read_text()
 
 
 def colors(t):
-    # (ruta, valor) de cada color del tema: todo lo que no es name, nvim ni light
+    # (path, value) of each color of the theme: everything that isn't name, nvim or light
     def walk(v, path):
         if isinstance(v, dict):
             for k, x in v.items():
@@ -67,7 +67,7 @@ def test_light_booleano(theme):
 
 
 def test_en_tabla_del_readme(theme):
-    # Fila "| `carpeta` | Nombre ... | dark/**light** | colorscheme |" del README raíz
+    # README root "| `folder` | Name ... | dark/**light** | colorscheme |" row
     name, t = theme
     row = re.search(rf"^\| `{re.escape(name)}` \| (.*?) \| (.*?) \| (.*?) \|$", README, re.M)
     assert row, f"{name}: no está en la tabla de temas de README.md"

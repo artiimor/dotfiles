@@ -6,32 +6,32 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Networking
 
-// Ventana "Network" al estilo de Ajustes del Sistema de macOS. Se abre desde
-// "Network Settings…" en el panel Wi‑Fi en Hyprland (`ipc call network open`).
-// El estado en vivo sale de Quickshell.Networking; los detalles, las conexiones
-// guardadas y las VPN, de nmcli.
+// "Network" window in the style of macOS System Settings. Opened from
+// "Network Settings…" in the Wi‑Fi panel in Hyprland (`ipc call network open`).
+// Live state comes from Quickshell.Networking; details, saved
+// connections and VPNs, from nmcli.
 FloatingWindow {
     id: win
-    title: "Network" // sin traducir: lo busca una regla de hypr/config/windowrules.lua
+    title: "Network" // untranslated: a rule in hypr/config/windowrules.lua matches it
     visible: false
     color: Theme.window
     implicitWidth: 560
     implicitHeight: 660
     minimumSize: Qt.size(460, 420)
 
-    // Si ya está abierta (quizá en otro workspace) se recrea para que aparezca donde estás
+    // If it's already open (maybe on another workspace) it is recreated so it shows up where you are
     function show() {
         if (visible) { visible = false; Qt.callLater(() => { win.visible = true; }); }
         else visible = true;
         refresh();
     }
-    // Cerrada desde Hyprland (Super+Q, barra de título): visible no cambia solo, y
-    // sin esto seguirían el escaneo y el Timer de nmcli
+    // Closed from Hyprland (Super+Q, title bar): visible doesn't change by itself, and
+    // without this the scan and the nmcli Timer would keep running
     onClosed: visible = false
 
-    // ── datos de nmcli ──
+    // ── data from nmcli ──
     property var saved: []        // [{ name, uuid, type }]
-    property var ssids: ({})      // uuid → SSID de las Wi‑Fi guardadas (el NAME puede ser otro)
+    property var ssids: ({})      // uuid → SSID of saved Wi‑Fi networks (the NAME may differ)
     property var activeUuids: []
     property var wifiInfo: ({})   // IP4.ADDRESS[1], IP4.GATEWAY, IP4.DNS[1], GENERAL.HWADDR...
     property var wiredInfo: ({})
@@ -59,7 +59,7 @@ FloatingWindow {
         if (wiredDev) { wiredInfoProc.dev = wiredDev.name; wiredInfoProc.running = true; }
     }
 
-    // nmcli -t escapa los ":" de los valores como "\:"
+    // nmcli -t escapes ":" in values as "\:"
     function parseFields(text) {
         const out = {};
         text.split("\n").forEach(l => {
@@ -68,7 +68,7 @@ FloatingWindow {
         });
         return out;
     }
-    // (sin lookbehind: el motor de QML no lo soporta y no partía la línea)
+    // (no lookbehind: the QML engine doesn't support it and the line wasn't split)
     function splitTerse(l) { return l.replace(/\\:/g, "\x01").split(":").map(f => f.replace(/\x01/g, ":")); }
 
     Timer { id: refreshSoon; interval: 1200; onTriggered: win.refresh() }
@@ -93,7 +93,7 @@ FloatingWindow {
             }
         }
     }
-    // El SSID no sale en la lista: se pide por conexión y llega en bloques uuid/ssid
+    // The SSID isn't in the list: it is requested per connection and arrives in uuid/ssid blocks
     Process {
         id: ssidProc
         stdout: StdioCollector {
@@ -134,12 +134,12 @@ FloatingWindow {
         font.pointSize: 9
     }
 
-    // caja redondeada que agrupa filas, como en Ajustes del Sistema
+    // rounded box grouping rows, like in System Settings
     component Group: Tile { Layout.fillWidth: true; padding: 0; spacing: 0 }
 
     component RowDivider: Divider { Layout.leftMargin: 12; Layout.rightMargin: 12 }
 
-    // icono en un cuadrado de color, título y estado; los hijos van a la derecha
+    // icon in a colored square, title and status; the children go on the right
     component BadgeRow: RowLayout {
         id: br
         property string glyph: ""
@@ -162,7 +162,7 @@ FloatingWindow {
         Item { Layout.fillWidth: true }
     }
 
-    // fila de red: nombre, estado en gris y, a la derecha, los hijos
+    // network row: name, status in grey and, on the right, the children
     component NetRow: Rectangle {
         id: nr
         property string name: ""
@@ -309,7 +309,7 @@ FloatingWindow {
                             id: knownRow
                             name: known.ssid
                             status: known.live ? "" : I18n.tr("Not in range")
-                            // fuera de alcance no hay a qué conectarse (olvidarla sí se puede)
+                            // out of range there's nothing to connect to (forgetting it is still possible)
                             clickable: known.live !== null
                             onClicked: known.live.connect()
                             Glyph {
@@ -340,8 +340,8 @@ FloatingWindow {
                     color: Theme.dim; font.pointSize: 9.5
                 }
                 Repeater {
-                    // ScriptModel y no un array: reaprovecha las filas cuando cambia la
-                    // señal, así no se pierde la contraseña a medio escribir
+                    // ScriptModel and not an array: reuses the rows when the signal
+                    // changes, so a half-typed password isn't lost
                     model: ScriptModel { values: win.others }
                     delegate: ColumnLayout {
                         id: other
@@ -362,7 +362,7 @@ FloatingWindow {
                             Glyph { visible: other.secured; name: "lock"; color: Theme.dim }
                             Glyph { name: "wifi"; level: Sys.wifiBars(other.modelData.signalStrength); color: Theme.text }
                         }
-                        // contraseña para una red protegida nueva
+                        // password for a new protected network
                         RowLayout {
                             visible: other.asking
                             Layout.fillWidth: true

@@ -1,6 +1,6 @@
--- Basalt: casi monocromo, a juego con ~/.config/themes/basalt.
--- Grises para casi todo; solo strings, constantes y diagnósticos llevan un tono apagado.
--- Los grupos están en lua/scheme.lua.
+-- Basalt: almost monochrome, matching ~/.config/themes/basalt.
+-- Greys for almost everything; only strings, constants and diagnostics get a muted tone.
+-- The groups are in lua/scheme.lua.
 require("scheme").apply("basalt", {
   fg = "#d4d4d4", bright = "#f0f0f0", light = "#e6e6e6",
   grey = "#a0a0a0", dim = "#8a8a8a", muted = "#5c5c5c", faint = "#3a3a3a",

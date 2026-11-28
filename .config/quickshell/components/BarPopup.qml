@@ -1,14 +1,14 @@
-// Ventana que se despliega debajo de un elemento de la barra (menú de la
-// bandeja, mezclador de volumen...). Se cierra con close(), con Escape o haciendo clic fuera.
-// El tamaño lo pone quien la usa (implicitWidth / implicitHeight).
+// Window that drops down below a bar element (tray
+// menu, volume mixer...). Closed with close(), Escape or clicking outside.
+// The size is set by the user (implicitWidth / implicitHeight).
 //
 //   BarPopup {
 //       id: popup
-//       target: icono
+//       target: icon
 //       implicitWidth: 200; implicitHeight: 100
 //       Text { ... }
 //   }
-//   // en el icono: onClicked: popup.toggle()
+//   // on the icon: onClicked: popup.toggle()
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
@@ -41,10 +41,10 @@ PopupWindow {
 
     color: "transparent"
 
-    // Clic fuera = cerrar. Además le da el teclado al popup (para Escape).
-    // Con `visible` no llega a activarse: la ventana de un PopupWindow se crea al mostrarlo,
-    // y el grab se pediría sin ella. Las PanelWindow (lanzador, panel de notificaciones)
-    // ya la tienen creada aunque estén ocultas, así que a ellas les vale `visible`.
+    // Click outside = close. It also gives the keyboard to the popup (for Escape).
+    // With `visible` it never activates: a PopupWindow's window is created when shown,
+    // and the grab would be requested without it. PanelWindows (launcher, notification panel)
+    // already have it created even when hidden, so `visible` works for them.
     HyprlandFocusGrab {
         windows: [root]
         active: root.backingWindowVisible

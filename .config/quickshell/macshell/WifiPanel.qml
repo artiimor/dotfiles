@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Networking
 
-// Popup Wi‑Fi de la barra: interruptor, lista de redes y acceso a la ventana Network.
+// Bar Wi‑Fi popup: switch, network list and access to the Network window.
 ColumnLayout {
     id: wp
     signal done()
@@ -13,7 +13,7 @@ ColumnLayout {
     implicitWidth: 300
     spacing: 6
 
-    property string askingFor: ""   // red que espera contraseña
+    property string askingFor: ""   // network waiting for a password
 
     Component.onCompleted: Sys.scanUsers++
     Component.onDestruction: Sys.scanUsers--
@@ -46,8 +46,8 @@ ColumnLayout {
         Layout.fillWidth: true
         spacing: 0
         Repeater {
-            // ScriptModel y no un array: con cada cambio de señal llega una lista
-            // nueva y así se reaprovechan las filas (sin perder la contraseña a medio escribir)
+            // ScriptModel and not an array: every signal change brings a new list
+            // and this way the rows are reused (without losing a half-typed password)
             model: ScriptModel {
                 values: Sys.wifiDevice
                     ? Sys.wifiDevice.networks.values.slice()
@@ -113,7 +113,7 @@ ColumnLayout {
                     }
                 }
 
-                // contraseña para una red protegida nueva
+                // password for a new protected network
                 PasswordField {
                     visible: wp.askingFor === rowItem.modelData.name
                     width: parent.width

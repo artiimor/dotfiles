@@ -1,8 +1,8 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Módulo redondeado dentro de los popups y de la ventana Network (bloques del
-// Control Center, grupos de filas). Los hijos van en una columna con margen.
+// Rounded module inside the popups and the Network window (Control
+// Center blocks, row groups). Children go in a column with margin.
 Rectangle {
     id: tile
     default property alias content: col.data

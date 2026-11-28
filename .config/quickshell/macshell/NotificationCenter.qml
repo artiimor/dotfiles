@@ -6,12 +6,12 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Wayland
 
-// Centro de notificaciones: calendario y lista de notificaciones a la derecha de la pantalla.
+// Notification center: calendar and notification list on the right of the screen.
 PanelWindow {
     id: center
 
     property bool open: false
-    property var notifications: []   // notificaciones seguidas, de la más antigua a la más nueva
+    property var notifications: []   // tracked notifications, from oldest to newest
     signal closeRequested()
     signal clearRequested()
 
@@ -29,7 +29,7 @@ PanelWindow {
         regions: centerLoader.item ? centerLoader.item.blurRegions : []
     }
 
-    // el calendario y las tarjetas solo existen mientras está abierto
+    // the calendar and the cards only exist while it is open
     Loader {
         id: centerLoader
         anchors.fill: parent

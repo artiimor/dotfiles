@@ -1,4 +1,4 @@
-# ReGreet estilo macOS oscuro (a juego con el Modo Mac)
+# macOS dark style ReGreet (matching Mac Mode)
 
 [background]
 path = "/usr/share/backgrounds/greeter.jpg"
@@ -16,11 +16,11 @@ reboot = [ "systemctl", "reboot" ]
 poweroff = [ "systemctl", "poweroff" ]
 
 [appearance]
-# install.sh lo cambia por el hostname de la máquina
+# install.sh replaces it with the machine's hostname
 greeting_msg = "cachyos"
 
-# install.sh cambia locale por el de las fechas del sistema (localectl: "es_ES", "de_DE"...)
-# y format por su traducción (.config/themes/i18n/<idioma>.json); aquí, en inglés
+# install.sh replaces locale with the system date locale (localectl: "es_ES", "de_DE"...)
+# and format with its translation (.config/themes/i18n/<language>.json); here, in English
 [widget.clock]
 format = "%A, %B %d  ·  %H:%M"
 resolution = "500ms"

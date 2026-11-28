@@ -6,8 +6,8 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
-// Buscador estilo Spotlight de macOS (Cmd/Super + Espacio).
-// Apps, calculadora (qalc) y archivos de $HOME (fd).
+// macOS Spotlight-style search (Cmd/Super + Space).
+// Apps, calculator (qalc) and files in $HOME (fd).
 OverlayWindow {
     id: win
 
@@ -23,12 +23,12 @@ OverlayWindow {
     card.clip: true
     Behavior on card.height { NumberAnimation { duration: 120; easing.type: Easing.OutCubic } }
 
-    // ── búsqueda ──
+    // ── search ──
     readonly property string query: field.text.trim()
     property int sel: 0
     property var fileHits: []
     property string calc: ""
-    property string calcQuery: ""   // la cuenta de `calc` (puede ir por detrás de query hasta que responde qalc)
+    property string calcQuery: ""   // the `calc` expression (may lag behind query until qalc answers)
 
     readonly property var apps: DesktopEntries.applications.values.filter(e => !e.noDisplay)
 
@@ -56,8 +56,8 @@ OverlayWindow {
             .map(x => x.e);
     }
 
-    // Lista plana de filas: { kind: "header"|"top"|"item", type: "app"|"calc"|"file", ... }.
-    // La primera fila es "top": la cuenta si la hay; si no, el primer resultado de la primera sección.
+    // Flat list of rows: { kind: "header"|"top"|"item", type: "app"|"calc"|"file", ... }.
+    // The first row is "top": the calculation if there is one; otherwise, the first result of the first section.
     readonly property var rows: {
         const q = query;
         if (!q) return [];
@@ -82,8 +82,8 @@ OverlayWindow {
 
     onQueryChanged: {
         sel = 0;
-        // los resultados viejos se quedan hasta que llegan los nuevos (así la tarjeta no parpadea);
-        // solo se vacían cuando ya no aplican
+        // old results stay until the new ones arrive (so the card doesn't flicker);
+        // they are only cleared when they no longer apply
         if (query.length < 2) fileHits = [];
         fileTimer.restart();
         if (/\d/.test(query) && /[-+*/^%()]|sqrt|sin|cos|tan|log|pi|to |in /.test(query)) calcTimer.restart();
@@ -97,9 +97,9 @@ OverlayWindow {
         list.positionViewAtIndex(selectable[sel], ListView.Contain);
     }
 
-    // Se lanza al terminar de desvanecerse: si la capa se quitara después, Hyprland
-    // daría el teclado a la ventana de debajo y se lo quitaría a lo recién abierto
-    // con teclado exclusivo (las preguntas de webapp en el lanzador de la raíz)
+    // Launched once the fade-out ends: if the layer were removed later, Hyprland
+    // would give the keyboard to the window below and take it away from what was just opened
+    // with exclusive keyboard (webapp questions in the root launcher)
     property var launching: null
     function activate(r) {
         if (!r) return;
@@ -125,7 +125,7 @@ OverlayWindow {
         command: ["qalc", "-t", "-set", "decimal comma off", q]
         stdout: StdioCollector {
             onStreamFinished: {
-                // salida vacía: proceso cortado por una consulta más nueva
+                // empty output: process cut short by a newer query
                 const t = text.trim();
                 if (calcProc.q === win.query && t) {
                     win.calc = !/error|warning/i.test(t) && t !== calcProc.q ? t : "";
@@ -151,8 +151,8 @@ OverlayWindow {
         command: ["fd", "-i", "--max-results", "6", "--max-depth", "6", "-E", "node_modules", "-E", ".cache",
                   "--fixed-strings", "--", q, Quickshell.env("HOME")]
         stdout: StdioCollector { id: fileOut }
-        // en onExited y no en onStreamFinished: así se ignora un fd cortado (código != 0),
-        // que si no vaciaría la lista
+        // in onExited and not in onStreamFinished: this way an interrupted fd (code != 0) is ignored,
+        // which would otherwise empty the list
         onExited: code => {
             if (code !== 0 || fileProc.q !== win.query) return;
             const home = Quickshell.env("HOME");
@@ -240,7 +240,7 @@ OverlayWindow {
             readonly property bool isHeader: modelData.kind === "header"
             readonly property bool isTop: modelData.kind === "top"
             readonly property bool current: win.selectable[win.sel] === index
-            readonly property color softWhite: Qt.rgba(1, 1, 1, 0.75)   // texto secundario sobre la selección
+            readonly property color softWhite: Qt.rgba(1, 1, 1, 0.75)   // secondary text over the selection
             width: list.width
             height: isHeader ? 26 : isTop ? 54 : 34
 

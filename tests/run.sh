@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
-# Tests del repo: linters + pytest. Uso: tests/run.sh
-# En local se salta (con aviso) lo que no esté instalado; en CI (CI=true) eso es un fallo.
+# Repo tests: linters + pytest. Usage: tests/run.sh
+# Locally, whatever isn't installed is skipped (with a warning); in CI (CI=true) that's a failure.
 cd "$(dirname "$0")/.." || exit 1
 
 QMLLINT=${QMLLINT:-/usr/lib/qt6/bin/qmllint}
 results=()
 failed=0
 
-# check <nombre> <herramienta> <orden...>: ejecuta la orden y apunta el resultado
+# check <name> <tool> <command...>: runs the command and records the result
 check() {
 	local name=$1 tool=$2
 	shift 2
@@ -29,7 +29,7 @@ check() {
 	fi
 }
 
-# each <orden...> -- <archivos...>: la orden con cada archivo, falla si falla alguno
+# each <command...> -- <files...>: the command with each file, fails if any fails
 each() {
 	local cmd=() f rc=0
 	while [[ $1 != -- ]]; do cmd+=("$1"); shift; done
@@ -38,7 +38,7 @@ each() {
 	return "$rc"
 }
 
-# Scripts de shell: los de la raíz, el entorno de uwsm y los que tienen shebang de sh/bash
+# Shell scripts: the root ones, the uwsm environment and those with an sh/bash shebang
 shells=(install.sh .bashrc .bash_profile .profile .config/uwsm/env)
 while IFS= read -r -d '' f; do
 	IFS= read -r line <"$f"
@@ -53,7 +53,7 @@ check shellcheck shellcheck shellcheck -S warning "${shells[@]}"
 check "lua syntax (hypr)" luac luac -p "${hypr_lua[@]}"
 check "lua syntax (nvim)" luajit each luajit -bl -- "${nvim_lua[@]}"
 check luacheck luacheck luacheck -q "${hypr_lua[@]}" "${nvim_lua[@]}"
-# qmllint solo mira la sintaxis: sin Quickshell ni `import qs` resueltos, el resto es ruido
+# qmllint only checks syntax: without Quickshell or `import qs` resolved, the rest is noise
 check qmllint "$QMLLINT" "$QMLLINT" --only-explicit-categories "${qml[@]}"
 check pytest pytest env PYTHONDONTWRITEBYTECODE=1 pytest -q -p no:cacheprovider tests
 

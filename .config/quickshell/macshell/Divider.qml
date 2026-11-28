@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Separador horizontal de 1 px. Los márgenes los pone quien lo usa.
+// 1 px horizontal separator. Margins are set by the user.
 Rectangle {
     Layout.fillWidth: true
     implicitHeight: 1

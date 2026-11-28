@@ -1,6 +1,6 @@
-// Panel de notificaciones (Super+A o clic en la campana). Igual que el de
-// swaync: no molestar, música, volumen, brillo y el historial.
-// Se cierra con Esc o haciendo clic fuera.
+// Notification panel (Super+A or click on the bell). Same as
+// swaync's: do not disturb, music, volume, brightness and the history.
+// Closed with Esc or by clicking outside.
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -35,7 +35,7 @@ PanelWindow {
     implicitWidth: 420
     color: "transparent"
 
-    // Clic fuera del panel = cerrar
+    // Click outside the panel = close
     HyprlandFocusGrab {
         windows: [panel]
         active: panel.visible
@@ -57,7 +57,7 @@ PanelWindow {
             anchors.margins: 14
             spacing: 12
 
-            // ── Título ────────────────────────────────────
+            // ── Title ────────────────────────────────────
             RowLayout {
                 Layout.fillWidth: true
 
@@ -119,7 +119,7 @@ PanelWindow {
                 }
             }
 
-            // ── Música ────────────────────────────────────
+            // ── Music ────────────────────────────────────
             Rectangle {
                 id: media
                 visible: Player.player !== null
@@ -206,7 +206,7 @@ PanelWindow {
                 }
             }
 
-            // ── Volumen y brillo ──────────────────────────
+            // ── Volume and brightness ──────────────────────────
             SliderRow {
                 Layout.fillWidth: true
                 icon: "󰕾"
@@ -217,7 +217,7 @@ PanelWindow {
                 onMoved: v => Audio.setVolume(v)
             }
 
-            // Brillo: solo si hay panel retroiluminado (portátil)
+            // Brightness: only if there is a backlit panel (laptop)
             SliderRow {
                 visible: Brightness.available
                 Layout.fillWidth: true
@@ -250,8 +250,8 @@ PanelWindow {
                     lineHeight: 1.6
                 }
 
-                // Agrupadas por app. Un grupo con varias se ve plegado (solo
-                // la más nueva); clic en la cabecera para verlas todas.
+                // Grouped by app. A group with several is shown collapsed (only
+                // the newest); click the header to see them all.
                 ListView {
                     anchors.fill: parent
                     clip: true
@@ -269,7 +269,7 @@ PanelWindow {
                         width: ListView.view.width
                         spacing: 6
 
-                        // Cabecera del grupo (solo si hay más de una)
+                        // Group header (only if there is more than one)
                         Item {
                             visible: group.many
                             width: parent.width
@@ -313,8 +313,8 @@ PanelWindow {
                             }
                         }
 
-                        // Plegado: la más nueva, con las de debajo asomando
-                        // por abajo como un montón de tarjetas
+                        // Collapsed: the newest, with the ones below peeking
+                        // out at the bottom like a stack of cards
                         Item {
                             visible: group.many && !group.open
                             width: group.width

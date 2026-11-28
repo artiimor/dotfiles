@@ -1,8 +1,8 @@
--- Neovim sobrio con mini.nvim (el nvim por defecto).
--- LazyVim sigue disponible con el comando `lazyvim` (NVIM_APPNAME=nvim-lazyvim).
--- Plugins con vim.pack (nvim 0.12): mini.nvim, nvim-lspconfig y nvim-treesitter.
--- Los LSP se reutilizan del mason de LazyVim (~/.local/share/nvim-lazyvim/mason/bin)
--- si existe; si no, los del sistema.
+-- Sober Neovim with mini.nvim (the default nvim).
+-- LazyVim is still available with the `lazyvim` command (NVIM_APPNAME=nvim-lazyvim).
+-- Plugins with vim.pack (nvim 0.12): mini.nvim, nvim-lspconfig and nvim-treesitter.
+-- LSPs are reused from LazyVim's mason (~/.local/share/nvim-lazyvim/mason/bin)
+-- if it exists; otherwise, the system ones.
 
 vim.g.mapleader = " "
 vim.g.maplocalleader = "\\"
@@ -14,14 +14,14 @@ vim.pack.add({
   { src = "https://github.com/nvim-treesitter/nvim-treesitter", version = "main" },
 })
 
--- Opciones: pensadas para ventanas pequeñas -------------------------------------
+-- Options: designed for small windows -------------------------------------
 local o = vim.o
 o.number = true
 o.relativenumber = false
-o.numberwidth = 2 -- margen de números lo más estrecho posible
-o.signcolumn = "yes:1" -- una sola columna para diagnósticos/git, fija para que no baile
-o.laststatus = 3 -- una única statusline global
-o.showmode = false -- el modo ya lo enseña la statusline
+o.numberwidth = 2 -- number column as narrow as possible
+o.signcolumn = "yes:1" -- a single column for diagnostics/git, fixed so it doesn't jump around
+o.laststatus = 3 -- a single global statusline
+o.showmode = false -- the statusline already shows the mode
 o.cmdheight = 1
 o.wrap = false
 o.scrolloff = 4
@@ -39,11 +39,11 @@ o.mouse = "a"
 o.termguicolors = true
 o.pumheight = 8
 o.updatetime = 300
-o.fillchars = "eob: " -- sin las ~ al final del buffer
+o.fillchars = "eob: " -- no ~ at the end of the buffer
 
--- Colores: colors/tema.lua (mini.hues a partir de theme.json) -----------------
--- El mismo colorscheme lo usa LazyVim. Fondo transparente para kitty; al cambiar
--- de tema con theme-set se recarga solo (MiniThemeReload / al recuperar el foco).
+-- Colors: colors/tema.lua (mini.hues from theme.json) -----------------
+-- LazyVim uses the same colorscheme. Transparent background for kitty; when
+-- the theme changes with theme-set it reloads by itself (MiniThemeReload / on focus gain).
 vim.cmd.colorscheme("tema")
 
 -- mini.* ------------------------------------------------------------------------
@@ -54,7 +54,7 @@ vim.notify = require("mini.notify").make_notify()
 require("mini.statusline").setup({ use_icons = true })
 require("mini.extra").setup()
 require("mini.pick").setup({ window = { config = function()
-  -- picker centrado que se adapta al tamaño de la ventana
+  -- centered picker that adapts to the window size
   local h = math.floor(vim.o.lines * 0.6)
   local w = math.floor(vim.o.columns * 0.8)
   return { anchor = "NW", height = h, width = w, row = math.floor((vim.o.lines - h) / 2), col = math.floor((vim.o.columns - w) / 2) }
@@ -97,7 +97,7 @@ clue.setup({
 })
 
 -- Treesitter --------------------------------------------------------------------
--- Se instalan una vez (necesita el CLI tree-sitter, que ya tienes).
+-- Installed once (needs the tree-sitter CLI, which you already have).
 local parsers = { "c", "cpp", "lua", "ruby", "bash", "json", "markdown", "markdown_inline", "vim", "vimdoc", "query", "python", "toml", "yaml" }
 require("nvim-treesitter").install(parsers)
 vim.api.nvim_create_autocmd("FileType", {
@@ -109,19 +109,19 @@ vim.api.nvim_create_autocmd("FileType", {
 })
 
 -- LSP ---------------------------------------------------------------------------
--- Los mismos servidores que LazyVim instaló con mason.
+-- The same servers LazyVim installed with mason.
 local mason_bin = vim.fn.expand("~/.local/share/nvim-lazyvim/mason/bin")
 if vim.fn.isdirectory(mason_bin) == 1 then
   vim.env.PATH = mason_bin .. ":" .. vim.env.PATH
 end
--- lua_ls: solo el runtime de Neovim y mini.nvim; indexar todo el runtimepath cuesta
--- segundos de CPU y cientos de MB al abrir cualquier .lua
+-- lua_ls: only the Neovim runtime and mini.nvim; indexing the whole runtimepath costs
+-- seconds of CPU and hundreds of MB when opening any .lua
 local mini_dir = vim.fn.stdpath("data") .. "/site/pack/core/opt/mini.nvim"
 vim.lsp.config("lua_ls", {
   settings = { Lua = { workspace = { checkThirdParty = false, library = { vim.env.VIMRUNTIME, mini_dir } } } },
 })
--- clangd solo con errores: su log normal va por stderr y Neovim lo apunta como ERROR
--- en lsp.log, que crece sin límite (bajar el nivel de vim.lsp.log no lo evita)
+-- clangd only with errors: its normal log goes to stderr and Neovim records it as ERROR
+-- in lsp.log, which grows without limit (lowering the vim.lsp.log level doesn't prevent it)
 vim.lsp.config("clangd", { cmd = { "clangd", "--log=error" } })
 vim.lsp.enable({ "clangd", "ruby_lsp", "lua_ls" })
 vim.diagnostic.config({ virtual_text = { spacing = 1, prefix = "●" }, severity_sort = true, float = { border = "rounded" } })
@@ -131,7 +131,7 @@ vim.api.nvim_create_autocmd("LspAttach", {
   end,
 })
 
--- Atajos (parecidos a LazyVim para no sufrir) -----------------------------------
+-- Shortcuts (similar to LazyVim to avoid suffering) -----------------------------------
 local map = function(lhs, rhs, desc, mode)
   vim.keymap.set(mode or "n", lhs, rhs, { desc = desc })
 end
@@ -149,7 +149,7 @@ map("<Leader>fh", pick.help, "Ayuda")
 map("<Leader>fk", extra.keymaps, "Atajos")
 map("<Leader>fd", extra.diagnostic, "Diagnósticos")
 map("<Leader>fs", function() extra.lsp({ scope = "document_symbol" }) end, "Símbolos")
--- ␣e abre y cierra (toggle). Si ya está abierto, lo cierra en vez de reabrirlo.
+-- ␣e opens and closes (toggle). If it's already open, it closes it instead of reopening.
 local function files_toggle(use_cwd)
   local mf = require("mini.files")
   if mf.close() then
@@ -166,7 +166,7 @@ end
 map("<Leader>e", function() files_toggle(false) end, "Explorador (abrir/cerrar)")
 map("<Leader>E", function() files_toggle(true) end, "Explorador en cwd")
 
--- Dentro del explorador: abrir un archivo lo cierra, y Esc / ␣e también cierran.
+-- Inside the explorer: opening a file closes it, and Esc / ␣e also close it.
 vim.api.nvim_create_autocmd("User", {
   pattern = "MiniFilesBufferCreate",
   callback = function(ev)
@@ -191,7 +191,7 @@ map("<Leader>cd", vim.diagnostic.open_float, "Diagnóstico de la línea")
 map("<Leader>gg", function() vim.cmd("terminal lazygit") vim.cmd("startinsert") end, "lazygit")
 map("<Leader>gd", function() require("mini.diff").toggle_overlay(0) end, "Ver cambios (diff)")
 map("<Leader>gb", "<Cmd>Git blame -- %<CR>", "Blame")
--- Revertir / stagear cambios (mini.diff: gH = reset, gh = apply, gh también es el textobject del hunk)
+-- Revert / stage changes (mini.diff: gH = reset, gh = apply, gh is also the hunk textobject)
 vim.keymap.set("n", "<Leader>gr", "gHgh", { remap = true, desc = "Revertir cambio (hunk) bajo el cursor" })
 vim.keymap.set("x", "<Leader>gr", "gH", { remap = true, desc = "Revertir líneas seleccionadas" })
 vim.keymap.set("n", "<Leader>gR", "gHG", { remap = true, desc = "Revertir hasta el final del archivo" })
@@ -210,7 +210,7 @@ map("<Esc>", "<Cmd>nohlsearch<CR>", "Quitar resaltado")
 map("<C-s>", "<Cmd>write<CR>", "Guardar", { "n", "i", "x" })
 map("<Leader>qq", "<Cmd>qa<CR>", "Salir")
 
--- Modo compacto: en ventanas estrechas fuera números y signcolumn ----------------
+-- Compact mode: in narrow windows no numbers or signcolumn ----------------
 local function compact()
   local narrow = vim.o.columns < 70
   for _, win in ipairs(vim.api.nvim_list_wins()) do
@@ -223,7 +223,7 @@ local function compact()
 end
 vim.api.nvim_create_autocmd({ "VimResized", "VimEnter", "BufWinEnter" }, { callback = compact })
 
--- Autoguardado sencillo (como tu auto-save.nvim) --------------------------------
+-- Simple autosave (like your auto-save.nvim) -----------------------------------
 vim.api.nvim_create_autocmd({ "InsertLeave", "TextChanged" }, {
   callback = function(ev)
     local b = ev.buf
@@ -237,8 +237,8 @@ vim.api.nvim_create_autocmd({ "InsertLeave", "TextChanged" }, {
   end,
 })
 
--- Resaltar lo copiado
+-- Highlight yanked text
 vim.api.nvim_create_autocmd("TextYankPost", { callback = function() vim.hl.on_yank({ timeout = 150 }) end })
 
--- Configuración del usuario: lua/user.lua (install.sh no lo pisa) ---------------
+-- User configuration: lua/user.lua (install.sh doesn't overwrite it) ---------------
 require("user")

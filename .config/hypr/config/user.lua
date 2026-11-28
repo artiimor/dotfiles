@@ -1,4 +1,4 @@
--- Tus cambios propios. Se carga el último, así que puede añadir binds o cambiar opciones
--- de los demás módulos, e install.sh no lo sobrescribe. Por ejemplo:
+-- Your own changes. Loaded last, so it can add binds or change options
+-- from the other modules, and install.sh doesn't overwrite it. For example:
 -- hl.bind("SUPER + E", hl.dsp.exec_cmd("firefox"), { description = "Firefox" })
 -- hl.config({ general = { gaps_out = 8 } })

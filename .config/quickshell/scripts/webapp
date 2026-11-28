@@ -1,32 +1,32 @@
 #!/usr/bin/env bash
-# Crea o quita webapps: un .desktop en ~/.local/share/applications que abre la
-# web en una ventana propia del navegador (--app=URL), con su icono en icons/.
-# Las preguntas van por el lanzador de Quickshell (dmenu-qs, de esta carpeta),
-# que funciona igual en Modo normal y en Modo Mac. Lo llaman las entradas
-# "Create webapp" y "Remove webapp" del lanzador.
+# Creates or removes webapps: a .desktop in ~/.local/share/applications that opens the
+# site in its own browser window (--app=URL), with its icon in icons/.
+# The questions go through the Quickshell launcher (dmenu-qs, in this folder),
+# which works the same in Normal Mode and in Mac Mode. Called by the launcher's
+# "Create webapp" and "Remove webapp" entries.
 #
-#   webapp            pide nombre, URL e icono (URL de una imagen o el de la web)
-#   webapp --remove   elige una webapp y la borra, con su icono
+#   webapp            asks for name, URL and icon (URL of an image or the site's own)
+#   webapp --remove   pick a webapp and delete it, with its icon
 
 APPS="${XDG_DATA_HOME:-$HOME/.local/share}/applications"
 ICONS="$APPS/icons"
 menu() { "$(dirname "$0")/dmenu-qs" -c -p "$1"; }
-# Traducción (ver themelib.py): t "Text %1" arg
+# Translation (see themelib.py): t "Text %1" arg
 t() { python3 "$(dirname "$0")/../../themes/themelib.py" tr "$@"; }
 say() { notify-send -a Webapps "$@"; }
 fail() { say -u critical "$(t "Could not do it")" "$1"; exit 1; }
 
-# Pide que se elija "Yes, $1" frente a "No"
+# Asks to choose "Yes, $1" versus "No"
 confirm() {
 	local yes
 	yes=$(t "Yes, %1" "$1")
 	[ "$(printf '%s\n%s\n' "$(t No)" "$yes" | menu "$(t "Are you sure?")")" = "$yes" ]
 }
 
-# Valor de una clave en un .desktop
+# Value of a key in a .desktop
 field() { sed -n "s/^$2=//p" "$1" | head -n 1; }
 
-# Descarga una imagen ($1) a $ICONS/$2.<ext> y escribe la ruta; falla si no lo es
+# Downloads an image ($1) to $ICONS/$2.<ext> and prints the path; fails if it isn't one
 fetch_icon() {
 	local tmp ext
 	tmp=$(mktemp) || return 1
@@ -60,7 +60,7 @@ remove() {
 		[ "${names[$i]}" = "$choice" ] || continue
 		confirm "$(t "delete %1" "$choice")" || exit 0
 		f=$(field "${files[$i]}" Icon)
-		# El icono solo se borra si es uno de los nuestros
+		# The icon is only deleted if it's one of ours
 		case $f in "$ICONS"/*) rm -f -- "$f" ;; esac
 		rm -f -- "${files[$i]}"
 		say "$(t "Webapp deleted")" "$choice"
@@ -76,13 +76,13 @@ create() {
 	[ -n "$name" ] || fail "$(t "The name is empty")"
 
 	url=$(menu "$(t "URL (e.g. youtube.com)")" </dev/null) || exit 0
-	[[ $url =~ ^[[:alpha:]]+:// ]] || url="https://$url"  # sin esquema: https:// por defecto
+	[[ $url =~ ^[[:alpha:]]+:// ]] || url="https://$url"  # no scheme: https:// by default
 	[[ $url =~ ^https?://[^/[:space:]]+[^[:space:][:cntrl:]]*$ ]] || fail "$(t "Invalid URL")"
 	host=${url#*://}
 	host=${host%%[/?#]*}
 	host=${host##*@}
 
-	# Nombre del archivo: solo [a-z0-9-], así no puede llevar / ni ..
+	# File name: only [a-z0-9-], so it can't contain / or ..
 	slug=$(printf '%s' "$name" | iconv -f utf-8 -t ascii//TRANSLIT 2>/dev/null | tr '[:upper:]' '[:lower:]' |
 		sed 's/[^a-z0-9]\+/-/g; s/^-//; s/-$//')
 	[ -n "$slug" ] || fail "$(t "The name needs at least one letter or number")"
@@ -91,13 +91,13 @@ create() {
 		grep -q -- '--app=' "$file" || fail "$(t "There is already an application called %1" "$slug.desktop")"
 		confirm "$(t "replace “%1”" "$(field "$file" Name)")" || exit 0
 	fi
-	# Uno con el mismo nombre en el sistema quedaría tapado por este
+	# One with the same name in the system would be hidden by this one
 	IFS=: read -ra dirs <<<"${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 	for d in "${dirs[@]}"; do
 		[ -e "$d/applications/$slug.desktop" ] && fail "$(t "There is already a system application called %1" "$slug.desktop")"
 	done
 
-	# Navegador: el que usan las webapps de siempre o, si no, otro Chromium
+	# Browser: the one the usual webapps use or, if not, another Chromium
 	for browser in brave chromium google-chrome-stable ""; do
 		[ -n "$browser" ] && command -v "$browser" >/dev/null && break
 	done
@@ -110,8 +110,8 @@ create() {
 		fetch_icon "${url%%://*}://$host/apple-touch-icon.png" "$slug" ||
 		fetch_icon "${url%%://*}://$host/favicon.ico" "$slug" || echo web-browser)
 
-	# Exec según la especificación desktop-entry: dentro de comillas se escapan
-	# \ " ` $ con \, y luego, por ser un valor de tipo string, cada \ se dobla; % va como %%
+	# Exec per the desktop-entry spec: inside quotes
+	# \ " ` $ are escaped with \, and then, being a string-type value, each \ is doubled; % becomes %%
 	arg=$(printf '%s' "$url" | sed 's/[\\"`$]/\\&/g; s/\\/\\\\/g; s/%/%%/g')
 	mkdir -p "$APPS"
 	cat >"$file" <<-EOF

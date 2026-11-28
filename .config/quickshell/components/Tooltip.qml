@@ -1,5 +1,5 @@
-// Tooltip que aparece debajo de `target` (o encima con `above`) cuando `show` es true.
-// Si quieres algo más que texto, mete hijos y deja `text` vacío.
+// Tooltip that appears below `target` (or above with `above`) when `show` is true.
+// If you want more than text, add children and leave `text` empty.
 import QtQuick
 import Quickshell
 import qs
@@ -13,8 +13,8 @@ PopupWindow {
     property bool above: false
     default property alias content: col.data
 
-    // Pequeño retraso para que no parpadee al pasar el ratón de largo.
-    // Cuenta desde que hay algo que enseñar (el primer hijo de col es el texto).
+    // Small delay so it doesn't flicker when the mouse just passes by.
+    // Counts from when there is something to show (the first child of col is the text).
     readonly property bool _wanted: show && (text !== "" || col.children.length > 1)
     property bool _ready: false
     Timer {
@@ -48,7 +48,7 @@ PopupWindow {
             Text {
                 visible: root.text !== ""
                 text: root.text
-                textFormat: Text.PlainText   // títulos, redes, dispositivos: vienen de fuera
+                textFormat: Text.PlainText   // titles, networks, devices: they come from outside
                 color: Theme.fg
                 font.family: Theme.font
                 font.pixelSize: Theme.fontSize

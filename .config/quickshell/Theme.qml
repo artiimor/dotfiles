@@ -1,8 +1,8 @@
-// Colores del tema activo: se leen de ~/.config/themes/current/theme.json
-// (sección "ui"). Cambiar de tema: Super+Ctrl+T o `~/.config/themes/theme-set <tema>`,
-// que avisa con `qs ipc call theme reload` y todo se recolorea al momento.
-// Los valores de respaldo de abajo son los de Miami night.
-// Se usa desde cualquier archivo como Theme.accent, Theme.barHeight...
+// Colors of the active theme: read from ~/.config/themes/current/theme.json
+// ("ui" section). Change theme: Super+Ctrl+T or `~/.config/themes/theme-set <theme>`,
+// which notifies with `qs ipc call theme reload` and everything is recolored at once.
+// The fallback values below are Miami night's.
+// Used from any file as Theme.accent, Theme.barHeight...
 pragma Singleton
 
 import QtQuick
@@ -13,9 +13,9 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    // Sección "ui" del theme.json del tema activo
+    // "ui" section of the active theme's theme.json
     property var ui: ({})
-    // "light": true en theme.json: tema claro (p. ej. la barra va más opaca)
+    // "light": true in theme.json: light theme (e.g. the bar is more opaque)
     property bool themeLight: false
 
     FileView {
@@ -33,16 +33,16 @@ Singleton {
         }
     }
 
-    // Perfil del escritorio (lo escribe config-set): en "mac" y "mac-light" (Modo Mac
-    // con un tema oscuro o claro; con macshell instalado) las ventanas de aquí que se
-    // siguen usando (lanzador y sus menús, OSD, polkit, dock) copian el aspecto de
-    // macshell en vez del tema de colores.
-    // Sin archivo: "mac" si está macshell. "mac" sin macshell = "default".
-    // Se vigila porque theme-set pasa de "mac" a "mac-light" y al revés sin reiniciar qs
-    // (macLight cambia al momento). Pero mac (qué barra y qué notificaciones hay) se
-    // queda con el valor del arranque: de Modo Mac a normal o al revés config-set
-    // reinicia qs, y si cambiara antes la barra y el servidor de notificaciones de aquí
-    // aparecerían mientras macshell sigue viva
+    // Desktop profile (written by config-set): in "mac" and "mac-light" (Mac Mode
+    // with a dark or light theme; with macshell installed) the windows from here that are
+    // still used (launcher and its menus, OSD, polkit, dock) copy macshell's look
+    // instead of the color theme.
+    // No file: "mac" if macshell is present. "mac" without macshell = "default".
+    // Watched because theme-set switches between "mac" and "mac-light" without restarting qs
+    // (macLight changes at once). But mac (which bar and notifications exist)
+    // keeps its start-up value: going from Mac Mode to normal or back, config-set
+    // restarts qs, and if it changed earlier the bar and notification server from here
+    // would appear while macshell is still alive
     FileView {
         id: profileFile
         path: Quickshell.env("HOME") + "/.local/state/desktop-profile"
@@ -65,20 +65,20 @@ Singleton {
         onLoaded: root.macChecked = true
         onLoadFailed: root.macChecked = true
     }
-    // Las comprobaciones pueden acabar después de crearse este singleton: hasta que
-    // profileReady sea true no se sabe aún si manda macshell (shell.qml lo espera
-    // para no quedarse con el servidor de notificaciones en Modo Mac)
+    // The checks may finish after this singleton is created: until
+    // profileReady is true it isn't known yet whether macshell is in charge (shell.qml waits
+    // for it so it doesn't grab the notification server in Mac Mode)
     property bool profileChecked: false
     property bool macChecked: false
     readonly property bool profileReady: profileChecked && macChecked
     readonly property string profile: profileFile.loaded ? profileFile.text().trim() : ""
-    property string startProfile: ""  // el perfil al arrancar ("" sin archivo)
+    property string startProfile: ""  // the profile at start-up ("" without file)
     readonly property bool mac: macshellFile.loaded && startProfile !== "default"
     readonly property bool macLight: mac && profile === "mac-light"
 
-    // Aumentar contraste ("1" en ~/.local/state/increased-contrast; lo cambia
-    // themes/contrast-set): fondos opacos, bordes marcados y texto apagado más claro.
-    // El script escribe el archivo con rename: FileView vigila la carpeta
+    // Increase contrast ("1" in ~/.local/state/increased-contrast; changed by
+    // themes/contrast-set): opaque backgrounds, marked borders and lighter muted text.
+    // The script writes the file with rename: FileView watches the folder
     FileView {
         id: contrastFile
         path: Quickshell.env("HOME") + "/.local/state/increased-contrast"
@@ -97,25 +97,25 @@ Singleton {
         }
     }
 
-    // El mismo color con otra opacidad: Theme.withAlpha(Theme.fg, 0.5)
+    // The same color with another opacity: Theme.withAlpha(Theme.fg, 0.5)
     function withAlpha(c: color, a: real): color {
         return Qt.rgba(c.r, c.g, c.b, a);
     }
 
-    // Un paso de rueda en una barra de 0 a 1 (d: +0.05 por paso hacia arriba).
-    // El volumen puede pasar de 1 (Pipewire lo permite): por encima, subir no hace
-    // nada y bajar quita d sin saltar a 1
+    // One wheel step on a 0 to 1 bar (d: +0.05 per step up).
+    // Volume can go above 1 (Pipewire allows it): above that, raising does
+    // nothing and lowering subtracts d without jumping to 1
     function wheelStep(v: real, d: real): real {
         return d > 0 ? (v < 1 ? Math.min(1, v + d) : v) : Math.max(0, v + d);
     }
 
-    // La pantalla con el foco (para las ventanas que solo salen en una)
+    // The focused screen (for windows that only show on one)
     readonly property ShellScreen focusedScreen: Quickshell.screens.find(s => s.name === Hyprland.focusedMonitor?.name)
         ?? Quickshell.screens[0]
 
-    // mac / mac-light: los colores de macshell (macshell/Theme.qml)
+    // mac / mac-light: macshell's colors (macshell/Theme.qml)
     readonly property color bgSolid: macLight ? "#f5f5f7" : mac ? "#28282b" : ui.bg ?? "#0d0b12"
-    readonly property color bg: withAlpha(bgSolid, contrast ? 1 : mac ? 0.88 : 0.85) // translúcido
+    readonly property color bg: withAlpha(bgSolid, contrast ? 1 : mac ? 0.88 : 0.85) // translucent
     readonly property color surface: macLight ? Qt.rgba(0, 0, 0, 0.07) : mac ? Qt.rgba(1, 1, 1, 0.10) : ui.surface ?? "#1c1826"
     readonly property color fg: macLight ? "#1d1d1f" : mac ? "#f5f5f7" : ui.fg ?? "#f0eff1"
     // Con contraste, a medio camino hacia fg
@@ -123,26 +123,26 @@ Singleton {
         withAlpha(fg, contrast ? 0.5 : 0))
     readonly property color accent: macLight ? "#007aff" : mac ? "#0a84ff" : ui.accent ?? "#848bbd"
     readonly property color accent2: mac ? accent : ui.accent2 ?? "#36f9f6"
-    readonly property color accentDim: mac ? Qt.darker(accent, 1.35) : ui.accentDim ?? "#6b6789" // para bordes y degradados
-    // Texto y símbolos sobre la fila elegida / botón principal
+    readonly property color accentDim: mac ? Qt.darker(accent, 1.35) : ui.accentDim ?? "#6b6789" // for borders and gradients
+    // Text and symbols on the selected row / primary button
     readonly property color onAccent: mac ? "white" : bgSolid
-    // Borde de las ventanas sueltas (OSD, polkit): fino y gris en mac
+    // Border of standalone windows (OSD, polkit): thin and grey in mac
     readonly property color frame: contrast ? withAlpha(fg, 0.75) : mac ? border : accentDim
     readonly property color red: ui.red ?? "#fe4450"
     readonly property color yellow: ui.yellow ?? "#fede5d"
 
-    // Pasteles: un color por función
+    // Pastels: one color per function
     readonly property color pink: ui.pink ?? "#e89bd0"
     readonly property color cyan: ui.cyan ?? "#86d4dc"
     readonly property color peach: ui.peach ?? "#f2b8a0"
     readonly property color butter: ui.butter ?? "#f0d99a"
     readonly property color mint: ui.mint ?? "#9fdcc0"
 
-    // Fondo del lanzador y de su fila elegida
+    // Launcher background and its selected row
     readonly property color launcherBg: mac ? bg : ui.launcherBg ?? "#1c2030"
     readonly property color launcherSel: mac ? accent : ui.launcherSel ?? "#2a3045"
 
-    // Borde fino de las islas
+    // Thin border of the islands
     readonly property color borderBase: ui.border ?? "#b893ce"
     readonly property color border: contrast ? withAlpha(fg, 0.5) : macLight ? Qt.rgba(0, 0, 0, 0.12) : mac ? Qt.rgba(1, 1, 1, 0.12)
         : withAlpha(borderBase, 0.25)
@@ -150,17 +150,17 @@ Singleton {
     readonly property string font: mac ? "Noto Sans" : "Inter"
     readonly property int fontSize: 13
     readonly property int iconSize: 12
-    readonly property int iconCell: 30 // ancho fijo de cada icono de la barra (glifos y bandeja)
+    readonly property int iconCell: 30 // fixed width of each bar icon (glyphs and tray)
 
     readonly property int barHeight: 26
-    readonly property int gap: 8      // separación entre islas y margen de la barra
+    readonly property int gap: 8      // spacing between islands and bar margin
     readonly property int radius: mac ? 14 : 10
-    readonly property int popupGap: 10 // separación entre la barra y sus popups y tooltips
+    readonly property int popupGap: 10 // spacing between the bar and its popups and tooltips
 
-    // Fondo de pantalla (también se usa, nítido y apenas oscurecido, en la pantalla de bloqueo)
+    // Wallpaper (also used, sharp and barely darkened, on the lock screen)
     readonly property string wallpaper: "file://" + Quickshell.env("HOME") + "/.config/backgrounds/wallpaper.jpg"
-    // Solo el escritorio: el fondo del tema (Super+Ctrl+B, themes/background-set);
-    // por defecto el prado con todos los pepes en color
+    // Desktop only: the theme's background (Super+Ctrl+B, themes/background-set);
+    // by default the meadow with all the pepes in color
     property string desktopWallpaper: "file://" + Quickshell.env("HOME") + "/.config/backgrounds/wallpaper-desktop.jpg"
     Process {
         id: backgroundProc
@@ -171,6 +171,6 @@ Singleton {
         }
     }
 
-    readonly property int anim: 250   // duración de las animaciones (ms)
+    readonly property int anim: 250   // animation duration (ms)
     readonly property int drawerAnim: 400
 }

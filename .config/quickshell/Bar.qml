@@ -1,4 +1,4 @@
-// La barra de una pantalla. Aquí se decide qué módulos van en cada lado.
+// The bar of one screen. This is where you decide which modules go on each side.
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -8,7 +8,7 @@ import qs.services
 PanelWindow {
     id: bar
 
-    // Variants (en shell.qml) rellena esto con la pantalla que toca
+    // Variants (in shell.qml) fills this with the right screen
     required property ShellScreen modelData
     screen: modelData
 
@@ -17,16 +17,16 @@ PanelWindow {
         left: true
         right: true
     }
-    // La ventana va pegada al borde para que el fondo definido llegue arriba del
-    // todo; el hueco de antes ahora son márgenes del contenido
+    // The window sits against the edge so the defined background reaches the very
+    // top; the old gap is now content margins
     implicitHeight: Theme.barHeight + Theme.gap
     color: "transparent"
     WlrLayershell.namespace: "quickshell-bar"
 
-    // Fondo: por defecto no hay, solo los iconos (en claro u oscuro según el
-    // fondo de pantalla, ver TopBar). Doble clic en un hueco vacío de la barra
-    // la "define": fondo liso casi opaco y una línea fina abajo. Se guarda en
-    // TopBar (sobrevive a los reinicios)
+    // Background: none by default, only the icons (light or dark depending on the
+    // wallpaper, see TopBar). Double-clicking an empty spot of the bar
+    // "defines" it: a flat, almost opaque background and a thin line below. Saved in
+    // TopBar (survives restarts)
     Rectangle {
         anchors.fill: parent
         color: Theme.withAlpha(Theme.bgSolid, 0.95)
@@ -43,8 +43,8 @@ PanelWindow {
         }
     }
 
-    // Detrás del contenido: los clics en iconos, workspaces y bandeja van a sus
-    // propias MouseArea; aquí solo llega lo que cae en un hueco vacío
+    // Behind the content: clicks on icons, workspaces and tray go to their
+    // own MouseArea; only what lands on an empty spot reaches this one
     MouseArea {
         anchors.fill: parent
         acceptedButtons: Qt.LeftButton
@@ -82,7 +82,7 @@ PanelWindow {
                 anchors.verticalCenter: parent.verticalCenter
                 spacing: Theme.gap
 
-                // Se esconde mientras el cajón de Status la tapa
+                // Hidden while the Status drawer covers it
                 Tray {
                     opacity: status.drawerOpen ? 0 : 1
                     Behavior on opacity { NumberAnimation { duration: Theme.anim } }

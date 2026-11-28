@@ -1,6 +1,6 @@
 import QtQuick
 
-// Slider grueso del Control Center de macOS, con el icono dentro de la barra.
+// Thick slider from the macOS Control Center, with the icon inside the bar.
 Item {
     id: s
     property real value: 0.5
@@ -10,8 +10,8 @@ Item {
     signal moved(real v)
     signal iconClicked()
 
-    // ancho de la zona del icono, a la izquierda: ahí el clic va al icono
-    // (silenciar) y no mueve el valor
+    // width of the icon area, on the left: there the click goes to the icon
+    // (mute) and doesn't move the value
     readonly property int iconZone: 26
 
     implicitHeight: 24
@@ -29,7 +29,7 @@ Item {
             color: Theme.sliderFill
         }
     }
-    // contorno con contraste, encima del relleno (la pista recorta a sus hijos)
+    // contrast outline, above the fill (the track clips its children)
     Rectangle {
         anchors.fill: track
         radius: track.radius

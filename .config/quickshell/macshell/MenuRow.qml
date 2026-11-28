@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Fila de menú estilo macOS: resaltado azul al pasar el ratón, check/icono/flecha de submenú opcionales.
+// macOS-style menu row: blue highlight on hover, optional check/icon/submenu arrow.
 Rectangle {
     id: r
     property string text: ""
@@ -12,7 +12,7 @@ Rectangle {
     property bool enabledItem: true
     signal triggered()
 
-    // resaltada: fondo de acento y contenido en blanco (como Spotlight), también en mac-light
+    // highlighted: accent background and white content (like Spotlight), also in mac-light
     readonly property bool lit: mouse.containsMouse && enabledItem
     readonly property color fg: lit ? "white" : Theme.text
 
@@ -38,7 +38,7 @@ Rectangle {
         Text {
             Layout.fillWidth: true
             text: r.text
-            textFormat: Text.PlainText   // nombres de redes, dispositivos, portapapeles...
+            textFormat: Text.PlainText   // network names, devices, clipboard...
             color: r.fg
             opacity: r.enabledItem ? 1 : 0.4
             font.pointSize: 9.5

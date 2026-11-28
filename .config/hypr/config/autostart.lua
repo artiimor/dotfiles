@@ -4,17 +4,17 @@
 local util = require("config.util")
 
 hl.on("hyprland.start", function()
-	-- Con uwsm el entorno de systemd/D-Bus ya lo prepara uwsm (y --all le metería
-	-- variables de la sesión que uwsm no quiere ahí); sin uwsm hace falta para los portales
+	-- With uwsm the systemd/D-Bus environment is already set up by uwsm (and --all would push
+	-- session variables uwsm doesn't want there); without uwsm the portals need it
 	if not UWSM then
 		hl.exec_cmd("dbus-update-activation-environment --systemd --all")
 	end
-	-- Quickshell (~/.config/quickshell): barra, fondo, notificaciones, OSD,
-	-- lanzador, pantalla de bloqueo y polkit. Sustituye a waybar, hyprpaper,
-	-- swaync, swayosd-server, wofi, hyprlock y hyprpolkitagent
+	-- Quickshell (~/.config/quickshell): bar, wallpaper, notifications, OSD,
+	-- launcher, lock screen and polkit. Replaces waybar, hyprpaper,
+	-- swaync, swayosd-server, wofi, hyprlock and hyprpolkitagent
 	hl.exec_cmd("qs & hypridle")
-	-- Perfil "mac": barra superior + Spotlight estilo macOS (macshell, en quickshell/macshell).
-	-- En "default" la barra la pone el propio qs (shell.qml mira el mismo perfil)
+	-- "mac" profile: top bar + macOS-style Spotlight (macshell, in quickshell/macshell).
+	-- In "default" the bar comes from qs itself (shell.qml reads the same profile)
 	if PROFILE_MAC then
 		hl.exec_cmd("qs -p " .. util.MACSHELL_DIR)
 	end

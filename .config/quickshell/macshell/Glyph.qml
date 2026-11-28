@@ -1,6 +1,6 @@
 import QtQuick
 
-// Iconos vectoriales pequeños dibujados a mano para que siempre casen con la barra (monocromos, estilo macOS).
+// Small hand-drawn vector icons so they always match the bar (monochrome, macOS style).
 Canvas {
     id: g
     property string name: ""
@@ -48,7 +48,7 @@ Canvas {
             c.beginPath(); c.moveTo(10.2, 10.2); c.lineTo(14, 14); c.stroke();
             break;
         case "bluetooth":
-        case "bluetooth-connected":   // con un punto a cada lado (dispositivo conectado)
+        case "bluetooth-connected":   // with a dot on each side (device connected)
             dim(!g.off);
             c.lineWidth = 1.5;
             c.beginPath();
@@ -146,14 +146,14 @@ Canvas {
             c.beginPath(); c.moveTo(8, 5.5); c.lineTo(8, 8); c.moveTo(3.5, 10.5); c.lineTo(3.5, 8);
             c.lineTo(12.5, 8); c.lineTo(12.5, 10.5); c.stroke();
             break;
-        case "gauge":   // indicador de sistema (memoria, temperatura, energía)
+        case "gauge":   // system indicator (memory, temperature, power)
             c.lineWidth = 1.6;
             c.beginPath(); c.arc(8, 10, 6.2, Math.PI * 0.85, Math.PI * 2.15); c.stroke();
             c.lineWidth = 1.7;
             c.beginPath(); c.moveTo(8, 10); c.lineTo(11, 6.2); c.stroke();
             c.beginPath(); c.arc(8, 10, 1.5, 0, Math.PI * 2); c.fill();
             break;
-        case "cup":     // cafeína: taza con vapor
+        case "cup":     // caffeine: cup with steam
             c.lineWidth = 1.5;
             c.beginPath(); c.moveTo(2.5, 6.5); c.lineTo(11, 6.5); c.lineTo(11, 11);
             c.arcTo(11, 14, 8, 14, 2.5); c.lineTo(5.5, 14); c.arcTo(2.5, 14, 2.5, 11, 2.5);
@@ -163,7 +163,7 @@ Canvas {
             c.beginPath(); c.moveTo(5, 1.5); c.quadraticCurveTo(6.2, 3, 5, 4.6);
             c.moveTo(8.3, 1.5); c.quadraticCurveTo(9.5, 3, 8.3, 4.6); c.stroke();
             break;
-        case "sunset":  // Night Shift: medio sol sobre el horizonte
+        case "sunset":  // Night Shift: half sun over the horizon
             c.beginPath(); c.arc(8, 11, 3.4, Math.PI, 0); c.closePath(); c.fill();
             c.lineWidth = 1.4;
             for (let i = 0; i < 5; i++) {
@@ -175,7 +175,7 @@ Canvas {
             }
             c.beginPath(); c.moveTo(1, 13.5); c.lineTo(15, 13.5); c.stroke();
             break;
-        case "contrast":    // aumentar contraste: círculo con la mitad derecha rellena
+        case "contrast":    // increase contrast: circle with the right half filled
             c.lineWidth = 1.5;
             c.beginPath(); c.arc(8, 8, 6, 0, Math.PI * 2); c.stroke();
             c.beginPath(); c.arc(8, 8, 6, -Math.PI / 2, Math.PI / 2); c.closePath(); c.fill();

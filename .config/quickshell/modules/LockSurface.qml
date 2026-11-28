@@ -1,5 +1,5 @@
-// Lo que se ve en cada pantalla al bloquear: el fondo de noche, la hora,
-// la fecha, el usuario, el campo de contraseña y la batería (como hyprlock).
+// What each screen shows when locked: the night background, the time,
+// the date, the user, the password field and the battery (like hyprlock).
 import QtQuick
 import QtQuick.Effects
 import Quickshell
@@ -10,8 +10,8 @@ Item {
     id: root
     anchors.fill: parent
 
-    // Fondo: el Pepe de noche (sin el sol del escritorio), nítido y apenas oscurecido
-    // para que la hora y la contraseña se sigan leyendo
+    // Background: the night Pepe (without the desktop's sun), sharp and barely darkened
+    // so the time and the password stay readable
     Image {
         id: wallpaper
         anchors.fill: parent
@@ -25,14 +25,14 @@ Item {
         brightness: -0.15
     }
 
-    // Texto sobre el fondo de noche (fecha, usuario, batería): con un tema claro
-    // (o Mac claro) el fg/muted del tema es oscuro y no se leería, así que va casi
-    // blanco y con sombra
+    // Text over the night background (date, user, battery): with a light theme
+    // (or Mac light) the theme's fg/muted is dark and wouldn't be readable, so it's almost
+    // white with a shadow
     readonly property bool lightText: Theme.themeLight || Theme.macLight
     readonly property color wallFg: lightText ? "#f5f5f7" : Theme.fg
     readonly property color wallMuted: lightText ? "#d8d8de" : Theme.muted
 
-    // La sombra de esos textos (y de la hora, siempre)
+    // The shadow of those texts (and of the time, always)
     Component {
         id: shadow
         MultiEffect {
@@ -88,7 +88,7 @@ Item {
         layer.effect: shadow
     }
 
-    // ── Contraseña ────────────────────────────────────────
+    // ── Password ────────────────────────────────────────
     Rectangle {
         id: field
         anchors.horizontalCenter: parent.horizontalCenter
@@ -98,7 +98,7 @@ Item {
         height: 50
         radius: Theme.radius
 
-        // Borde: degradado del acento; amarillo comprobando o con Bloq Mayús; rojo si falla
+        // Border: accent gradient; yellow while checking or with Caps Lock; red on failure
         readonly property color stateColor: Lock.failed ? Theme.red
             : Lock.checking || Lock.capsLock ? Theme.yellow
             : "transparent"
@@ -108,7 +108,7 @@ Item {
             GradientStop { position: 1; color: field.stateColor.a > 0 ? field.stateColor : Theme.accent }
         }
 
-        // Tiembla al fallar
+        // Shakes on failure
         SequentialAnimation {
             id: shake
             running: false
@@ -126,10 +126,10 @@ Item {
             anchors.fill: parent
             anchors.margins: 2
             radius: Theme.radius - 2
-            // Como Theme.bg, pero 0.85 también en Modo Mac (allí Theme.bg es 0.88)
+            // Like Theme.bg, but 0.85 also in Mac Mode (there Theme.bg is 0.88)
             color: Theme.withAlpha(Theme.bgSolid, 0.85)
 
-            // Puntos, uno por letra
+            // Dots, one per letter
             Row {
                 anchors.centerIn: parent
                 spacing: 8
@@ -158,14 +158,14 @@ Item {
             }
         }
 
-        // Recibe el teclado (invisible: lo que se ve son los puntos)
+        // Receives the keyboard (invisible: what you see are the dots)
         TextInput {
             id: input
             anchors.fill: parent
             opacity: 0
             focus: true
-            // Al escribir, el texto pasa a Lock.password; y si Lock lo vacía
-            // (tras un intento), se vacía aquí también
+            // While typing, the text goes to Lock.password; and if Lock clears it
+            // (after an attempt), it is cleared here too
             Connections {
                 target: Lock
                 function onPasswordChanged() {
@@ -191,7 +191,7 @@ Item {
         }
     }
 
-    // Batería, abajo a la derecha
+    // Battery, bottom right
     Text {
         anchors.right: parent.right
         anchors.bottom: parent.bottom

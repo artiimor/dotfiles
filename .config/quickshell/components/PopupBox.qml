@@ -1,4 +1,4 @@
-// Caja de los popups de la barra (BarPopup, Tooltip)
+// Box of the bar popups (BarPopup, Tooltip)
 import QtQuick
 import qs
 

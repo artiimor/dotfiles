@@ -7,8 +7,8 @@
 -- Or remove existing autocmds by their group name (which is prefixed with `lazyvim_` for the defaults)
 -- e.g. vim.api.nvim_del_augroup_by_name("lazyvim_wrap_spell")
 
--- Ruby: no formatear al guardar (con auto-save reescribía el código mientras
--- escribes). Para formatear a mano: <leader>cf
+-- Ruby: don't format on save (with auto-save it rewrote the code while
+-- typing). To format by hand: <leader>cf
 vim.api.nvim_create_autocmd("FileType", {
   pattern = { "ruby", "eruby" },
   callback = function()

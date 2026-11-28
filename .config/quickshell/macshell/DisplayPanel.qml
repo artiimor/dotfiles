@@ -1,7 +1,7 @@
 import QtQuick
 import QtQuick.Layouts
 
-// Menú de Pantalla de la barra (como el de macOS): brillo y Night Shift.
+// Bar Display menu (like macOS's): brightness and Night Shift.
 ColumnLayout {
     implicitWidth: 240
     spacing: 8

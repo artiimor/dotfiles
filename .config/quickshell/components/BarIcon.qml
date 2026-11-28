@@ -1,19 +1,19 @@
-// Un icono (o texto) clicable de la barra, con tooltip y rueda del ratón.
+// A clickable bar icon (or text), with tooltip and mouse wheel.
 //
 //   BarIcon {
 //       icon: "󰕾"
 //       color: Theme.accent
-//       hoverColor: Theme.red        // opcional: color con el ratón encima
+//       hoverColor: Theme.red        // optional: color on mouse hover
 //       tooltip: I18n.tr("Volume %1%", 50)
-//       onClicked: mouse => ...      // mouse.button dice qué botón
+//       onClicked: mouse => ...      // mouse.button tells which button
 //       onScrolledUp: ...
 //   }
 //
-// Si icon es solo un glifo (sin letras ni números), se centra por su tinta y no
-// por la caja de la fuente: los glifos de Nerd Font vienen de otra fuente (la de
-// respaldo) y cada uno tiene sus márgenes, así unos quedaban altos o torcidos.
-// Con cell > 0 el ancho es fijo (como mínimo cell): glifos de distinto ancho
-// quedan a la misma distancia unos de otros.
+// If icon is only a glyph (no letters or numbers), it is centered by its ink and not
+// by the font box: Nerd Font glyphs come from another font (the
+// fallback one) and each has its own margins, so some ended up high or crooked.
+// With cell > 0 the width is fixed (at least cell): glyphs of different widths
+// end up at the same distance from each other.
 import QtQuick
 import Quickshell
 import qs
@@ -29,20 +29,20 @@ Item {
     property bool italic: false
     property int padding: 10
     property int cell: 0
-    property bool clickable: true   // false: sin la manita (solo tooltip o rueda)
+    property bool clickable: true   // false: no hand cursor (only tooltip or wheel)
     readonly property bool hovered: mouse.containsMouse
 
     signal clicked(var mouse)
     signal scrolledUp
     signal scrolledDown
 
-    // Solo glifos: ni letras ni números (p. ej. "󰕾", "⏻" o "󰂯 󰕾")
+    // Glyphs only: no letters or numbers (e.g. "󰕾", "⏻" or "󰂯 󰕾")
     readonly property bool glyph: icon !== "" && !/[0-9A-Za-z\u00C0-\u024F]/.test(icon)
 
     implicitWidth: Math.max(cell, label.implicitWidth + padding * 2)
     implicitHeight: Theme.barHeight
 
-    // Caja de la tinta del glifo (relativa a la línea base)
+    // Ink box of the glyph (relative to the baseline)
     TextMetrics {
         id: ink
         font: label.font
@@ -51,13 +51,13 @@ Item {
 
     Text {
         id: label
-        // Redondeado a píxeles enteros para que no salga borroso
+        // Rounded to whole pixels so it doesn't come out blurry
         x: root.glyph ? Math.round((root.width - ink.tightBoundingRect.width) / 2 - ink.tightBoundingRect.x)
                       : Math.round((root.width - implicitWidth) / 2)
         y: root.glyph ? Math.round(root.height / 2 - baselineOffset - ink.tightBoundingRect.y - ink.tightBoundingRect.height / 2)
                       : Math.round((root.height - implicitHeight) / 2)
         text: root.icon
-        textFormat: Text.PlainText   // p. ej. el título de la canción (Media) viene de fuera
+        textFormat: Text.PlainText   // e.g. the song title (Media) comes from outside
         color: root.hovered ? root.hoverColor : root.color
         font.family: Theme.font
         font.pixelSize: root.pixelSize
@@ -84,7 +84,7 @@ Item {
         }
     }
 
-    // Solo se crea con el ratón encima y texto (el retraso del Tooltip tapa la creación)
+    // Only created with the mouse over it and text (the Tooltip delay hides the creation)
     LazyLoader {
         active: root.hovered && root.tooltip !== ""
 

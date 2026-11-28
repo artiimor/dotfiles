@@ -5,7 +5,7 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Services.Notifications
 
-// Una tarjeta de notificación al estilo macOS.
+// A macOS-style notification card.
 Item {
     id: card
 
@@ -18,7 +18,7 @@ Item {
     readonly property var actionList: notif ? notif.actions.filter(a => a.identifier !== "default") : []
     readonly property var defaultAction: notif ? notif.actions.find(a => a.identifier === "default") : null
 
-    // para que la ventana difumine justo detrás de la tarjeta (Theme.cardBlurs)
+    // so the window blurs right behind the card (Theme.cardBlurs)
     readonly property Region blur: Region { item: bg; radius: Theme.radius }
 
     implicitWidth: Theme.width
@@ -28,7 +28,7 @@ Item {
 
     Timer {
         interval: Theme.popupTimeout
-        // al pasar el ratón se para y al salir vuelve a empezar de cero, como en macOS
+        // on hover it pauses and on leave it starts again from zero, like in macOS
         running: card.popup && !card.hovered && !card.critical
         onTriggered: card.timedOut()
     }
@@ -111,7 +111,7 @@ Item {
                     elide: Text.ElideRight
                 }
 
-                // los botones de acción aparecen al pasar el ratón
+                // the action buttons appear on hover
                 RowLayout {
                     Layout.fillWidth: true
                     Layout.topMargin: 6
@@ -122,7 +122,7 @@ Item {
                         delegate: PillButton {
                             required property var modelData
                             Layout.fillWidth: true
-                            Layout.preferredWidth: 1   // todos del mismo ancho
+                            Layout.preferredWidth: 1   // all the same width
                             implicitHeight: 26
                             radius: 8
                             pointSize: 9
@@ -138,7 +138,7 @@ Item {
         }
     }
 
-    // botón de cerrar, arriba a la izquierda, solo al pasar el ratón
+    // close button, top left, only on hover
     Rectangle {
         x: -6; y: -6
         width: 20; height: 20; radius: 10

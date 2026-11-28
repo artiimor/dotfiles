@@ -32,7 +32,7 @@ require("lazy").setup({
   },
   install = { colorscheme = { "tokyonight", "habamax" } },
   checker = {
-    enabled = false, -- sin git fetch de todos los plugins cada hora: se actualiza a mano con :Lazy
+    enabled = false, -- no git fetch of every plugin each hour: update by hand with :Lazy
     notify = false, -- notify on update
   },
   performance = {

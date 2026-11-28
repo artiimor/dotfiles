@@ -5,13 +5,13 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 
-// Ventana "Appearance" al estilo de Ajustes del Sistema de macOS: modo (Mac o normal),
-// tema de colores, fondo de pantalla, fuente y aumentar contraste. Se abre desde
-// "Appearance Settings…" del Centro de control y con `ipc call appearance open`.
-// Los datos y los cambios van por los scripts de ~/.config/themes.
+// "Appearance" window in the style of macOS System Settings: mode (Mac or normal),
+// color theme, wallpaper, font and increase contrast. Opened from
+// the Control Center's "Appearance Settings…" and with `ipc call appearance open`.
+// Data and changes go through the scripts in ~/.config/themes.
 FloatingWindow {
     id: win
-    title: "Appearance" // sin traducir: lo busca una regla de hypr/config/windowrules.lua
+    title: "Appearance" // untranslated: a rule in hypr/config/windowrules.lua matches it
     visible: false
     color: Theme.window
     implicitWidth: 720
@@ -20,7 +20,7 @@ FloatingWindow {
 
     readonly property string themesDir: Quickshell.env("HOME") + "/.config/themes"
 
-    // Si ya está abierta (quizá en otro workspace) se recrea para que aparezca donde estás
+    // If it's already open (maybe on another workspace) it is recreated so it shows up where you are
     function show() {
         if (visible) { visible = false; Qt.callLater(() => { win.visible = true; }); }
         else visible = true;
@@ -29,13 +29,13 @@ FloatingWindow {
     }
     onClosed: visible = false
 
-    // ── datos de los scripts ──
+    // ── data from the scripts ──
     property var profiles: []     // [{ key, name, cur }]
     property var themes: []       // [{ dir, name, cur, light, bg, fg, colors }]
     property var backgrounds: []  // [{ name, path, cur }]
     property var fonts: []        // [{ font, cur }]
     property bool showLight: false
-    property bool syncFilter: false   // al abrir, el filtro va a la claridad del tema actual
+    property bool syncFilter: false   // on open, the filter goes to the current theme's lightness
     property bool fontsOpen: false
     readonly property string curFont: (fonts.find(f => f.cur) ?? { font: "" }).font
 
@@ -47,10 +47,10 @@ FloatingWindow {
     }
     function lines(text) { return text.split("\n").filter(l => l); }
 
-    // config-set reinicia macshell al pasar a Modo normal: setsid para que no muera con
-    // él. Lo demás (también el cambio entre Mac claro y oscuro) no la cierra: se relee todo
-    // sin tocar el filtro Dark/Light ni el desplazamiento. Con `list` y `key` (p. ej.
-    // "themes", "dir") la marca de elegido pasa al momento a esa fila, sin esperar a releer
+    // config-set restarts macshell when switching to Normal Mode: setsid so it doesn't die with
+    // it. Everything else (including switching between Mac light and dark) doesn't close it: everything is re-read
+    // without touching the Dark/Light filter or the scroll position. With `list` and `key` (e.g.
+    // "themes", "dir") the selected mark moves to that row at once, without waiting for the re-read
     function run(script, arg, list, key) {
         Quickshell.execDetached(["setsid", "-f", themesDir + "/" + script, arg]);
         if (list) win[list] = win[list].map(x => Object.assign({}, x, { cur: x[key] === arg }));
@@ -58,7 +58,7 @@ FloatingWindow {
     }
     Timer { id: refreshSoon; interval: 2000; onTriggered: win.refresh() }
 
-    // `config-set --list`: "<perfil>\t<nombre>\t<1 si es el actual>"
+    // `config-set --list`: "<profile>\t<name>\t<1 if current>"
     Process {
         id: profileProc
         command: [win.themesDir + "/config-set", "--list"]
@@ -69,7 +69,7 @@ FloatingWindow {
             })
         }
     }
-    // `theme-set --list`: un JSON por línea
+    // `theme-set --list`: one JSON per line
     Process {
         id: themeProc
         command: [win.themesDir + "/theme-set", "--list"]
@@ -82,7 +82,7 @@ FloatingWindow {
             }
         }
     }
-    // `background-set`: "<fondo>\t<ruta>\t<1 si es el actual>"
+    // `background-set`: "<background>\t<path>\t<1 if current>"
     Process {
         id: bgProc
         command: [win.themesDir + "/background-set"]
@@ -93,7 +93,7 @@ FloatingWindow {
             })
         }
     }
-    // `font-set --list`: un JSON { font, cur } por línea
+    // `font-set --list`: one JSON { font, cur } per line
     Process {
         id: fontProc
         command: [win.themesDir + "/font-set", "--list"]
@@ -107,10 +107,10 @@ FloatingWindow {
         font.pointSize: 9
     }
 
-    // caja redondeada que agrupa filas, como en Ajustes del Sistema
+    // rounded box grouping rows, like in System Settings
     component Group: Tile { Layout.fillWidth: true; padding: 0; spacing: 0 }
 
-    // fila con el nombre a la izquierda y los hijos a la derecha
+    // row with the name on the left and the children on the right
     component LabelRow: RowLayout {
         property string label: ""
         Layout.fillWidth: true
@@ -119,7 +119,7 @@ FloatingWindow {
         Text { Layout.fillWidth: true; text: parent.label; color: Theme.text; font.pointSize: 10 }
     }
 
-    // control segmentado de macOS: [{ key, label }], resalta el de current
+    // macOS segmented control: [{ key, label }], highlights the current one
     component Segmented: Rectangle {
         id: seg
         property var options: []
@@ -158,7 +158,7 @@ FloatingWindow {
         }
     }
 
-    // rejilla que reparte el ancho en columnas de al menos minWidth
+    // grid that splits the width into columns of at least minWidth
     component CardGrid: Flow {
         property real minWidth: 140
         readonly property int cols: Math.max(1, Math.floor((width + spacing) / (minWidth + spacing)))
@@ -189,7 +189,7 @@ FloatingWindow {
                 Layout.bottomMargin: 4
             }
 
-            // ── modo y fuente ──
+            // ── mode and font ──
             Group {
                 LabelRow {
                     label: I18n.tr("Mode")
@@ -200,7 +200,7 @@ FloatingWindow {
                     }
                 }
                 Divider { Layout.leftMargin: 12; Layout.rightMargin: 12 }
-                // menú desplegable de fuentes
+                // font drop-down menu
                 LabelRow {
                     label: I18n.tr("Font")
                     PillButton {
@@ -216,7 +216,7 @@ FloatingWindow {
                     clip: true
                     boundsBehavior: Flickable.StopAtBounds
                     model: win.fonts
-                    // al desplegarse, a la vista la fuente actual
+                    // when it opens, scroll the current font into view
                     onVisibleChanged: if (visible) positionViewAtIndex(win.fonts.findIndex(f => f.cur), ListView.Contain)
                     delegate: MenuRow {
                         required property var modelData
@@ -229,7 +229,7 @@ FloatingWindow {
                 }
             }
 
-            // ── tema de colores ──
+            // ── color theme ──
             RowLayout {
                 Layout.fillWidth: true
                 SectionTitle { Layout.fillWidth: true; text: I18n.tr("Theme") }
@@ -250,7 +250,7 @@ FloatingWindow {
                             required property var modelData
                             width: themeGrid.cellWidth
                             spacing: 6
-                            // vista previa: fondo, "Aa" en el texto y la paleta
+                            // preview: background, "Aa" in the text color and the palette
                             Rectangle {
                                 width: parent.width
                                 height: 64
@@ -299,7 +299,7 @@ FloatingWindow {
                 }
             }
 
-            // ── fondo de pantalla (los del tema actual) ──
+            // ── wallpaper (the current theme's) ──
             SectionTitle { text: I18n.tr("Wallpaper") }
             Group {
                 CardGrid {
@@ -327,7 +327,7 @@ FloatingWindow {
                             MouseArea { anchors.fill: parent; onClicked: if (!bg.modelData.cur) win.run("background-set", bg.modelData.name, "backgrounds", "name") }
                         }
                     }
-                    // "Añadir…": abre la carpeta de fondos del tema (current es un enlace al tema)
+                    // "Add…": opens the theme's backgrounds folder (current is a link to the theme)
                     Rectangle {
                         width: bgGrid.cellWidth
                         height: width * 0.625

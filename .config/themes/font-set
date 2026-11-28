@@ -1,31 +1,31 @@
 #!/usr/bin/env python3
-# Fuente monoespaciada de todo el escritorio, aparte del tema de colores (no va en
-# theme.json: cambiar de tema o `theme-set --reapply` no la tocan).
+# Monospace font for the whole desktop, separate from the color theme (not in
+# theme.json: changing theme or `theme-set --reapply` don't touch it).
 #
-#   font-set              lista las fuentes (* = la actual)
-#   font-set <familia>    la aplica, p.ej. font-set "JetBrainsMono Nerd Font"
-#   font-set --list       para el menú de Quickshell (Super+T, pestaña Fuente): una
-#                         línea JSON por fuente, { font, cur }
+#   font-set              lists the fonts (* = the current one)
+#   font-set <family>     applies it, e.g. font-set "JetBrainsMono Nerd Font"
+#   font-set --list       for the Quickshell menu (Super+T, Font tab): one
+#                         JSON line per font, { font, cur }
 #
-# Las fuentes son las Nerd Fonts monoespaciadas instaladas, una por familia (sin
-# las variantes "Mono", de iconos estrechos, ni "Propo"). La elegida se guarda en
-# ~/.local/state/font y se escribe un archivo pequeño por programa, que su config
-# incluye después de su fuente por defecto (sin elegir ninguna, se queda esa):
+# The fonts are the installed monospace Nerd Fonts, one per family (without
+# the "Mono" variants, with narrow icons, or "Propo"). The choice is saved in
+# ~/.local/state/font and a small file is written per program, which its config
+# includes after its default font (with none chosen, that one stays):
 #
-#   Ghostty     ghostty/font.ghostty (config-file en config.ghostty)   (al momento)
-#   hyprbars    hypr/font.conf      (lo lee desktopmode.lua, Modo normal) (al momento)
+#   Ghostty     ghostty/font.ghostty (config-file in config.ghostty)   (instantly)
+#   hyprbars    hypr/font.conf      (read by desktopmode.lua, Normal Mode) (instantly)
 #
-# hyprbars usa la variante "Propo" (proporcional) si está instalada. hyprlock (solo
-# de reserva si Quickshell no está) sigue con JetBrains Mono.
-# La interfaz de Quickshell y el Modo Mac siguen con su fuente sans (Theme.qml).
+# hyprbars uses the "Propo" (proportional) variant if installed. hyprlock (only
+# a fallback if Quickshell isn't running) keeps JetBrains Mono.
+# The Quickshell UI and Mac Mode keep their sans font (Theme.qml).
 #
-# Rutas y utilidades comunes con theme-set: themelib.py.
+# Paths and utilities shared with theme-set: themelib.py.
 
 import json
 import subprocess
 import sys
 
-sys.dont_write_bytecode = True  # sin __pycache__ en ~/.config/themes
+sys.dont_write_bytecode = True  # no __pycache__ in ~/.config/themes
 from themelib import CONF, HOME, notify, read_state, reload_terminals, run_quiet, tr, write
 
 STATE = f"{HOME}/.local/state/font"
@@ -33,20 +33,20 @@ HEADER = "Generado por font-set: no editar, elige la fuente con font-set (Super+
 
 
 def installed():
-    # {familia: es monoespaciada}, con el primer nombre de cada familia de fc-list
+    # {family: is monospace}, with the first name of each family from fc-list
     out = subprocess.run(["fc-list", "--format", "%{family[0]}\t%{spacing}\n"],
                          capture_output=True, text=True).stdout
     fams = {}
     for line in out.splitlines():
         fam, _, spacing = line.partition("\t")
-        # 100 = mono, 90 = dual (mono con glifos dobles: Iosevka, Zed Mono)
+        # 100 = mono, 90 = dual (mono with double-width glyphs: Iosevka, Zed Mono)
         fams[fam] = fams.get(fam, False) or spacing in ("90", "100")
     return fams
 
 
 def families(fams):
-    # Las Nerd Fonts monoespaciadas, sin las variantes "... Nerd Font Mono/Propo".
-    # Alguna (Monaco parcheada) no declara spacing: vale si su variante Mono es mono
+    # Monospace Nerd Fonts, without the "... Nerd Font Mono/Propo" variants.
+    # Some (patched Monaco) don't declare spacing: valid if their Mono variant is mono
     return sorted(f for f, mono in fams.items()
                   if f.endswith(" Nerd Font") and (mono or fams.get(f"{f} Mono")))
 
@@ -56,7 +56,7 @@ def apply(fam, fams):
     write(STATE, fam + "\n")
     write(f"{CONF}/ghostty/font.ghostty", f"# {HEADER}\nfont-family = {fam}\n")
     write(f"{CONF}/hypr/font.conf", f"# {HEADER}\n{propo}\n")
-    reload_terminals()  # Ghostty relee su config
+    reload_terminals()  # Ghostty re-reads its config
     run_quiet(["hyprctl", "reload"])  # hyprbars
     notify(tr("Font"), tr("Font"), fam)
 

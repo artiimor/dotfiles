@@ -1,13 +1,13 @@
-// Botón con texto (paneles, diálogos, acciones de las notificaciones).
+// Button with text (panels, dialogs, notification actions).
 //
 //   TextButton {
 //       text: I18n.tr("Clear")
-//       hoverColor: Theme.red        // fondo con el ratón encima (no primario)
+//       hoverColor: Theme.red        // background on mouse hover (not primary)
 //       onClicked: ...
 //   }
-// primary: true es el botón principal (fondo de acento). El resto se cambia
-// como en cualquier Rectangle (implicitHeight, color, border...) y el texto
-// con font y textColor.
+// primary: true is the main button (accent background). The rest is changed
+// like in any Rectangle (implicitHeight, color, border...) and the text
+// with font and textColor.
 import QtQuick
 import qs
 

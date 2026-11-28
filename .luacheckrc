@@ -1,7 +1,7 @@
--- luacheck: solo errores (0xx) y globales sin definir o mal escritas (1xx), nada de estilo
+-- luacheck: only errors (0xx) and undefined or misspelled globals (1xx), no style
 only = { "0", "1" }
 
--- Hyprland: API hl y globales que un archivo de config/ define y otros leen
+-- Hyprland: hl API and globals that one config/ file defines and others read
 files[".config/hypr"] = {
 	std = "lua54",
 	globals = {
@@ -12,7 +12,7 @@ files[".config/hypr"] = {
 	},
 }
 
--- Neovim (LuaJIT); MiniThemeReload la define colors/tema.lua para theme-set
+-- Neovim (LuaJIT); MiniThemeReload is defined by colors/tema.lua for theme-set
 local nvim = { std = "luajit", globals = { "vim", "MiniThemeReload" } }
 files[".config/nvim"] = nvim
 files[".config/nvim-lazyvim"] = nvim

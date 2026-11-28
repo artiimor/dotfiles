@@ -1,7 +1,7 @@
 import QtQuick
 
-// Interruptor estilo macOS. El tamaño se cambia con implicitWidth/implicitHeight:
-// la bola y el radio salen de la altura.
+// macOS-style switch. The size is changed with implicitWidth/implicitHeight:
+// the knob and the radius come from the height.
 Rectangle {
     id: sw
     property bool on: false

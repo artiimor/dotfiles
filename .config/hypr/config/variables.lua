@@ -1,7 +1,7 @@
 -- Hyprland default apps
 
--- ¿Sesión "Hyprland (uwsm-managed)"? El plugin de Hyprland de uwsm exporta esta
--- variable; en la sesión "Hyprland" normal (start-hyprland) no existe
+-- "Hyprland (uwsm-managed)" session? uwsm's Hyprland plugin exports this
+-- variable; in the plain "Hyprland" session (start-hyprland) it doesn't exist
 UWSM = os.getenv("UWSM_FINALIZE_VARNAMES") ~= nil
 
 TERMINAL = "ghostty"

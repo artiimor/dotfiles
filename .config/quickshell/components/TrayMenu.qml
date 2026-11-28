@@ -1,5 +1,5 @@
-// Menú del clic derecho de la bandeja, con el estilo de la barra.
-// Los submenús se abren dentro del mismo menú (con "Atrás" para volver).
+// Tray right-click menu, in the bar's style.
+// Submenus open inside the same menu (with "Back" to return).
 import QtQuick
 import Quickshell
 import Quickshell.Widgets
@@ -10,7 +10,7 @@ BarPopup {
 
     property var rootMenu: null     // SystemTrayItem.menu
 
-    // Pila de submenús abiertos; el último es el que se ve
+    // Stack of open submenus; the last one is the visible one
     property var stack: []
     readonly property var current: stack.length > 0 ? stack[stack.length - 1] : rootMenu
     onVisibleChanged: if (visible) stack = []
@@ -18,7 +18,7 @@ BarPopup {
     implicitWidth: Math.max(180, column.implicitWidth + 12)
     implicitHeight: column.implicitHeight + 12
 
-    // Solo carga el menú (por DBus) mientras está abierto
+    // Only loads the menu (over DBus) while it is open
     QsMenuOpener {
         id: opener
         menu: root.visible ? root.current : null
@@ -30,7 +30,7 @@ BarPopup {
         y: 6
         width: parent.width - 12
 
-        // "Atrás" (Back) cuando estás en un submenú
+        // "Back" when you are in a submenu
         MenuRow {
             visible: root.stack.length > 0
             label: I18n.tr("Back")
@@ -41,7 +41,7 @@ BarPopup {
         Repeater {
             model: opener.children
 
-            // Cada entrada es una fila o un separador, según lo que sea
+            // Each entry is a row or a separator, depending on what it is
             Column {
                 id: entry
                 required property QsMenuEntry modelData
@@ -62,7 +62,7 @@ BarPopup {
                 MenuRow {
                     readonly property QsMenuEntry e: entry.modelData
                     visible: !e.isSeparator
-                    label: e.text.replace(/_(?!_)/g, "") // quita los "_" de los atajos de teclado
+                    label: e.text.replace(/_(?!_)/g, "") // strips the "_" of keyboard shortcuts
                     enabled: e.enabled
                     icon: e.icon
                     leading: e.buttonType === QsMenuButtonType.None ? ""
@@ -82,7 +82,7 @@ BarPopup {
         }
     }
 
-    // Una fila del menú: [marca/icono] texto [flecha de submenú]
+    // A menu row: [check/icon] text [submenu arrow]
     component MenuRow: Rectangle {
         id: row
         property string label
@@ -126,7 +126,7 @@ BarPopup {
                 font.pixelSize: Theme.fontSize
                 font.bold: true
             }
-            // Hueco para que la flecha no pise el texto
+            // Room so the arrow doesn't overlap the text
             Item {
                 width: row.trailing !== "" ? 18 : 0
                 height: 1

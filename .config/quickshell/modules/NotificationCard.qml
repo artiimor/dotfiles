@@ -1,5 +1,5 @@
-// Una notificación: se usa tanto en los popups como en el panel.
-// Clic: acción por defecto (abrir la app) · Botón X: descartar
+// A notification: used both in the popups and in the panel.
+// Click: default action (open the app) · X button: dismiss
 import QtQuick
 import Quickshell
 import Quickshell.Widgets
@@ -8,8 +8,8 @@ import qs
 import qs.components
 import qs.services
 
-// El rectángulo de fuera es la barra de color de la izquierda (verde, gris
-// si es poco importante, rojo si es crítica); el de dentro, la tarjeta.
+// The outer rectangle is the color bar on the left (green, grey
+// if low priority, red if critical); the inner one, the card.
 Rectangle {
     id: root
 
@@ -26,9 +26,9 @@ Rectangle {
     radius: Theme.radius
     color: accent
 
-    // ── Tiempo en pantalla del popup (como en swaync) ──────
-    // Baja: 4 s · Normal: 6 s · Crítica: hasta que la cierres.
-    // Si pasas el ratón por encima, se espera.
+    // ── Popup time on screen (like in swaync) ──────
+    // Low: 4 s · Normal: 6 s · Critical: until you close it.
+    // If you hover over it, it waits.
     readonly property int timeout: critical ? 0
         : n.urgency === NotificationUrgency.Low ? 4000
         : 6000
@@ -38,7 +38,7 @@ Rectangle {
         onTriggered: Notifs.hidePopup(root.n)
     }
 
-    // Entrada deslizando desde la derecha (desde fuera de la ventana)
+    // Slides in from the right (from outside the window)
     x: popup ? width : 0
     Component.onCompleted: x = 0
     Behavior on x {
@@ -79,7 +79,7 @@ Rectangle {
         width: parent.width - 23
         spacing: 10
 
-        // Imagen de la notificación o, si no trae, el icono de la app
+        // Notification image or, if it has none, the app icon
         IconImage {
             id: icon
             readonly property string src: {
@@ -103,7 +103,7 @@ Rectangle {
             width: parent.width - (icon.visible ? icon.width + parent.spacing : 0)
             spacing: 3
 
-            // Título + hora + cerrar
+            // Title + time + close
             Item {
                 width: parent.width
                 height: summary.implicitHeight
@@ -157,7 +157,7 @@ Rectangle {
                 onLinkActivated: link => Qt.openUrlExternally(link)
             }
 
-            // Botones de acción (menos la de por defecto, que es el clic)
+            // Action buttons (except the default one, which is the click)
             Flow {
                 width: parent.width
                 spacing: 6

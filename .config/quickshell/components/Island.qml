@@ -1,5 +1,5 @@
-// Una "isla": cada grupo de módulos de la barra. Ya no lleva recuadro (la barra
-// tiene un degradado detrás para que se lea); solo coloca su contenido en fila.
+// An "island": each group of bar modules. It no longer has a frame (the bar
+// has a gradient behind it for legibility); it only lays out its content in a row.
 import QtQuick
 import qs
 

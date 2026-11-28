@@ -4,14 +4,14 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Services.Pipewire
 
-// Menú de Sonido de la barra (como el de macOS): volumen y salida de audio.
-// Todo va contra Pipewire, el mismo estado que usan el OSD y la barra normal.
+// Bar Sound menu (like macOS's): volume and audio output.
+// Everything goes against Pipewire, the same state used by the OSD and the normal bar.
 ColumnLayout {
     id: sp
     implicitWidth: 260
     spacing: 8
 
-    // salidas de audio reales (sin los streams de las apps)
+    // real audio outputs (without the apps' streams)
     readonly property var sinks: Pipewire.nodes.values.filter(n => n.isSink && !n.isStream && n.audio)
 
     Text {

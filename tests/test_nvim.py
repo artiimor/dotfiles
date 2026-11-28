@@ -1,6 +1,6 @@
-# Colorscheme "tema" de Neovim: por cada tema, nvim sin config del usuario carga
-# .config/nvim/colors/tema.lua con TEMA_THEME_JSON=<tema> y los grupos llevan los colores
-# del theme.json. Necesita mini.nvim (mini.hues): MINI_PATH (CI) o la copia de vim.pack.
+# "tema" Neovim colorscheme: for each theme, nvim without the user's config loads
+# .config/nvim/colors/tema.lua with TEMA_THEME_JSON=<theme> and the groups get the colors
+# from the theme.json. Requires mini.nvim (mini.hues): MINI_PATH (CI) or the vim.pack copy.
 import json
 import os
 import shutil
@@ -23,7 +23,7 @@ pytestmark = [
     pytest.mark.skipif(not MINI, reason="falta mini.nvim: define MINI_PATH con un checkout de nvim-mini/mini.nvim"),
 ]
 
-# Carga el colorscheme y vuelca los grupos y los errores a JSON (arg[1])
+# Loads the colorscheme and dumps the groups and errors to JSON (arg[1])
 SCRIPT = """
 vim.opt.rtp:prepend(vim.env.MINI_DIR)
 vim.opt.rtp:prepend(vim.env.NVIM_DIR)
@@ -70,8 +70,8 @@ def hexcolor(n):
 
 
 def expected(t):
-    # {(grupo, atributo): color} que tema.lua saca directamente del theme.json.
-    # Solo lo que no depende de la paleta de mini.hues (los huecos se omiten).
+    # {(group, attribute): color} that tema.lua takes directly from the theme.json.
+    # Only what doesn't depend on the mini.hues palette (gaps are omitted).
     ui = t.get("ui", {})
     term = t.get("term", {})
     nc = t.get("nvimColors", {})
@@ -99,7 +99,7 @@ def test_colorscheme(theme, tmp_path):
     exp = expected(t)
     got = {k: hexcolor(hl.get(k[0], {}).get(k[1])) for k in exp}
     assert got == exp
-    # fondo transparente y comentarios en cursiva
+    # transparent background and italic comments
     assert hl["Normal"].get("bg") is None
     if "comment" in t.get("nvimColors", {}).get("syn", {}):
         assert hl["Comment"].get("italic")

@@ -1,11 +1,11 @@
-// Icono + barra deslizante + porcentaje (volumen, brillo...).
+// Icon + slider + percentage (volume, brightness...).
 //   SliderRow {
 //       icon: "󰕾"
 //       value: 0.5                  // 0–1
 //       onMoved: v => ...
-//       onIconClicked: ...          // p. ej. silenciar
+//       onIconClicked: ...          // e.g. mute
 //   }
-// muted: icono de silencio y barra apagada (sigue respondiendo)
+// muted: mute icon and dimmed bar (still responds)
 import QtQuick
 import QtQuick.Layouts
 import qs

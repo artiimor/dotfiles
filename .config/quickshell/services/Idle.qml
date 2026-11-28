@@ -1,15 +1,15 @@
-// "Cafeína": si está activo, hypridle no apaga ni bloquea la pantalla.
+// "Caffeine": when active, hypridle doesn't turn off or lock the screen.
 //
-// El inhibidor de Wayland necesita una superficie, así que va en una ventana
-// propia de 1×1 px, transparente, sin clics ni hueco reservado, que solo existe
-// mientras está activo. Así no depende de la barra (Super+B la destruye).
-// Como todo singleton, se crea la primera vez que alguien usa Idle (el botón
-// de la barra, o shell.qml para que exista también en el Modo Mac) y a partir
-// de ahí vive hasta que se reinicia Quickshell.
+// The Wayland inhibitor needs a surface, so it lives in its own
+// 1×1 px window, transparent, with no clicks or reserved space, which only exists
+// while active. That way it doesn't depend on the bar (Super+B destroys it).
+// Like every singleton, it is created the first time something uses Idle (the bar
+// button, or shell.qml so it also exists in Mac Mode) and from then on
+// it lives until Quickshell restarts.
 //
-// Modo Mac: macshell no crea su propio inhibidor. Lo cambia con
-// `qs ipc call idle toggle`, lo pregunta con `qs ipc call idle get` y vigila
-// $XDG_RUNTIME_DIR/qs-idle-inhibited, que se reescribe aquí en cada cambio ("1" o "0").
+// Mac Mode: macshell doesn't create its own inhibitor. It toggles it with
+// `qs ipc call idle toggle`, queries it with `qs ipc call idle get` and watches
+// $XDG_RUNTIME_DIR/qs-idle-inhibited, which is rewritten here on every change ("1" or "0").
 pragma Singleton
 
 import QtQuick
@@ -22,10 +22,10 @@ Singleton {
 
     property bool inhibited: false
 
-    // FileView escribe aunque no haya leído nada (preload: false) y el path ya está
-    // puesto en onCompleted; la escritura es atómica (archivo temporal + rename) y
-    // FileView vigila también la carpeta, así que el de macshell sigue enterándose.
-    // Sin XDG_RUNTIME_DIR no se escribe (nada de /tmp, que es de todos).
+    // FileView writes even if it hasn't read anything (preload: false) and the path is already
+    // set in onCompleted; the write is atomic (temporary file + rename) and
+    // FileView also watches the folder, so macshell's keeps getting notified.
+    // Without XDG_RUNTIME_DIR nothing is written (no /tmp, which is shared by everyone).
     function save() {
         if (stateFile.path !== "")
             stateFile.setText(inhibited ? "1" : "0");
@@ -36,7 +36,7 @@ Singleton {
     FileView {
         id: stateFile
         path: Quickshell.env("XDG_RUNTIME_DIR") ? Quickshell.env("XDG_RUNTIME_DIR") + "/qs-idle-inhibited" : ""
-        preload: false   // solo se escribe
+        preload: false   // only written
         printErrors: false
     }
 

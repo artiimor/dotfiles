@@ -1,4 +1,4 @@
-# Tu configuración de Ghostty. Se carga después de config.ghostty, así que lo que
-# pongas aquí gana, e install.sh no pisa este archivo si ya existe.
-# Ejemplo:
+# Your Ghostty configuration. Loaded after config.ghostty, so whatever
+# you put here wins, and install.sh doesn't overwrite this file if it already exists.
+# Example:
 # font-size = 12

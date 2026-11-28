@@ -1,6 +1,6 @@
-// Reproductor de música (MPRIS) que enseñan la barra y el panel de
-// notificaciones: el que está sonando o, si no, el primero que haya.
-// playerctld es un "proxy" de playerctl, no un reproductor de verdad: fuera.
+// Music player (MPRIS) shown by the bar and the notification
+// panel: the one playing or, if none, the first one there is.
+// playerctld is a playerctl "proxy", not a real player: out.
 pragma Singleton
 
 import QtQuick

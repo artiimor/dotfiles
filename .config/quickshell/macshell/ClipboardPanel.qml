@@ -5,14 +5,14 @@ import QtQuick.Layouts
 import Quickshell
 import Quickshell.Io
 
-// Historial del portapapeles (cliphist).
+// Clipboard history (cliphist).
 ColumnLayout {
     id: cp
     signal done()
     implicitWidth: 300
     spacing: 1
 
-    // líneas de cliphist ("<id>\t<vista previa>")
+    // cliphist lines ("<id>\t<preview>")
     property var lines: []
 
     Process {

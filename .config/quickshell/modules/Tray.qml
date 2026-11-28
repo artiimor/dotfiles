@@ -1,6 +1,6 @@
-// Bandeja del sistema. Clic: abrir la app · Clic derecho: su menú
+// System tray. Click: open the app · Right click: its menu
 // (components/TrayMenu.qml).
-// Se oculta si no hay ningún icono.
+// Hidden if there are no icons.
 import QtQuick
 import Quickshell.Services.SystemTray
 import Quickshell.Widgets
@@ -20,7 +20,7 @@ Island {
             required property SystemTrayItem modelData
             readonly property bool attention: modelData.status === Status.NeedsAttention
 
-            // Misma celda que los iconos de Status, así el paso entre iconos es igual
+            // Same cell as the Status icons, so the spacing between icons is the same
             implicitWidth: Theme.iconCell
             implicitHeight: Theme.barHeight
 
@@ -34,8 +34,8 @@ Island {
 
             IconImage {
                 anchors.centerIn: parent
-                // Algo más pequeño que antes: con 16 abultaban más que los glifos de al
-                // lado (par, para que quede en píxeles enteros dentro de la celda)
+                // A bit smaller than before: at 16 they looked bigger than the glyphs next
+                // to them (even, so it stays on whole pixels inside the cell)
                 implicitSize: 14
                 source: trayItem.modelData.icon
             }

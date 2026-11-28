@@ -1,4 +1,4 @@
-// Calendario del mes, para el tooltip del reloj. Lunes primero.
+// Month calendar, for the clock tooltip. Monday first.
 import QtQuick
 import qs
 
@@ -6,12 +6,12 @@ Column {
     id: root
     spacing: 6
 
-    // Mes mostrado, relativo al actual (la rueda sobre el reloj lo mueve)
+    // Month shown, relative to the current one (the wheel over the clock moves it)
     property int offset: 0
     function shift(n) { offset += n; }
     function reset() { offset = 0; }
 
-    // Lo pasa el reloj de Center (si no, se quedaría en el día de arranque)
+    // Passed by the Center clock (otherwise it would stay on the start-up day)
     required property date today
     readonly property date month: new Date(today.getFullYear(), today.getMonth() + offset, 1)
 

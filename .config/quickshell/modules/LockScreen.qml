@@ -1,5 +1,5 @@
-// Bloqueo de sesión de Wayland: cubre todas las pantallas con LockSurface
-// hasta que Lock.locked vuelve a false (contraseña correcta).
+// Wayland session lock: covers every screen with LockSurface
+// until Lock.locked goes back to false (correct password).
 import QtQuick
 import Quickshell.Wayland
 import qs.services

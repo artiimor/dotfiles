@@ -1,22 +1,22 @@
--- Modo escritorio por workspace: las ventanas flotan,
--- se pueden minimizar y Quickshell enseña un dock abajo.
---   Super+Alt+D   activar/desactivar en el workspace actual
---   minimizar con el botón de hyprbars (va a special:minimized; se recupera desde el dock)
+-- Per-workspace desktop mode: windows float,
+-- can be minimized and Quickshell shows a dock at the bottom.
+--   Super+Alt+D   toggle it on the current workspace
+--   minimize with the hyprbars button (goes to special:minimized; restored from the dock)
 --
--- Qué workspaces flotan depende del perfil (profile.lua):
---   mac / mac-light  todos los numerados flotan; Super+Alt+D pasa uno a tiling
---   default          todos en tiling; Super+Alt+D pasa uno a flotante
--- Cada perfil guarda solo sus excepciones (así sobreviven a recargas y a cambiar
--- de perfil), y la lista final de workspaces flotantes se escribe en
--- desktop-workspaces, que es lo que leen Quickshell (dock, números de la barra) y
--- macshell (números en cajita).
+-- Which workspaces float depends on the profile (profile.lua):
+--   mac / mac-light  all numbered ones float; Super+Alt+D switches one to tiling
+--   default          all tiling; Super+Alt+D switches one to floating
+-- Each profile stores only its exceptions (so they survive reloads and profile
+-- switches), and the final list of floating workspaces is written to
+-- desktop-workspaces, which is what Quickshell (dock, bar numbers) and
+-- macshell (boxed numbers) read.
 local util = require("config.util")
 local STATE = util.HOME .. "/.local/state/"
 local stateFile = STATE .. "desktop-workspaces"
 local exceptionsFile = STATE .. (PROFILE_MAC and "desktop-exceptions-mac" or "desktop-workspaces-default")
 local appliedFile = STATE .. "desktop-applied-profile"
-local MAX_WS = 99 -- workspaces numerados que se apuntan como flotantes en mac (monitor*10 + n)
--- Minimizar = mover a este special sin seguirla (botón de hyprbars)
+local MAX_WS = 99 -- numbered workspaces recorded as floating in mac (monitor*10 + n)
+-- Minimize = move to this special without following it (hyprbars button)
 local MINIMIZED = "special:minimized"
 
 local function readLines(path)
@@ -45,7 +45,7 @@ end
 
 local exceptions = readLines(exceptionsFile)
 
--- ¿Flota este workspace? (los especiales y con nombre, p.ej. gaming, no flotan por defecto)
+-- Does this workspace float? (special and named ones, e.g. gaming, don't float by default)
 local function isDesktop(name)
 	local base = PROFILE_MAC and tonumber(name) ~= nil
 	return base ~= (exceptions[name] == true)
@@ -71,24 +71,24 @@ local function save()
 	end
 	writeLines(stateFile, public)
 end
-save() -- al cargar: la lista pública siempre refleja el perfil actual
+save() -- on load: the public list always reflects the current profile
 
--- Tamaño de las ventanas nuevas: fracción de la pantalla (en píxeles lógicos,
--- por eso se divide por la escala)
+-- Size of new windows: fraction of the screen (in logical pixels,
+-- hence the division by the scale)
 local OPEN_SIZE = 0.65
 
--- La etiqueta "desktop" marca las ventanas que hemos hecho flotar nosotros, para
--- no devolver al tiling las que flotan por una window rule (Dolphin, calculadora...)
+-- The "desktop" tag marks windows we made float ourselves, so we don't
+-- send back to tiling the ones floating because of a window rule (Dolphin, calculator...)
 local function hasTag(w, tag)
 	local tags = type(w.tags) == "table" and table.concat(w.tags, " ") or (w.tags or "")
 	return (" " .. tags .. " "):find(" " .. tag .. " ", 1, true) ~= nil
 end
 
--- Alto de la barra de hyprbars: se dibuja encima de w.at
-local TITLEBAR = PROFILE_MAC and 32 or 28 -- mac: como la barra Sur-Gris de Plasma
+-- Height of the hyprbars bar: it is drawn above w.at
+local TITLEBAR = PROFILE_MAC and 32 or 28 -- mac: like Plasma's Sur-Gris title bar
 
--- Zona útil de un monitor para una ventana flotante (x, y, ancho, alto): sin las
--- barras reservadas y dejando sitio a la barra de título
+-- Usable area of a monitor for a floating window (x, y, width, height): without the
+-- reserved bars and leaving room for the title bar
 local function usableArea(m)
 	local r = m.reserved
 	return m.x + r.left,
@@ -97,10 +97,10 @@ local function usableArea(m)
 		math.floor(m.height / m.scale) - r.top - r.bottom - TITLEBAR
 end
 
--- Al pasar de tiling a flotante la ventana conserva su sitio (y la barra de título
--- quedaría bajo la barra de arriba) o recupera un tamaño flotante guardado que
--- puede no caber: se encaja en la zona útil. Va en window.update_state (abajo)
--- para cubrir cualquier camino: atajo, gesto, mover a un workspace en modo escritorio...
+-- When going from tiling to floating the window keeps its place (and the title bar
+-- would end up under the top bar) or gets back a saved floating size that
+-- may not fit: it is fitted into the usable area. It lives in window.update_state (below)
+-- to cover every path: shortcut, gesture, moving to a desktop-mode workspace...
 local function fitOnScreen(w)
 	local m = w and w.floating and w.monitor
 	if not m then
@@ -114,7 +114,7 @@ local function fitOnScreen(w)
 	width, height = math.min(width, areaW), math.min(height, areaH)
 	x = math.max(left, math.min(x, left + areaW - width))
 	y = math.max(top, math.min(y, top + areaH - height))
-	-- primero el resize: Hyprland redimensiona manteniendo el centro y w.at cambia
+	-- resize first: Hyprland resizes keeping the centre and w.at changes
 	hl.dispatch(hl.dsp.window.resize({ x = width, y = height, window = w }))
 	hl.dispatch(hl.dsp.window.move({ x = x, y = y, window = w }))
 end
@@ -146,7 +146,7 @@ local function makeTiled(w)
 	hl.dispatch(hl.dsp.window.float({ action = "disable", window = w }))
 end
 
--- Adapta la ventana al modo de su workspace (flotante en modo escritorio, si no tiling)
+-- Adapt the window to its workspace's mode (floating in desktop mode, otherwise tiling)
 local function applyMode(w, ws)
 	if isDesktop(ws.name) then
 		makeFloat(w, false)
@@ -167,8 +167,8 @@ hl.on("window.open", function(w)
 	end
 end)
 
--- Al mover una ventana entre workspaces se adapta al modo del destino
--- (minimizar es moverla a un special: esa no se toca)
+-- When a window moves between workspaces it adapts to the target's mode
+-- (minimizing is moving it to a special: that one is left alone)
 hl.on("window.move_to_workspace", function(w, ws)
 	ws = ws or w.workspace
 	if not ws or ws.special then
@@ -188,7 +188,7 @@ hl.bind("SUPER + ALT + D", function()
 	local windows = hl.get_workspace_windows(ws)
 	for _, w in ipairs(windows) do
 		if on then
-			-- Si estaba sola ocupaba toda la pantalla: se pone al tamaño de las nuevas
+			-- If it was alone it filled the whole screen: give it the size of new windows
 			makeFloat(w, #windows == 1)
 		else
 			makeTiled(w)
@@ -196,8 +196,8 @@ hl.bind("SUPER + ALT + D", function()
 	end
 end, { description = "Desktop mode" })
 
--- Al cambiar entre mac y default (config-set hace hyprctl reload) las ventanas que
--- ya están abiertas se adaptan al modo nuevo de su workspace
+-- When switching between mac and default (config-set runs hyprctl reload) windows that
+-- are already open adapt to their workspace's new mode
 local family = PROFILE_MAC and "mac" or "default"
 if not readLines(appliedFile)[family] then
 	for _, w in ipairs(hl.get_windows()) do
@@ -209,16 +209,16 @@ if not readLines(appliedFile)[family] then
 	writeLines(appliedFile, { family })
 end
 
--- Snap como macOS: al soltar una ventana arrastrada con el cursor pegado al borde
---   izquierda/derecha → media pantalla   arriba → maximizar (igual que el botón □)
--- No hay evento de "fin de arrastre": con Super se escucha el clic izquierdo
--- (sin consumirlo) y se compara la posición al pulsar y al soltar; con la barra
--- de título avisa hyprbars (opción on_drag_end, parche local del plugin).
-local EDGE = 4 -- píxeles de margen para considerar "pegado al borde"
+-- macOS-like snap: when releasing a dragged window with the cursor against the edge
+--   left/right → half screen   top → maximize (same as the □ button)
+-- There is no "drag end" event: with Super the left click is listened to
+-- (without consuming it) and the press and release positions are compared; with the title
+-- bar hyprbars reports it (on_drag_end option, local plugin patch).
+local EDGE = 4 -- margin in pixels to count as "against the edge"
 local pressedAt
-local snapped = {} -- tamaño previo de las ventanas en media pantalla, por address
+local snapped = {} -- previous size of half-screen windows, by address
 
--- Ventana activa si es flotante y está en un workspace en modo escritorio
+-- Active window if it is floating and on a desktop-mode workspace
 local function snapTarget(w)
 	w = w or hl.get_active_window()
 	if w and w.floating and w.workspace and isDesktop(w.workspace.name) then
@@ -226,26 +226,26 @@ local function snapTarget(w)
 	end
 end
 
--- Clic en una ventana flotante o maximizada (de cualquier workspace) = sale delante.
--- Con follow_mouse = 1 el hover ya le da el foco pero no la sube, y el clic sobre
--- una ventana que ya tiene el foco tampoco: por eso se sube a mano.
+-- Click on a floating or maximized window (on any workspace) = it is raised.
+-- With follow_mouse = 1 hovering already focuses it but doesn't raise it, and clicking
+-- a window that already has focus doesn't either: hence raising it by hand.
 local function raise(w)
 	if w.fullscreen == 0 then
 		if w.floating then
-			hl.dispatch(hl.dsp.window.bring_to_top()) -- w es la activa
+			hl.dispatch(hl.dsp.window.bring_to_top()) -- w is the active one
 		end
 		return
 	end
-	-- Una maximizada/pantalla completa va en su propia capa: bring_to_top no la pone
-	-- sobre las flotantes que se abrieron encima (allowed_over_fullscreen). Volver a
-	-- maximizarla les quita ese permiso y quedan detrás.
+	-- A maximized/fullscreen window lives in its own layer: bring_to_top doesn't put it
+	-- above the floating windows opened on top of it (allowed_over_fullscreen). Maximizing
+	-- it again takes that permission away and they go behind.
 	if not w.workspace then
 		return
 	end
 	for _, o in ipairs(hl.get_workspace_windows(w.workspace)) do
 		if o.allowed_over_fullscreen and o.visible and not o.pinned and o.address ~= w.address then
-			-- El modo se guarda antes: w está vivo y tras el unset w.fullscreen vale 0,
-			-- que como modo significa pantalla completa total
+			-- The mode is saved first: w is alive and after the unset w.fullscreen is 0,
+			-- which as a mode means real fullscreen
 			local mode = w.fullscreen == 1 and "maximized" or "fullscreen"
 			hl.dispatch(hl.dsp.window.fullscreen({ mode = mode, action = "unset", window = w }))
 			hl.dispatch(hl.dsp.window.fullscreen({ mode = mode, action = "set", window = w }))
@@ -263,10 +263,10 @@ hl.bind("mouse:272", function()
 	pressedAt = w and { x = w.at.x, y = w.at.y } or nil
 end, { non_consuming = true, transparent = true, ignore_mods = true })
 
--- Mientras se arrastra una ventana del modo escritorio el cursor no puede subir a la
--- barra de arriba (zona reservada): se devuelve a su borde. Se activa al empezar el
--- arrastre (DesktopUnsnap) y se apaga al soltar (clic o on_drag_end de hyprbars).
--- Por si se pierde el soltar, se apaga solo sin ventana del modo escritorio o a los ~30 s.
+-- While dragging a desktop-mode window the cursor can't go up into the
+-- top bar (reserved area): it is pushed back to its edge. Enabled when the drag
+-- starts (DesktopUnsnap) and disabled on release (click or hyprbars' on_drag_end).
+-- In case the release is missed, it turns off by itself with no desktop-mode window or after ~30 s.
 local confineTicks = 0
 local confine
 confine = hl.timer(function()
@@ -282,9 +282,9 @@ confine = hl.timer(function()
 end, { timeout = 16, type = "repeat" })
 confine:set_enabled(false)
 
--- Global para poder llamarla con `hyprctl eval 'DesktopSnap()'` desde hyprbars
+-- Global so it can be called with `hyprctl eval 'DesktopSnap()'` from hyprbars
 function DesktopSnap()
-	confine:set_enabled(false) -- fin del arrastre por la barra de título (hyprbars)
+	confine:set_enabled(false) -- end of a drag by the title bar (hyprbars)
 	local w = snapTarget()
 	if not w then
 		return
@@ -302,18 +302,18 @@ function DesktopSnap()
 		local x = atLeft and mx or mx + mw - half
 		hl.dispatch(hl.dsp.window.resize({ x = half, y = mh, window = w }))
 		hl.dispatch(hl.dsp.window.move({ x = x, y = my, window = w }))
-	elseif c.y <= m.y + m.reserved.top + EDGE then -- soltar sobre la barra de arriba cuenta como borde
+	elseif c.y <= m.y + m.reserved.top + EDGE then -- dropping on the top bar counts as the edge
 		hl.dispatch(hl.dsp.window.fullscreen({ mode = "maximized", action = "set", window = w }))
 	elseif w.at.y < my then
-		-- Como el menú de macOS: la barra de título nunca se queda debajo de la barra de arriba
+		-- Like the macOS menu bar: the title bar never stays under the top bar
 		hl.dispatch(hl.dsp.window.move({ x = w.at.x, y = my, window = w }))
 	end
 end
 
--- Al empezar a arrastrar una ventana en media pantalla recupera su tamaño, con el
--- cursor en la misma proporción de la barra para que no se quede fuera de ella.
--- Tiene que ir antes de que Hyprland "coja" la ventana: hyprbars la llama de forma
--- síncrona (on_drag_start_eval) y con Super el drag_threshold de abajo da margen.
+-- When starting to drag a half-screen window it gets its size back, with the
+-- cursor at the same proportion of the bar so it doesn't end up outside it.
+-- It must run before Hyprland "grabs" the window: hyprbars calls it
+-- synchronously (on_drag_start_eval) and with Super the drag_threshold below gives margin.
 function DesktopUnsnap()
 	local w = snapTarget()
 	if w then
@@ -326,7 +326,7 @@ function DesktopUnsnap()
 		return
 	end
 	snapped[w.address] = nil
-	-- se calcula antes del resize: Hyprland redimensiona manteniendo el centro y w.at cambia
+	-- computed before the resize: Hyprland resizes keeping the centre and w.at changes
 	local x, y = math.floor(c.x - (c.x - w.at.x) * old.x / w.size.x), w.at.y
 	hl.dispatch(hl.dsp.window.resize({ x = old.x, y = old.y, window = w }))
 	hl.dispatch(hl.dsp.window.move({ x = x, y = y, window = w }))
@@ -343,22 +343,22 @@ hl.bind("mouse:272", function()
 	local w, from = snapTarget(), pressedAt
 	pressedAt = nil
 	confine:set_enabled(false)
-	if w and from and (w.at.x ~= from.x or w.at.y ~= from.y) then -- arrastre, no un clic
+	if w and from and (w.at.x ~= from.x or w.at.y ~= from.y) then -- a drag, not a click
 		DesktopSnap()
 	end
 end, { release = true, non_consuming = true, transparent = true, ignore_mods = true })
 
--- Barra de título (cerrar, minimizar y maximizar) en las ventanas flotantes.
--- Es el plugin hyprbars de hyprwm/hyprland-plugins, compilado a mano: si tras
--- actualizar Hyprland sale "version mismatch", recompílalo con el mismo tag:
+-- Title bar (close, minimize and maximize) on floating windows.
+-- It is the hyprbars plugin from hyprwm/hyprland-plugins, built by hand: if after
+-- updating Hyprland it says "version mismatch", rebuild it with the same tag:
 --   git clone https://github.com/hyprwm/hyprland-plugins && cd hyprland-plugins
---   git checkout v<versión> && git apply ~/.config/hypr/hyprbars-on-drag-end.patch ~/.config/hypr/hyprbars-hover-icon.patch \
+--   git checkout v<version> && git apply ~/.config/hypr/hyprbars-on-drag-end.patch ~/.config/hypr/hyprbars-hover-icon.patch \
 --     ~/.config/hypr/hyprbars-resize-top-edge.patch ~/.config/hypr/hyprbars-separator.patch
---   make -C hyprbars all   (los parches añaden on_drag_end y on_drag_start_eval, que usa el snap,
---                           hover_icon en add_button: el símbolo cambia al pasar el ratón,
---                           bar_resize_edge: el borde de arriba de la barra redimensiona
---                           y col.separator: línea entre la barra y la ventana)
---   cp --remove-destination hyprbars/hyprbars.so ~/.local/lib/hyprland/   (inodo nuevo: el viejo está cargado)
+--   make -C hyprbars all   (the patches add on_drag_end and on_drag_start_eval, used by snap,
+--                           hover_icon in add_button: the symbol changes on mouse hover,
+--                           bar_resize_edge: the top edge of the bar resizes
+--                           and col.separator: line between the bar and the window)
+--   cp --remove-destination hyprbars/hyprbars.so ~/.local/lib/hyprland/   (new inode: the old one is loaded)
 local HYPRBARS = util.HOME .. "/.local/lib/hyprland/hyprbars.so"
 local MAXIMIZE = [[hyprctl dispatch 'hl.dsp.window.fullscreen({ mode = "maximized", action = "toggle" })']]
 
@@ -366,8 +366,8 @@ if util.exists(HYPRBARS) then
 	hl.plugin.load(HYPRBARS)
 end
 
--- Fuente de la barra en Modo normal: la elegida con font-set (la línea de
--- hypr/font.conf que no es comentario) o, si no hay, JetBrains Mono
+-- Bar font in Normal Mode: the one chosen with font-set (the line in
+-- hypr/font.conf that isn't a comment) or, if there is none, JetBrains Mono
 local function barFont()
 	for line in pairs(readLines(util.HOME .. "/.config/hypr/font.conf")) do
 		if not line:match("^#") then
@@ -384,12 +384,12 @@ if hl.plugin.hyprbars then
 		plugin = {
 			hyprbars = {
 				bar_height = TITLEBAR,
-				-- mac: colores, fuente y medidas de la decoración Sur-Gris de Plasma;
-				-- default: el fondo y el texto del tema de colores y la fuente de font-set
-				-- mac-light: gris claro de macOS con texto oscuro
+				-- mac: colors, font and sizes of Plasma's Sur-Gris decoration;
+				-- default: the color theme's background and text and the font-set font
+				-- mac-light: macOS light grey with dark text
 				bar_color = PROFILE_LIGHT and "rgba(ececedff)" or PROFILE_MAC and "rgba(2d2d2dff)" or THEME_BG,
-				-- Con CONTRAST (aumentar contraste) el texto es negro o blanco puro y hay una
-				-- línea del color del texto entre la barra y la ventana (col.separator, parche local)
+				-- With CONTRAST (increase contrast) the text is pure black or white and there is a
+				-- line in the text color between the bar and the window (col.separator, local patch)
 				col = {
 					text = BAR_TEXT,
 					separator = CONTRAST and BAR_TEXT:gsub("%x%x%)$", "73)") or "rgba(00000000)",
@@ -399,16 +399,16 @@ if hl.plugin.hyprbars then
 				bar_text_align = "center",
 				bar_padding = PROFILE_MAC and 16 or 10,
 				bar_button_padding = PROFILE_MAC and 10 or 8,
-				-- Estilo macOS: botones a la izquierda, un punto que cambia a su símbolo al pasar el ratón (hover_icon),
-				-- todos grises (más apagados en las ventanas sin foco)
+				-- macOS style: buttons on the left, a dot that turns into its symbol on hover (hover_icon),
+				-- all grey (dimmer on unfocused windows)
 				bar_buttons_alignment = "left",
 				icon_on_hover = true,
 				inactive_button_color = PROFILE_LIGHT and (CONTRAST and "rgba(c7c7ccdd)" or "rgba(c7c7cc88)")
 					or (CONTRAST and "rgba(8e8e93bb)" or "rgba(8e8e9355)"),
 				bar_part_of_window = true,
 				bar_precedence_over_border = true,
-				-- Parche local: los 6 px de arriba de la barra y lo que sobresale por encima
-				-- (border_size + extend_border_grab_area) redimensionan como los demás bordes
+				-- Local patch: the top 6 px of the bar and what sticks out above it
+				-- (border_size + extend_border_grab_area) resize like the other edges
 				bar_resize_edge = 6,
 				on_double_click = MAXIMIZE,
 				on_drag_end = [[hyprctl eval 'DesktopSnap()']],
@@ -418,10 +418,10 @@ if hl.plugin.hyprbars then
 	})
 	local BUTTON_BG = PROFILE_LIGHT and "rgba(aeaeb2ff)" or "rgba(8e8e93ff)"
 	local BUTTON_FG = PROFILE_LIGHT and "rgba(3a3a3ccc)" or "rgba(2c2c2ecc)"
-	-- Alineados a la izquierda se añaden de izquierda a derecha: cerrar, minimizar, maximizar
+	-- Left-aligned buttons are added left to right: close, minimize, maximize
 	hl.plugin.hyprbars.add_button({ bg_color = BUTTON_BG, fg_color = BUTTON_FG, size = 12, icon = "·", hover_icon = "×", action = [[hyprctl dispatch 'hl.dsp.window.close()']] })
 	hl.plugin.hyprbars.add_button({ bg_color = BUTTON_BG, fg_color = BUTTON_FG, size = 12, icon = "·", hover_icon = "–", action = "hyprctl dispatch 'hl.dsp.window.move({ workspace = \"" .. MINIMIZED .. "\", follow = false })'" })
 	hl.plugin.hyprbars.add_button({ bg_color = BUTTON_BG, fg_color = BUTTON_FG, size = 12, icon = "·", hover_icon = "+", action = MAXIMIZE })
-	-- Barra en todas las ventanas flotantes, estén o no en modo escritorio
+	-- Bar on every floating window, whether in desktop mode or not
 	hl.window_rule({ match = { float = false }, ["hyprbars:no_bar"] = true })
 end

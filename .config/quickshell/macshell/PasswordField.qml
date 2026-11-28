@@ -1,7 +1,7 @@
 import QtQuick
 
-// Campo de contraseña de una red Wi‑Fi protegida. Coge el foco al mostrarse;
-// con Enter (o submit()) emite submitted(psk) y se vacía.
+// Password field for a protected Wi‑Fi network. Takes focus when shown;
+// on Enter (or submit()) emits submitted(psk) and clears itself.
 Rectangle {
     id: f
     property string placeholder: I18n.tr("Password")

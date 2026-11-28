@@ -1,5 +1,5 @@
-# Idiomas: los i18n/*.json son JSON plano inglés → traducción, con los mismos
-# marcadores %N, y todo texto que se traduce en el código tiene su entrada en es.json.
+# Languages: the i18n/*.json files are flat JSON English → translation, with the same
+# %N placeholders, and every text translated in the code has its entry in es.json.
 import ast
 import json
 import re
@@ -13,7 +13,7 @@ MAC = QS / "macshell"
 I18N_DIRS = [QS / "i18n", MAC / "i18n", THEMES_DIR / "i18n"]
 JSONS = sorted(p for d in I18N_DIRS for p in d.glob("*.json"))
 
-# Literal entre comillas dobles, con escapes (\n, \")
+# Double-quoted literal, with escapes (\n, \")
 STR = r'"((?:[^"\\\n]|\\.)*)"'
 
 
@@ -22,7 +22,7 @@ def rel(p):
 
 
 def load(path):
-    # Como json.load, pero falla con claves repetidas (json se queda con la última)
+    # Like json.load, but fails on duplicate keys (json keeps the last one)
     def pairs(items):
         keys = [k for k, _ in items]
         dup = {k for k in keys if keys.count(k) > 1}
@@ -32,22 +32,22 @@ def load(path):
 
 
 def lines(path, comment):
-    # El archivo sin las líneas de comentario (p. ej. los ejemplos de user.lua)
+    # The file without its comment lines (e.g. the user.lua examples)
     return "\n".join(l for l in path.read_text().splitlines() if not l.lstrip().startswith(comment))
 
 
-# ── Textos que se traducen en el código ──────────────────────
+# ── Texts translated in the code ──────────────────────
 
 def qml_texts(root, skip=None):
-    # Literales de I18n.tr("...") en los QML de root (sin la carpeta skip)
+    # I18n.tr("...") literals in the root QML files (without the skip folder)
     return {json.loads(f'"{s}"') for f in root.rglob("*.qml") if not (skip and skip in f.parents)
             for s in re.findall(r"I18n\.tr\(" + STR, f.read_text())}
 
 
 def bind_texts():
-    # Descripciones de los binds de Hyprland (las traduce el Launcher de la raíz con I18n.tr):
-    # los literales de "description = ..." y el último argumento de bindDigits(..., end, "X")
-    # y resizeBind("H", -50, 0, "X"), que la pasan por la variable desc
+    # Hyprland bind descriptions (translated by the root Launcher with I18n.tr):
+    # the "description = ..." literals and the last argument of bindDigits(..., end, "X")
+    # and resizeBind("H", -50, 0, "X"), which pass it through the desc variable
     out = set()
     for f in (CONFIG / "hypr/config").glob("*.lua"):
         text = lines(f, "--")
@@ -58,7 +58,7 @@ def bind_texts():
 
 
 def python_texts():
-    # tr("...") con un literal como primer argumento en los scripts de themes
+    # tr("...") with a literal as first argument in the themes scripts
     out = set()
     for name in ["theme-set", "config-set", "background-set", "font-set", "contrast-set",
                  "themelib.py"]:
@@ -70,8 +70,8 @@ def python_texts():
 
 
 def bash_texts():
-    # t "Text %1" arg en install.sh y quickshell/scripts (t llama a themelib.py tr);
-    # también $(t No) sin comillas. Los que llevan variables ($1...) se saltan
+    # t "Text %1" arg in install.sh and quickshell/scripts (t calls themelib.py tr);
+    # also $(t No) without quotes. Those with variables ($1...) are skipped
     out = set()
     for f in [REPO / "install.sh", *(QS / "scripts").iterdir()]:
         for s, word in re.findall(r"(?<![\w$-])t (?:" + STR + r"|(\w+)\))", lines(f, "#")):

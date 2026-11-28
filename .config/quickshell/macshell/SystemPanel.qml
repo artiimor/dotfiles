@@ -2,8 +2,8 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Services.UPower
 
-// Popup "System" de la barra: lo que la barra normal guarda en su cajón (memoria,
-// temperatura, perfil de energía y apagado), en un menú al estilo de macOS.
+// Bar "System" popup: what the normal bar keeps in its drawer (memory,
+// temperature, power profile and shutdown), in a macOS-style menu.
 ColumnLayout {
     id: sp
     signal openProfiles()
@@ -37,7 +37,7 @@ ColumnLayout {
                 font.pointSize: 9
             }
         }
-        // barra de uso
+        // usage bar
         Rectangle {
             Layout.fillWidth: true
             implicitHeight: 6

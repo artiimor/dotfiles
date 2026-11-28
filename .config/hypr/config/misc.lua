@@ -10,8 +10,8 @@ hl.config({
         col = {
             splash = THEME_ACCENT,
         },
-        -- Sin la chica/logo por defecto de Hyprland: si el fondo de Quickshell
-        -- tarda un instante (p. ej. al desbloquear), se ve solo este color liso
+        -- Without Hyprland's default girl/logo: if the Quickshell wallpaper
+        -- takes a moment (e.g. when unlocking), only this flat color is shown
         force_default_wallpaper = 0,
         disable_hyprland_logo = true,
         disable_splash_rendering = true,
@@ -20,8 +20,8 @@ hl.config({
         enable_swallow = true,
         swallow_regex = "(" .. require("config.util").TERMINAL_CLASSES .. ")",
         vrr = 3,
-        -- Si la pantalla de bloqueo (Quickshell) se cierra estando bloqueado,
-        -- permite volver a lanzarla en vez de quedarte en la pantalla roja
+        -- If the lock screen (Quickshell) closes while locked,
+        -- allows relaunching it instead of being stuck on the red screen
         allow_session_lock_restore = true,
     },
     render = {

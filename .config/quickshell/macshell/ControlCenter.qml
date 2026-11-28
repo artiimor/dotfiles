@@ -4,7 +4,7 @@ import QtQuick
 import QtQuick.Layouts
 import Quickshell.Networking
 
-// Control Center al estilo de macOS.
+// macOS-style Control Center.
 ColumnLayout {
     id: cc
     signal openWifi()
@@ -50,7 +50,7 @@ ColumnLayout {
             Layout.fillWidth: true
             Layout.preferredWidth: 1
             Layout.fillHeight: true
-            // ocupa todo el alto: Toggle centra su contenido en vertical
+            // takes the full height: Toggle centers its content vertically
             Toggle {
                 Layout.fillWidth: true
                 Layout.fillHeight: true
@@ -63,7 +63,7 @@ ColumnLayout {
         }
     }
 
-    // Night Shift (luz nocturna, hyprsunset) y Keep Awake (cafeína de la config raíz)
+    // Night Shift (night light, hyprsunset) and Keep Awake (caffeine from the root config)
     RowLayout {
         Layout.fillWidth: true
         spacing: 8
@@ -94,7 +94,7 @@ ColumnLayout {
         }
     }
 
-    // Aumentar contraste (accesibilidad): fondos opacos y bordes marcados
+    // Increase contrast (accessibility): opaque backgrounds and marked borders
     Tile {
         Layout.fillWidth: true
         Toggle {
@@ -107,7 +107,7 @@ ColumnLayout {
         }
     }
 
-    // Brillo: solo si hay panel retroiluminado (portátil)
+    // Brightness: only if there is a backlit panel (laptop)
     Tile {
         visible: Sys.hasBacklight
         Layout.fillWidth: true

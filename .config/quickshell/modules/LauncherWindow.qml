@@ -1,20 +1,20 @@
-// La ventana del lanzador (lo que antes era wofi). La lógica de cada modo
-// está en services/Launcher.qml.
+// The launcher window (what used to be wofi). The logic of each mode
+// is in services/Launcher.qml.
 //
-// Estilo: limpio (buscador arriba, lista plana, sin
-// efectos), todo cuadrado y sin bordes. En el menú de temas cada fila lleva
-// su paleta de colores a la derecha (las fuentes, escritas con ella misma) y
-// en el de fondos, su miniatura. En los perfiles mac (Theme.mac) va como
-// macshell: esquinas redondeadas, borde fino, fondo translúcido con desenfoque
-// y la fila elegida en azul.
+// Style: clean (search box on top, flat list, no
+// effects), all square and borderless. In the theme menu each row has
+// its color palette on the right (fonts, written in themselves) and
+// in the backgrounds one, its thumbnail. In the mac profiles (Theme.mac) it looks like
+// macshell: rounded corners, thin border, translucent blurred background
+// and the selected row in blue.
 //
-// Teclas: escribir filtra · ↑/↓ o Ctrl+K/J o Tab moverse · Enter elegir · Esc cerrar
-// Clic fuera también cierra. Con pestañas (temas: Oscuros / Claros / Fuente), Tab, Shift+Tab
-// y ←/→ cambian de pestaña y ↑/↓ se mueven. Cada pestaña tiene su búsqueda: al
-// volver a una sigue lo que escribiste en ella. En los submenús del menú principal,
-// → entra en la fila si abre otro menú y ← vuelve al anterior (con pestañas, desde la
-// primera). En los menús sin buscador, h j k l hacen de flechas. Con una pestaña fija
-// (temas desde el menú de estilo) solo se ve la lista: ni buscador ni pestañas.
+// Keys: typing filters · ↑/↓ or Ctrl+K/J or Tab move · Enter select · Esc close
+// Clicking outside also closes. With tabs (themes: Dark / Light / Font), Tab, Shift+Tab
+// and ←/→ switch tab and ↑/↓ move. Each tab has its own search: when
+// you come back to one, what you typed in it is still there. In the main menu's submenus,
+// → enters the row if it opens another menu and ← goes back to the previous one (with tabs, from the
+// first one). In menus without a search box, h j k l act as arrows. With a fixed tab
+// (themes from the style menu) only the list is shown: no search box and no tabs.
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -29,8 +29,8 @@ PanelWindow {
     screen: Theme.focusedScreen
     visible: Launcher.open
 
-    // Apps, portapapeles, emojis y energía (Super+Escape) en el centro; el
-    // resto de menús, arriba a la derecha bajo la barra (como estaban con wofi)
+    // Apps, clipboard, emojis and power (Super+Escape) in the center; the
+    // other menus, top right under the bar (as they were with wofi)
     anchors {
         top: !Launcher.centered
         right: !Launcher.centered
@@ -56,8 +56,8 @@ PanelWindow {
         onCleared: Launcher.close()
     }
 
-    // Cada vez que se abre un modo o llega una pregunta de dmenu (aunque la
-    // ventana ya estuviera abierta): buscador vacío, primera fila y foco en él
+    // Every time a mode opens or a dmenu question arrives (even if the
+    // window was already open): empty search box, first row and focus on it
     Connections {
         target: Launcher
         function onShown() {
@@ -67,7 +67,7 @@ PanelWindow {
             list.currentIndex = 0;
             search.forceActiveFocus();
         }
-        // Al cambiar de pestaña se guarda lo escrito y se pone lo de la nueva
+        // When switching tab the typed text is saved and the new tab's is restored
         function onTabChanged() {
             win.queries[win.queryTab] = search.text;
             win.queryTab = Launcher.tab;
@@ -75,14 +75,14 @@ PanelWindow {
         }
     }
 
-    // Búsqueda de cada pestaña (índice = pestaña) y la pestaña a la que
-    // pertenece lo que hay ahora en el buscador
+    // Search of each tab (index = tab) and the tab that
+    // the current search box text belongs to
     property var queries: []
     property int queryTab: 0
 
-    // ── Filtrado ──────────────────────────────────────────
-    // Primero lo que contiene el texto tal cual (antes cuanto más al
-    // principio), después lo que tiene las letras en orden ("ffx" → Firefox)
+    // ── Filtering ──────────────────────────────────────────
+    // First whatever contains the text as is (the closer to the
+    // start, the earlier), then whatever has the letters in order ("ffx" → Firefox)
     readonly property var filtered: {
         const q = search.text.toLowerCase().trim();
         const all = Launcher.tabs.length ? Launcher.items.filter(it => it.tab === Launcher.tab) : Launcher.items;
@@ -96,7 +96,7 @@ PanelWindow {
             if (i >= 0)
                 score = 1000 - i;
             else {
-                // Sin espacios: "fira code" también encuentra "FiraCode"
+                // Without spaces: "fira code" also finds "FiraCode"
                 const letters = q.replace(/\s+/g, "");
                 let j = 0;
                 for (const c of hay) if (c === letters[j]) j++;
@@ -108,11 +108,11 @@ PanelWindow {
         }
         return scored.sort((a, b) => b.score - a.score).map(s => s.it);
     }
-    // Elegida la primera fila, o sin buscar nada, la actual (`cur`, el tema activo)
-    // si está en la lista. Con callLater: si no, el ListView, que aún no ha
-    // cogido la lista nueva, la vuelve a poner en la primera fila al cogerla
+    // With the first row selected, or nothing searched, the current one (`cur`, the active theme)
+    // if it is in the list. With callLater: otherwise the ListView, which hasn't
+    // picked up the new list yet, resets it to the first row when it does
     onFilteredChanged: Qt.callLater(selectDefault)
-    // (si no hay actual, la de Launcher.startIndex: al volver a un menú, la de la que se salió)
+    // (if there is no current one, Launcher.startIndex: when going back to a menu, the one you left from)
     function selectDefault() {
         const cur = filtered.findIndex(it => it.cur);
         list.currentIndex = search.text.trim() ? 0 : cur >= 0 ? cur : Launcher.startIndex;
@@ -122,7 +122,7 @@ PanelWindow {
         Launcher.choose(filtered[list.currentIndex] ?? null, search.text);
     }
 
-    // Altura máxima de la lista según el modo
+    // Maximum list height depending on the mode
     readonly property int maxRows: Launcher.centered ? 8 : 6
     readonly property int rowHeight: 38
 
@@ -142,10 +142,10 @@ PanelWindow {
             width: parent.width - 28
             spacing: Launcher.noSearch ? 0 : 12
 
-            // ── Buscador: solo el texto, sin fondo ni lupa ──────
-            // (el candado aparece únicamente al pedir una contraseña)
-            // En el menú de apagar no se ve: alto 0 y transparente, pero sigue
-            // existiendo para recibir las teclas (flechas, Enter, Esc)
+            // ── Search box: text only, no background or magnifier ──────
+            // (the lock only appears when asking for a password)
+            // Not shown in the power menu: height 0 and transparent, but it still
+            // exists to receive keys (arrows, Enter, Esc)
             Item {
                 Layout.fillWidth: true
                 implicitHeight: Launcher.noSearch ? 0 : 36
@@ -198,7 +198,7 @@ PanelWindow {
                         const key = Launcher.noSearch && !ctrl
                             ? ({ [Qt.Key_H]: Qt.Key_Left, [Qt.Key_J]: Qt.Key_Down, [Qt.Key_K]: Qt.Key_Up, [Qt.Key_L]: Qt.Key_Right })[e.key] ?? e.key
                             : e.key;
-                        // ← en la primera pestaña (o sin pestañas) vuelve al menú anterior
+                        // ← on the first tab (or without tabs) goes back to the previous menu
                         const back = key === Qt.Key_Left && Launcher.history.length > 0 && (!n || Launcher.tab === 0);
                         if (n && (key === Qt.Key_Tab || key === Qt.Key_Right))
                             Launcher.tab = (Launcher.tab + 1) % n;
@@ -227,9 +227,9 @@ PanelWindow {
                 }
             }
 
-            // ── Pestañas (solo en los modos que las tienen) ─────
-            // La elegida, en negrita con una raya del acento debajo; en mac, una
-            // píldora gris como los controles segmentados de macOS
+            // ── Tabs (only in the modes that have them) ─────
+            // The selected one, bold with an accent line below; in mac, a
+            // grey pill like macOS segmented controls
             RowLayout {
                 visible: Launcher.tabs.length > 0 && !Launcher.fixedTab
                 Layout.fillWidth: true
@@ -284,9 +284,9 @@ PanelWindow {
             ListView {
                 id: list
                 Layout.fillWidth: true
-                // Alto fijo según los items del modo (sin filtrar): no encoge al escribir.
-                // Con una pestaña fija (sin buscador), los de esa pestaña (mínimo una fila,
-                // para que quepa el "nada por aquí")
+                // Fixed height from the mode's items (unfiltered): doesn't shrink while typing.
+                // With a fixed tab (no search box), that tab's items (at least one row,
+                // so the "nothing here" fits)
                 implicitHeight: Math.min(Launcher.fixedTab ? Math.max(1, win.filtered.length) : Launcher.items.length, win.maxRows) * win.rowHeight
                 visible: Launcher.items.length > 0
                 clip: true
@@ -303,7 +303,7 @@ PanelWindow {
                     width: ListView.view.width
                     height: win.rowHeight
 
-                    // Fila elegida: solo un bloque de fondo
+                    // Selected row: just a background block
                     Rectangle {
                         anchors.fill: parent
                         radius: Theme.mac ? 8 : 0
@@ -317,7 +317,7 @@ PanelWindow {
                         anchors.rightMargin: 14
                         spacing: 12
 
-                        // Fondos: miniatura del fondo
+                        // Backgrounds: thumbnail of the background
                         Image {
                             visible: !!row.modelData.image
                             Layout.preferredWidth: 48
@@ -328,7 +328,7 @@ PanelWindow {
                             asynchronous: true
                         }
 
-                        // Símbolo (menús y emojis); las apps van sin icono
+                        // Symbol (menus and emojis); apps have no icon
                         Text {
                             visible: !!row.modelData.glyph
                             Layout.preferredWidth: 22
@@ -339,7 +339,7 @@ PanelWindow {
                             font.pixelSize: 16
                         }
 
-                        // Fuentes (pestaña Fuente de temas): cada una escrita con ella misma
+                        // Fonts (Font tab of themes): each one written in itself
                         Text {
                             Layout.fillWidth: true
                             elide: Text.ElideRight
@@ -350,9 +350,9 @@ PanelWindow {
                             font.bold: row.selected && !Theme.mac
                         }
 
-                        // Temas: su paleta sobre el fondo de su terminal ("Aa" con el
-                        // color del texto, el acento y 6 colores ANSI). Cuadrada como
-                        // el resto del lanzador, o en píldora con puntos en mac
+                        // Themes: their palette on their terminal background ("Aa" in the
+                        // text color, the accent and 6 ANSI colors). Square like
+                        // the rest of the launcher, or a pill with dots in mac
                         Rectangle {
                             id: chip
                             readonly property var pal: row.modelData.palette ?? null
@@ -395,7 +395,7 @@ PanelWindow {
                             }
                         }
 
-                        // Descripción corta a la derecha (p. ej. "Navegador web")
+                        // Short description on the right (e.g. "Web browser")
                         Text {
                             visible: !!row.modelData.sub && Launcher.showSub
                             Layout.maximumWidth: Launcher.mode === "keys" ? 240 : 180
@@ -421,7 +421,7 @@ PanelWindow {
             }
         }
 
-        // Encima del hueco de la lista, para no cambiar el alto de la caja
+        // Above the list area, so the box height doesn't change
         Text {
             visible: list.visible && list.count === 0 && !Launcher.password && Launcher.mode !== "dmenu"
             x: column.x + list.x + (list.width - width) / 2

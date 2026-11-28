@@ -1,6 +1,6 @@
-# Perfil de energía según la corriente (power-profiles-daemon): ahorro con batería,
-# equilibrado enchufado. Solo en "change" (al enchufar o desenchufar), no en el "add"
-# del arranque, cuando el demonio aún puede no estar: al arrancar queda el último perfil.
-# Si powerprofilesctl falla (demonio parado), udev solo lo apunta en el log.
+# Power profile based on the power source (power-profiles-daemon): power-saver on battery,
+# balanced when plugged in. Only on "change" (plugging or unplugging), not on the boot
+# "add", when the daemon may not be up yet: at boot the last profile stays.
+# If powerprofilesctl fails (daemon stopped), udev only logs it.
 SUBSYSTEM=="power_supply", ACTION=="change", ATTR{type}=="Mains", ATTR{online}=="0", RUN+="/usr/bin/powerprofilesctl set power-saver"
 SUBSYSTEM=="power_supply", ACTION=="change", ATTR{type}=="Mains", ATTR{online}=="1", RUN+="/usr/bin/powerprofilesctl set balanced"

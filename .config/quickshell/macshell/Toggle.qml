@@ -1,6 +1,6 @@
 import QtQuick
 
-// Botón redondo con icono, azul si está activo (estilo Control Center), con título y subtítulo.
+// Round button with icon, blue when active (Control Center style), with title and subtitle.
 Item {
     id: t
     property string icon: ""
@@ -27,8 +27,8 @@ Item {
             width: 15; height: 15
             name: t.icon
             level: t.iconLevel
-            // encendido, blanco sobre el azul; apagado, el color del texto (en mac-light
-            // el blanco casi no se ve sobre el gris claro)
+            // on, white over the blue; off, the text color (in mac-light
+            // white is barely visible over the light grey)
             color: t.on ? "white" : Theme.text
         }
         MouseArea { anchors.fill: parent; onClicked: t.toggled() }
@@ -48,7 +48,7 @@ Item {
             width: parent.width
             visible: text.length > 0
             text: t.subtitle
-            textFormat: Text.PlainText   // nombres de redes y dispositivos
+            textFormat: Text.PlainText   // network and device names
             color: Theme.dim
             font.pointSize: 8.5
             elide: Text.ElideRight

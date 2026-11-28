@@ -1,5 +1,5 @@
 -- Generado por theme-set a partir de themes/grafito/theme.json: no editar
--- Lo usan decorations.lua, misc.lua y desktopmode.lua
+-- Used by decorations.lua, misc.lua and desktopmode.lua
 
 THEME_BORDER   = { "rgba(c4c6c9ff)" }
 THEME_INACTIVE = "rgba(34373b88)"

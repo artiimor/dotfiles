@@ -1,7 +1,7 @@
-// Batería del portátil (UPower). En un sobremesa no hay: `present` queda en
-// false y la barra y la pantalla de bloqueo no la enseñan.
-// También avisa de batería baja (notify-send: la pinta el servidor de notificaciones
-// activo, el de aquí o el de macshell). shell.qml lo crea siempre, en los dos perfiles.
+// Laptop battery (UPower). On a desktop there is none: `present` stays
+// false and the bar and the lock screen don't show it.
+// Also warns about low battery (notify-send: drawn by the active notification
+// server, this one or macshell's). shell.qml always creates it, in both profiles.
 pragma Singleton
 
 import QtQuick
@@ -14,17 +14,17 @@ Singleton {
 
     readonly property UPowerDevice device: UPower.displayDevice
     readonly property bool present: device?.isLaptopBattery ?? false
-    // Según el backend viene como 0–1 o 0–100
+    // Depending on the backend it comes as 0–1 or 0–100
     readonly property int percent: {
         const p = device?.percentage ?? 0;
         return Math.round(p > 1 ? p : p * 100);
     }
     readonly property bool charging: device?.state === UPowerDeviceState.Charging
-    // Enchufado pero sin cargar (llena o con umbral de carga)
+    // Plugged in but not charging (full or with a charge threshold)
     readonly property bool plugged: !UPower.onBattery && !charging
 
-    // Aviso de batería baja: una notificación al bajar de 15 % y otra al bajar de 5 %,
-    // solo descargando. Al enchufar o subir de umbral el nivel vuelve a 100 y se rearma
+    // Low battery warning: one notification when dropping below 15 % and another below 5 %,
+    // only while discharging. When plugging in or rising above the threshold the level goes back to 100 and it re-arms
     readonly property int lowLevel: !present || !device.ready || !UPower.onBattery || percent <= 0 ? 100
         : percent <= 5 ? 5 : percent <= 15 ? 15 : 100
     property int lastLevel: 100

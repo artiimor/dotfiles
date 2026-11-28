@@ -1,5 +1,5 @@
-// Mezclador de volumen (clic en el icono de audio de la barra): la salida
-// actual y cada app que está sonando por ella. Se cierra haciendo clic fuera.
+// Volume mixer (click the audio icon in the bar): the current
+// output and each app playing through it. Closed by clicking outside.
 import QtQuick
 import Quickshell
 import Quickshell.Services.Pipewire
@@ -15,14 +15,14 @@ BarPopup {
     implicitWidth: 320
     implicitHeight: column.implicitHeight + 24
 
-    // Las apps que mandan audio a la salida actual
-    // (solo con el mezclador abierto; el icono de la barra sigue la salida por su cuenta)
+    // The apps sending audio to the current output
+    // (only with the mixer open; the bar icon tracks the output on its own)
     PwNodeLinkTracker {
         id: links
         node: root.visible ? root.sink : null
     }
     readonly property var apps: links.linkGroups.map(g => g.source).filter(n => n?.audio)
-    // Sin esto Pipewire no rellena node.audio (la salida ya la sigue Audio)
+    // Without this Pipewire doesn't fill node.audio (the output is already tracked by Audio)
     PwObjectTracker { objects: root.visible ? root.apps : [] }
 
     Column {
@@ -47,7 +47,7 @@ BarPopup {
             }
         }
 
-        // Lo que no está aquí (dispositivos, micrófono...)
+        // What isn't here (devices, microphone...)
         BarIcon {
             anchors.right: parent.right
             implicitHeight: 24
@@ -63,7 +63,7 @@ BarPopup {
         }
     }
 
-    // Nombre y volumen de un nodo. Clic en el icono: silenciar
+    // Name and volume of a node. Click on the icon: mute
     component Channel: Column {
         id: channel
         required property PwNode node

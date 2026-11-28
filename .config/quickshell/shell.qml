@@ -1,13 +1,13 @@
-// Punto de entrada. `qs` carga este archivo (~/.config/quickshell/shell.qml)
-// y recarga solo al guardar cualquier .qml de esta carpeta.
+// Entry point. `qs` loads this file (~/.config/quickshell/shell.qml)
+// and reloads by itself when any .qml in this folder is saved.
 //
-// Estructura:
-//   Theme.qml     colores y tamaños (lo primero que tocar)
-//   Bar.qml       la barra: qué módulos van a la izquierda, centro y derecha
-//   modules/      cada isla de la barra (workspaces, reloj, audio...)
-//   components/   piezas reutilizables (isla, icono con tooltip, cajón)
-//   services/     datos compartidos (memoria, brillo, luz nocturna...)
-//   scripts/      scripts de shell que usan los módulos
+// Structure:
+//   Theme.qml     colors and sizes (the first thing to touch)
+//   Bar.qml       the bar: which modules go on the left, center and right
+//   modules/      each bar island (workspaces, clock, audio...)
+//   components/   reusable pieces (island, icon with tooltip, drawer)
+//   services/     shared data (memory, brightness, night light...)
+//   scripts/      shell scripts used by the modules
 
 import QtQuick
 import Quickshell
@@ -17,46 +17,46 @@ import qs.services
 ShellRoot {
     id: root
 
-    // Perfil del escritorio (~/.local/state/desktop-profile, lo escribe
-    // ~/.config/themes/config-set; se elige con Super+Shift+T):
-    //   "mac"      la barra superior, las notificaciones y el Spotlight los pone
-    //              macshell (./macshell; lo arranca autostart.lua / config-set)
-    //   "default"  la barra y las notificaciones de aquí
-    // Sin archivo: "mac" si está macshell. "mac" sin macshell = "default".
-    // config-set reinicia qs al pasar de Modo Mac a normal o al revés: Theme.mac es el
-    // del arranque (de mac a mac-light solo cambian los colores, sin reiniciar).
-    // Lo lee Theme (Theme.profile, Theme.mac). Hasta que acabe la comprobación
-    // (Theme.profileReady) no se crea la barra ni las notificaciones de aquí
-    // (si no, se quedarían con el servidor de notificaciones)
+    // Desktop profile (~/.local/state/desktop-profile, written by
+    // ~/.config/themes/config-set; chosen with Super+Shift+T):
+    //   "mac"      the top bar, notifications and Spotlight come from
+    //              macshell (./macshell; started by autostart.lua / config-set)
+    //   "default"  the bar and notifications from here
+    // No file: "mac" if macshell is present. "mac" without macshell = "default".
+    // config-set restarts qs when going from Mac Mode to normal or back: Theme.mac is the
+    // start-up one (from mac to mac-light only the colors change, without restarting).
+    // Read by Theme (Theme.profile, Theme.mac). Until the check finishes
+    // (Theme.profileReady) the bar and notifications from here aren't created
+    // (otherwise they would grab the notification server)
     readonly property bool ownBar: Theme.profileReady && !Theme.mac
 
-    // Crea ya el singleton Idle (cafeína): sin barra propia (Modo Mac) nadie más lo
-    // usaría y su IPC (`qs ipc call idle toggle`, el botón de macshell) no existiría
+    // Create the Idle singleton now (caffeine): without its own bar (Mac Mode) nothing else would
+    // use it and its IPC (`qs ipc call idle toggle`, the macshell button) wouldn't exist
     readonly property bool idleInhibited: Idle.inhibited
-    // Lo mismo con Battery, que es quien avisa de batería baja
+    // Same with Battery, which is what warns about low battery
     readonly property bool batteryPresent: Battery.present
 
-    // Una barra por cada pantalla conectada. Al ocultarla (Super+B) se quitan
-    // del todo, y con ellas sus menús y su hueco reservado
+    // One bar per connected screen. When hidden (Super+B) they are removed
+    // completely, and with them their menus and their reserved space
     Variants {
         model: root.ownBar && TopBar.shown ? Quickshell.screens : []
 
         Bar {}
     }
 
-    // Dock del modo escritorio (solo en workspaces con Super+Alt+D)
+    // Desktop-mode dock (only on Super+Alt+D workspaces)
     Dock {}
 
-    // Fondo de pantalla (en todas las pantallas)
+    // Wallpaper (on every screen)
     Wallpaper {}
 
-    // Estos van solo en la pantalla con el foco
+    // These only go on the focused screen
     LazyLoader { active: root.ownBar; NotificationPopups {} }
     LazyLoader { active: root.ownBar; NotificationCenter {} }
     Osd {}
     LauncherWindow {}
     PolkitDialog {}
 
-    // Pantalla de bloqueo (en todas, solo mientras está bloqueado)
+    // Lock screen (on all of them, only while locked)
     LockScreen {}
 }

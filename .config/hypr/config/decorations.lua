@@ -33,20 +33,20 @@ hl.config({
     },
     decoration = {
         dim_special = 0.3,
-        -- Perfil "default": esquinas rectas y la sombra por defecto de Hyprland
+        -- "default" profile: square corners and Hyprland's default shadow
         rounding = 0,
         active_opacity = 1,
         inactive_opacity = 1,
-        -- La inactiva se distingue oscureciéndola un poco, sin transparencia
+        -- The inactive one is told apart by darkening it a bit, no transparency
         dim_inactive = true,
         dim_strength = 0.1,
         fullscreen_opacity = 1,
-        -- Sin blur del compositor en ningún perfil: cuesta GPU (y batería) en cada fotograma
+        -- No compositor blur in any profile: costs GPU (and battery) every frame
         blur = { enabled = false },
     },
 })
 
--- Perfil "mac": esquinas redondeadas y sombra como las ventanas de Plasma (Sur-Gris)
+-- "mac" profile: rounded corners and shadow like Plasma windows (Sur-Gris)
 if PROFILE_MAC then
     hl.config({
         decoration = {
@@ -65,10 +65,10 @@ if PROFILE_MAC then
     })
 end
 
--- Aumentar contraste (CONTRAST, ver profile.lua y themes/contrast-set): borde más
--- grueso, el activo del color del texto del tema y el inactivo también, al 60 %, para
--- que el contorno de las ventanas se vea siempre (el gris inactivo del tema se pierde
--- sobre fondos claros)
+-- Increase contrast (CONTRAST, see profile.lua and themes/contrast-set): thicker
+-- border, the active one in the theme's text color and the inactive one too, at 60 %, so
+-- window outlines are always visible (the theme's inactive grey gets lost
+-- on light backgrounds)
 if CONTRAST then
     hl.config({
         general = {

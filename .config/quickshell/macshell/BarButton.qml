@@ -1,13 +1,13 @@
 import QtQuick
 
-// Zona pulsable de la barra con la píldora sutil de macOS al pasar el ratón o estar activa.
+// Clickable bar area with the subtle macOS pill on hover or when active.
 Item {
     id: btn
     property bool active: false
     default property alias content: holder.data
     signal clicked(var mouse)
-    // rueda: solo si scrollable (si no, la rueda sigue de largo). Un paso por cada
-    // muesca (120); los touchpads y ratones de alta resolución mandan trozos y se suman
+    // wheel: only if scrollable (otherwise the wheel passes through). One step per
+    // notch (120); touchpads and high-resolution mice send fractions that add up
     property bool scrollable: false
     signal scrolled(int steps)   // > 0 arriba, < 0 abajo
     property real _wheelAcc: 0
@@ -15,7 +15,7 @@ Item {
     implicitWidth: holder.childrenRect.width + 14
     implicitHeight: 22
 
-    // distancia del borde derecho de este botón al borde derecho de la pantalla
+    // distance from this button's right edge to the screen's right edge
     function rightDistance() {
         const p = btn.mapToItem(null, btn.width, 0);
         return btn.Window.window ? btn.Window.window.width - p.x : 0;

@@ -1,5 +1,5 @@
-// Fondo de pantalla en todas las pantallas: sustituye a hyprpaper.
-// La imagen se cambia en Theme.qml (Theme.desktopWallpaper).
+// Wallpaper on every screen: replaces hyprpaper.
+// The image is changed in Theme.qml (Theme.desktopWallpaper).
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -26,10 +26,10 @@ Variants {
         Image {
             anchors.fill: parent
             source: Theme.desktopWallpaper
-            fillMode: Image.PreserveAspectCrop // como fit_mode = cover
-            smooth: false // píxeles nítidos para el pixel art
+            fillMode: Image.PreserveAspectCrop // like fit_mode = cover
+            smooth: false // sharp pixels for the pixel art
             asynchronous: true
-            // Cargarla a la resolución de la pantalla, no más
+            // Load it at the screen's resolution, no more
             sourceSize.width: parent.width
             sourceSize.height: parent.height
         }

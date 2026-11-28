@@ -18,5 +18,5 @@ hl.animation({ leaf = "windows",             enabled = true, speed = 3, bezier =
 hl.animation({ leaf = "workspaces",          enabled = false })
 hl.animation({ leaf = "specialWorkspaceIn",  enabled = true, speed = 2, bezier = "quick", style = "slide top"})
 hl.animation({ leaf = "specialWorkspaceOut", enabled = true, speed = 2, bezier = "quick", style = "slide bottom"})
--- Degradado del borde activo girando despacio (speed 100 = una vuelta cada 10 s)
+-- Active border gradient rotating slowly (speed 100 = one turn every 10 s)
 hl.animation({ leaf = "borderangle",         enabled = false, speed = 100, bezier = "linear", style = "loop" })

@@ -1,5 +1,5 @@
-// Luz nocturna. Toda la lógica está en scripts/nightlight.sh (habla con
-// hyprsunset); esto lo ejecuta, guarda lo que devuelve y pone los textos.
+// Night light. All the logic is in scripts/nightlight.sh (talks to
+// hyprsunset); this runs it, stores what it returns and sets the texts.
 pragma Singleton
 
 import QtQuick
@@ -12,11 +12,11 @@ Singleton {
 
     readonly property string script: Quickshell.shellDir + "/scripts/nightlight.sh"
 
-    // Lo que devuelve el script: class ("on" | "off" | "unavailable"), temperature
-    // y next (epoch del próximo cambio del horario de hyprsunset.conf)
+    // What the script returns: class ("on" | "off" | "unavailable"), temperature
+    // and next (epoch of the next schedule change in hyprsunset.conf)
     property string state: "unavailable"
     property int temperature
-    property real nextChange: 0   // ms; hasta entonces no hace falta volver a leer
+    property real nextChange: 0   // ms; until then there's no need to read again
 
     readonly property string icon: state === "on" ? "󰖔" : "󰖙"
     readonly property string tooltip: state === "on" ? I18n.tr("Night light: %1 K", temperature) + "\n" + I18n.tr("Scroll: adjust · Click: turn off")
@@ -27,8 +27,8 @@ Singleton {
     function warmer() { run("down"); }
     function cooler() { run("up"); }
 
-    // Acciones en cola: con la rueda llegan pasos mientras el script aún corre,
-    // y lanzarlo otra vez se ignoraría. Se aplican en orden y luego se lee el estado
+    // Queued actions: with the wheel, steps arrive while the script is still running,
+    // and launching it again would be ignored. They are applied in order and then the state is read
     property var queue: []
 
     function run(action) {
@@ -59,16 +59,16 @@ Singleton {
                     const j = JSON.parse(text);
                     root.state = j["class"];
                     root.temperature = j.temperature;
-                    // Sin hyprsunset se reintenta cada 5 min, por si arranca luego
+                    // Without hyprsunset it retries every 5 min, in case it starts later
                     root.nextChange = j["class"] === "unavailable" ? Date.now() + 300000 : j.next * 1000 + 2000;
                 } catch (e) {}
             }
         }
     }
 
-    // Solo se relee al llegar el próximo cambio del horario (y tras cada acción).
-    // Se compara con la hora real en vez de un Timer con esa espera: el reloj de
-    // los Timer se para al suspender, y así al reanudar se ve enseguida
+    // Only re-read when the next schedule change arrives (and after each action).
+    // Compared against the real time instead of a Timer with that delay: the
+    // Timer clock stops on suspend, and this way it is seen right after resuming
     Timer {
         interval: 30000
         running: true

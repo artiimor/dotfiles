@@ -1,6 +1,6 @@
 import QtQuick
 
-// Icono del Centro de control (dos interruptores) hecho con rectángulos alineados al píxel para que se vea nítido.
+// Control Center icon (two switches) made of pixel-aligned rectangles so it looks sharp.
 Item {
     property color color: Theme.text
     implicitWidth: 16

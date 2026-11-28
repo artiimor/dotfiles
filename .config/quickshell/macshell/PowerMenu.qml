@@ -5,9 +5,9 @@ import Quickshell
 import Quickshell.Io
 import Quickshell.Wayland
 
-// Bloquear / suspender / cerrar sesión / reiniciar / apagar, con los botones redondos de la
-// ventana de inicio de sesión de macOS. Super+Esc en Hyprland (`ipc call power toggle`).
-// Flechas o Tab para moverse, Intro para elegir, Esc o clic fuera para cerrar.
+// Lock / suspend / log out / restart / shut down, with the round buttons of the
+// macOS login window. Super+Esc in Hyprland (`ipc call power toggle`).
+// Arrows or Tab to move, Enter to choose, Esc or click outside to close.
 OverlayWindow {
     id: win
 

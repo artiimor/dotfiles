@@ -1,6 +1,6 @@
--- Miami night: pasteles suaves sobre morado, a juego con ~/.config/themes/miami
--- (misma paleta que la terminal). Rosa para palabras clave, cian para funciones,
--- lavanda para tipos. Los grupos están en lua/scheme.lua.
+-- Miami night: soft pastels on purple, matching ~/.config/themes/miami
+-- (same palette as the terminal). Pink for keywords, cyan for functions,
+-- lavender for types. The groups are in lua/scheme.lua.
 require("scheme").apply("miami", {
   fg = "#d9d6e6", bright = "#e6e3ef", light = "#e6e3ef",
   grey = "#a99bd6", dim = "#8f8aa8", muted = "#6b6789", faint = "#3d3558",

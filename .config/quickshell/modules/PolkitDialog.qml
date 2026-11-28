@@ -1,6 +1,6 @@
-// Agente de polkit: la ventana que pide tu contraseña cuando algo necesita
-// permisos (pkexec, montar discos, cambiar cosas del sistema...).
-// Sustituye a hyprpolkitagent. Enter: autenticar · Esc: cancelar
+// Polkit agent: the window that asks for your password when something needs
+// permissions (pkexec, mounting disks, changing system settings...).
+// Replaces hyprpolkitagent. Enter: authenticate · Esc: cancel
 import QtQuick
 import QtQuick.Layouts
 import Quickshell
@@ -18,7 +18,7 @@ Scope {
 
     readonly property AuthFlow flow: agent.flow
 
-    // Pantalla entera oscurecida con el diálogo en el centro
+    // Whole screen darkened with the dialog in the center
     PanelWindow {
         id: win
         screen: Theme.focusedScreen
@@ -84,7 +84,7 @@ Scope {
                     }
                 }
 
-                // Qué se está pidiendo (lo escribe la app)
+                // What is being requested (written by the app)
                 Text {
                     Layout.fillWidth: true
                     text: root.flow?.message ?? ""
@@ -102,7 +102,7 @@ Scope {
                     font.bold: true
                 }
 
-                // Campo de contraseña
+                // Password field
                 Rectangle {
                     Layout.fillWidth: true
                     implicitHeight: 40
@@ -137,7 +137,7 @@ Scope {
                     }
                 }
 
-                // Error o aviso (p. ej. contraseña incorrecta)
+                // Error or notice (e.g. wrong password)
                 Text {
                     Layout.fillWidth: true
                     visible: text !== ""

@@ -1,6 +1,6 @@
-// OSD de volumen, micrófono y brillo: sustituye a swayosd. Aparece arriba a la
-// derecha, bajo la barra, como en macOS, cada vez que cambian (con las teclas,
-// la rueda en la barra...).
+// Volume, microphone and brightness OSD: replaces swayosd. Shows up at the top
+// right, under the bar, like in macOS, whenever they change (with the keys,
+// the wheel on the bar...).
 import QtQuick
 import Quickshell
 import Quickshell.Wayland
@@ -19,11 +19,11 @@ PanelWindow {
     anchors.right: true
     margins.top: Theme.gap
     margins.right: Theme.gap * 2
-    // 0 = no reserva espacio pero respeta el de las barras (queda debajo)
+    // 0 = reserves no space but respects the bars' (sits below them)
     exclusiveZone: 0
     WlrLayershell.layer: WlrLayer.Overlay
     WlrLayershell.namespace: "quickshell-osd"
-    // Región vacía = los clics lo atraviesan
+    // Empty region = clicks go through it
     mask: Region {}
 
     implicitWidth: box.implicitWidth
@@ -51,7 +51,7 @@ PanelWindow {
         onTriggered: osd.shown = false
     }
 
-    // Al arrancar se cargan los valores iniciales: eso no debe sacar el OSD
+    // The initial values are loaded at start-up: that must not show the OSD
     property bool armed: false
     Timer {
         interval: 1500
@@ -59,8 +59,8 @@ PanelWindow {
         onTriggered: osd.armed = true
     }
 
-    // ── Qué lo dispara ────────────────────────────────────
-    // El micro (la salida ya la sigue Audio)
+    // ── What triggers it ────────────────────────────────────
+    // The mic (the output is already tracked by Audio)
     readonly property PwNode source: Pipewire.defaultAudioSource
     PwObjectTracker { objects: [osd.source] }
 
@@ -68,7 +68,7 @@ PanelWindow {
         show(Audio.icon, Audio.volume, Audio.muted);
     }
 
-    // Solo los cambios de la salida actual, no el cambio de salida
+    // Only changes of the current output, not a change of output
     Connections {
         target: Audio.sink?.audio ?? null
         function onVolumeChanged() { osd.showVolume(); }

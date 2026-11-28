@@ -1,4 +1,4 @@
-/* ReGreet estilo macOS oscuro: grises neutros + azul de sistema */
+/* macOS dark style ReGreet: neutral greys + system blue */
 @define-color bg        rgba(36, 36, 38, 0.82);
 @define-color surface   rgba(255, 255, 255, 0.07);
 @define-color surfaceHi rgba(255, 255, 255, 0.12);
@@ -18,7 +18,7 @@ window {
     background: radial-gradient(ellipse at 50% 35%, #3a3a3d 0%, #232325 45%, #111112 100%);
 }
 
-/* Tarjeta de login y barra de arriba */
+/* Login card and top bar */
 frame {
     background: @bg;
     border: 1px solid @line;
@@ -57,7 +57,7 @@ button {
 }
 button:hover { background: @surfaceHi; }
 
-/* Entrar: azul de macOS */
+/* Log in: macOS blue */
 button.suggested-action {
     background: @accent;
     border-color: transparent;
@@ -88,7 +88,7 @@ box.horizontal > button:not(.suggested-action):hover {
 }
 box.horizontal > button:not(.suggested-action):hover label { color: @fg; }
 
-/* ...pero los desplegables de usuario y sesión vuelven a su estilo */
+/* ...but the user and session drop-downs go back to their own style */
 combobox box.horizontal > button:not(.suggested-action) {
     background: @surface;
     color: @fg;
