@@ -54,7 +54,8 @@ Row {
             id: wsRow
             anchors.verticalCenter: parent.verticalCenter
             Repeater {
-                model: lh.slots
+                // ScriptModel conserva los delegados de los huecos que siguen
+                model: ScriptModel { values: lh.slots }
                 delegate: MouseArea {
                     id: ws
                     required property int modelData

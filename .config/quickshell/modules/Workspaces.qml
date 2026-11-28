@@ -23,8 +23,11 @@ Island {
     }
 
     Repeater {
-        // Los workspaces especiales (scratchpad) tienen id negativo: fuera
-        model: Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor?.name === root.screen.name)
+        // Los workspaces especiales (scratchpad) tienen id negativo: fuera.
+        // ScriptModel conserva los delegados de los que siguen
+        model: ScriptModel {
+            values: Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor?.name === root.screen.name)
+        }
 
         Item {
             id: ws

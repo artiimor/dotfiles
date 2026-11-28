@@ -91,7 +91,8 @@ Variants {
                     spacing: 4
 
                     Repeater {
-                        model: dock.windows
+                        // ScriptModel conserva los delegados de las ventanas que siguen
+                        model: ScriptModel { values: dock.windows }
 
                         Item {
                             id: app
