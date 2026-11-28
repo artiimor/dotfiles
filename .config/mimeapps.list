@@ -4,7 +4,11 @@ x-scheme-handler/proton-inbox=proton-mail.desktop;
 [Default Applications]
 inode/directory=org.kde.dolphin.desktop;
 text/plain=org.gnome.TextEditor.desktop;
-x-scheme-handler/http=firefox.desktop;
-x-scheme-handler/https=firefox.desktop;
+x-scheme-handler/http=brave-browser.desktop;
+x-scheme-handler/https=brave-browser.desktop;
+x-scheme-handler/about=brave-browser.desktop;
+x-scheme-handler/unknown=brave-browser.desktop;
+text/html=brave-browser.desktop;
+application/xhtml+xml=brave-browser.desktop;
 x-scheme-handler/claude-cli=claude-code-url-handler.desktop
 x-scheme-handler/proton-inbox=proton-mail.desktop

@@ -41,11 +41,8 @@ hl.config({
         dim_inactive = true,
         dim_strength = 0.1,
         fullscreen_opacity = 1,
-        blur = {
-            size = 5,
-            passes = 2,
-            special = true,
-        },
+        -- Sin blur del compositor en ningún perfil: cuesta GPU (y batería) en cada fotograma
+        blur = { enabled = false },
     },
 })
 
@@ -55,6 +52,7 @@ if PROFILE_MAC then
         decoration = {
             rounding = 10,
             rounding_power = 2,
+            dim_inactive = false,
             shadow = {
                 enabled = true,
                 range = 24,
@@ -70,7 +68,7 @@ end
 -- Aumentar contraste (CONTRAST, ver profile.lua y themes/contrast-set): borde más
 -- grueso, el activo del color del texto del tema y el inactivo también, al 60 %, para
 -- que el contorno de las ventanas se vea siempre (el gris inactivo del tema se pierde
--- sobre fondos claros), y sin blur
+-- sobre fondos claros)
 if CONTRAST then
     hl.config({
         general = {
@@ -79,9 +77,6 @@ if CONTRAST then
                 active_border = THEME_FG,
                 inactive_border = THEME_FG:gsub("%x%x%)$", "99)"),
             },
-        },
-        decoration = {
-            blur = { enabled = false },
         },
     })
 end

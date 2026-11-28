@@ -103,8 +103,8 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
 - **Per-workspace desktop mode** (**Super+Alt+D**): floating windows, minimize, a dock and macOS-style edge snapping.
 - **macOS-style titlebars** (close / minimize / maximize) on floating windows, using a patched `hyprbars` plugin.
 - **Color theme switcher** (**Super+T**, `theme-set`): one `theme.json` per theme recolors Hyprland, Quickshell, hyprlock,
-  Ghostty, kitty, btop, fzf, GTK, Qt/KDE, fastfetch and running Neovim instances at once. 18 themes, 4 of them light.
-- **Monospace font picker** (**Super+T**, "Font" tab, `font-set`) for kitty, Ghostty and the Normal mode titlebars.
+  Ghostty, btop, fzf, GTK, Qt/KDE, fastfetch and running Neovim instances at once. 18 themes, 4 of them light.
+- **Monospace font picker** (**Super+T**, "Font" tab, `font-set`) for Ghostty and the Normal mode titlebars.
 - **Increase contrast** (`contrast-set`, Control Center tile in Mac mode, bar button in Normal mode): opaque, thicker borders, no blur, purer text, GTK high contrast and stronger terminal/Neovim colors.
 - **Per-theme backgrounds** (**Super+Ctrl+B**, `background-set`), remembered per theme.
 - **Main menu** (**Super+M**), like Omarchy's. For now it has *Style*: theme, font, background, profile and increase
@@ -114,7 +114,7 @@ cheatsheet are all the same Quickshell launcher in different modes. Their labels
   mini.hues; LazyVim, available as `lazyvim`, shares the same colors and keeps `miami` and `basalt` colorschemes),
   btop, eza/bat/fzf aliases, fastfetch with an ASCII Pepe tinted with the theme accent.
 - **System extras** (optional, under `system/`): greetd + ReGreet login screen, the "sobrio" Plymouth boot theme (plain neutral gray),
-  a keyd config for a ThinkPad keyboard, automatic time zone from the network and 10 password attempts before lockout (faillock).
+  a keyd config for a ThinkPad keyboard, automatic time zone from the network, 10 password attempts before lockout (faillock) and the power saver profile on battery (udev).
 - **Web apps** (`.local/share/applications`): Proton Mail, Proton Calendar, Proton Drive, WhatsApp and YouTube as Brave app windows.
   "Create webapp" and "Remove webapp" in the launcher (and Spotlight) add or remove your own (`quickshell/scripts/webapp`).
 
@@ -151,7 +151,7 @@ When it finishes, reboot and pick the **Hyprland (uwsm-managed)** session.
 | **3b. Shell** | If your login shell isn't bash (CachyOS defaults to fish), offers `chsh -s /bin/bash`. |
 | **4. Theme and profile** | Runs `theme-set <theme>` (your current theme if you already had one, otherwise **grafito**) and `config-set --reapply` (keeps your profile; Mac mode on a fresh install). |
 | **5. hyprbars** | Clones `hyprwm/hyprland-plugins` at the tag matching your installed Hyprland (falls back to `vX.Y.0`), applies the four patches in `.config/hypr/`, builds it and copies `hyprbars.so` to `~/.local/lib/hyprland/`. Then offers to remove the apps' own window buttons (GTK `button-layout`, and Brave's "use system title bar", only if Brave is closed). |
-| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname and the clock's locale and date format to the system's date locale (`LC_TIME`, or else `LANG`, from `localectl`), disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group. The default answer depends on the hardware: yes if a ThinkPad is detected via DMI, no otherwise, and `--yes` follows that default); **automatic time zone** (installs the NetworkManager dispatcher script `system/etc/NetworkManager/dispatcher.d/90-timezone` and enables `NetworkManager-dispatcher`: on each connection it sends your public IP to ipinfo.io and sets the time zone it returns; it does nothing while a VPN is active); **password attempts** (installs `system/etc/security/faillock.conf` with `deny = 10`: 10 failed passwords lock the account for 10 minutes, instead of 3; it affects sudo and the lock screen); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
+| **6. System (sudo)** | Each part is asked separately: **greetd + ReGreet** (installs `system/etc/greetd/*` and the greeter background, sets the greeting to your hostname and the clock's locale and date format to the system's date locale (`LC_TIME`, or else `LANG`, from `localectl`), disables whatever display manager is active and enables greetd); **Plymouth "sobrio"** (copies the theme, sets it as default and regenerates the initramfs with `limine-mkinitcpio` or `mkinitcpio -P`); **keyd** (installs `system/etc/keyd/thinkpad.conf`: Alt/Super swap and CapsLock as Control; enables keyd and adds you to the `keyd` group. The default answer depends on the hardware: yes if a ThinkPad is detected via DMI, no otherwise, and `--yes` follows that default); **automatic time zone** (installs the NetworkManager dispatcher script `system/etc/NetworkManager/dispatcher.d/90-timezone` and enables `NetworkManager-dispatcher`: on each connection it sends your public IP to ipinfo.io and sets the time zone it returns; it does nothing while a VPN is active); **password attempts** (installs `system/etc/security/faillock.conf` with `deny = 10`: 10 failed passwords lock the account for 10 minutes, instead of 3; it affects sudo and the lock screen); **power profile** (laptops only: installs `system/etc/udev/rules.d/90-power-profile.rules` and reloads udev; unplugging switches power-profiles-daemon to `power-saver` and plugging in to `balanced`. It only acts on plug/unplug events, so at boot the last profile stays, and if the daemon isn't running the rule just fails silently); **services** (enables NetworkManager, bluetooth and power-profiles-daemon). Files it replaces under `/etc` are backed up to `~/.dotfiles-old/<timestamp>/system/etc/...`. |
 
 Details of step 3:
 
@@ -180,8 +180,8 @@ Details of step 3:
 | Group | Packages |
 |---|---|
 | Desktop | `hyprland quickshell uwsm xdg-desktop-portal-hyprland hypridle hyprlock hyprsunset hyprshot hyprpicker grim slurp cliphist wl-clipboard brightnessctl playerctl ddcutil pipewire-pulse wireplumber pavucontrol power-profiles-daemon upower networkmanager networkmanager-dmenu bluez bluez-utils gnome-keyring seahorse libnotify xdg-user-dirs unicode-emoji dolphin kde-cli-tools ffmpegthumbs ffmpegthumbnailer qview gnome-calculator gnome-text-editor swash qt6ct breeze nwg-look adw-gtk-theme papirus-icon-theme fd libqalculate python-gobject` |
-| Terminal | `ghostty kitty starship btop fastfetch bash-completion fzf eza bat neovim lazygit ripgrep tree-sitter-cli nodejs npm micro python python-defusedxml git base-devel rsync` |
-| Fonts | `ttf-jetbrains-mono-nerd otf-geist-mono-nerd ttf-firacode-nerd ttf-hack-nerd ttf-cascadia-code-nerd ttf-iosevka-nerd ttf-meslo-nerd ttf-sourcecodepro-nerd ttf-ubuntu-mono-nerd ttf-victor-mono-nerd otf-commit-mono-nerd ttf-mononoki-nerd ttf-zed-mono-nerd ttf-ibmplex-mono-nerd otf-monaspace-nerd ttf-0xproto-nerd ttf-martian-mono-nerd ttf-roboto-mono-nerd inter-font cantarell-fonts noto-fonts noto-fonts-emoji noto-fonts-cjk` |
+| Terminal | `ghostty starship btop fastfetch bash-completion fzf eza bat neovim lazygit ripgrep tree-sitter-cli nodejs npm micro python python-defusedxml git base-devel rsync` |
+| Fonts | `ttf-jetbrains-mono-nerd otf-geist-mono-nerd ttf-firacode-nerd ttf-hack-nerd ttf-cascadia-code-nerd ttf-sourcecodepro-nerd ttf-ubuntu-mono-nerd otf-commit-mono-nerd ttf-mononoki-nerd ttf-ibmplex-mono-nerd ttf-0xproto-nerd ttf-martian-mono-nerd ttf-roboto-mono-nerd inter-font cantarell-fonts noto-fonts noto-fonts-emoji noto-fonts-cjk` |
 | Login / boot | `greetd greetd-regreet cage plymouth keyd` |
 | AUR | `bzmenu whitesur-icon-theme` |
 
@@ -288,7 +288,7 @@ If `~/.config/quickshell/macshell/shell.qml` is missing, `mac` / `mac-light` beh
 |---|---|---|
 | Quickshell | reads `themes/current/theme.json` | immediately |
 | Hyprland | `hypr/config/theme.lua` | immediately |
-| kitty / Ghostty | `kitty/themes/current.conf`, `ghostty/themes/current` | immediately |
+| Ghostty | `ghostty/themes/current` | immediately |
 | Neovim | shared `tema` colorscheme (also used by `lazyvim`): mini.hues from `ui.bg`/`ui.fg`, syntax from `nvimColors.syn`, and the whole UI (line numbers, cursorline, selection, menus, floats, statusline, search, diagnostics, diff) from the theme's `ui`/`term` palette, optionally overridden by `nvimColors.ui`; sent to running instances over their socket | immediately |
 | Background | asked from `background-set` | immediately |
 | btop | `btop/themes/current.theme` | next launch |
@@ -309,7 +309,7 @@ The meaning of each `theme.json` section is documented in [`.config/themes/READM
 
 The monospace font is separate from the color theme: pick it in the **Font** tab of Super+T (each row is written in
 its font) or with `~/.config/themes/font-set "<family>"` (no argument lists the installed Nerd Fonts). It applies at once
-to kitty, Ghostty and the hyprbars titlebars in Normal mode, and is saved in `~/.local/state/font`. The Quickshell UI
+to Ghostty and the hyprbars titlebars in Normal mode, and is saved in `~/.local/state/font`. The Quickshell UI
 (Inter, or Noto Sans in Mac mode) keeps its own font. Details in [`.config/themes/README.md`](.config/themes/README.md#fuente).
 
 ### Increase contrast
@@ -501,7 +501,7 @@ dotfiles/
 │   ├── themes/                   one folder per theme + theme-set, config-set, background-set, font-set, contrast-set
 │   ├── backgrounds/              default wallpapers (Pepes) and the script that made them
 │   ├── uwsm/env                  session environment (Qt, cursor, Electron); install.sh adds env.d/gpu (NVIDIA)
-│   ├── ghostty/ kitty/ nvim/ nvim-lazyvim/ btop/ fastfetch/ starship.toml micro/
+│   ├── ghostty/ nvim/ nvim-lazyvim/ btop/ fastfetch/ starship.toml micro/
 │   ├── gtk-3.0/ gtk-4.0/ qt6ct/ kdeglobals dolphinrc
 │   └── networkmanager-dmenu/ mimeapps.list swash/ …
 ├── .local/share/applications/    web app launchers and their icons
@@ -510,6 +510,7 @@ dotfiles/
 │   ├── etc/keyd/thinkpad.conf    Alt/Super swap, Caps Lock → Ctrl
 │   ├── etc/NetworkManager/       dispatcher script for the automatic time zone
 │   ├── etc/security/faillock.conf  10 password attempts before lockout
+│   ├── etc/udev/rules.d/         power saver profile on battery, balanced on AC
 │   └── usr/share/                greeter background, Plymouth "sobrio" theme
 ├── tests/                        pytest tests + run.sh (linters); CI in .github/workflows/ci.yml
 └── screenshots/                  the images in this README
@@ -590,6 +591,7 @@ There's no uninstall script. To go back:
    - keyd: `sudo rm /etc/keyd/thinkpad.conf && sudo systemctl restart keyd` (or `sudo systemctl disable --now keyd`).
    - Automatic time zone: `sudo rm /etc/NetworkManager/dispatcher.d/90-timezone`.
    - Password attempts: restore `/etc/security/faillock.conf` from the backup (or set `deny = 3` again).
+   - Power profile: `sudo rm /etc/udev/rules.d/90-power-profile.rules && sudo udevadm control --reload`.
 4. Remove the state files in `~/.local/state/` listed in [Repository structure](#repository-structure).
 
 ## Tests

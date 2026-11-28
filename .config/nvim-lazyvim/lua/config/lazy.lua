@@ -32,9 +32,9 @@ require("lazy").setup({
   },
   install = { colorscheme = { "tokyonight", "habamax" } },
   checker = {
-    enabled = true, -- check for plugin updates periodically
+    enabled = false, -- sin git fetch de todos los plugins cada hora: se actualiza a mano con :Lazy
     notify = false, -- notify on update
-  }, -- automatically check for plugin updates
+  },
   performance = {
     rtp = {
       -- disable some rtp plugins

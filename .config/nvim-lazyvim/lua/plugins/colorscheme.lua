@@ -52,8 +52,7 @@ return {
   {
     "catppuccin/nvim",
     name = "catppuccin",
-    lazy = false,
-    priority = 1000,
+    lazy = true, -- solo es el fallback de colors/tema.lua; lazy.nvim lo carga al pedirlo
     opts = {
       flavour = "mocha",
       transparent_background = true,

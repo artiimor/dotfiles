@@ -185,7 +185,8 @@ Singleton {
         }
         onExited: if (sys._nightAgain) { sys._nightAgain = false; sys.refreshNight(); }
     }
-    Timer { interval: 30000; running: true; repeat: true; triggeredOnStart: true; onTriggered: sys.refreshNight() }
+    // Sin sondeo: se lee al arrancar (onCompleted, abajo) y al abrir el panel de
+    // pantalla y el centro de control, los únicos que lo enseñan (shell.qml)
 
     // ── aumentar contraste ──
     // contrast-set (scripts de temas) guarda el estado en un archivo que Theme vigila:
@@ -228,7 +229,7 @@ Singleton {
         printErrors: false
         onFileChanged: sys.syncCaffeine()
     }
-    Component.onCompleted: syncCaffeine()
+    Component.onCompleted: { syncCaffeine(); refreshNight(); }
 
     // ── memoria y temperatura (como services/SysStats.qml de la config raíz) ──
     property real memUsed: 0     // GiB

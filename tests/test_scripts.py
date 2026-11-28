@@ -15,7 +15,7 @@ import pytest
 from conftest import CONFIG, THEMES, load_theme
 
 # Programas con efecto fuera de los archivos (y fc-list, que solo lee)
-STUBS = ("qs", "hyprctl", "gsettings", "notify-send", "nvim", "kitty", "ghostty", "pkill",
+STUBS = ("qs", "hyprctl", "gsettings", "notify-send", "nvim", "ghostty", "pkill",
          "fc-list")
 # Lo que devuelve el fc-list falso a font-set: "familia\tspacing"
 FONTS = "Foo Nerd Font\t100\nFoo Nerd Font Propo\t0\nFoo Nerd Font Mono\t100\nBar Sans\t0\n"
@@ -92,8 +92,7 @@ def test_theme_set(home, theme):
         ".config/hypr/config/theme.lua": [hypr(ui["bg"]), hypr(ui["fg"]), hypr(ui["accent"])],
         ".config/hypr/hyprlock-colors.conf": [
             "rgba({}, {}, {}, 0.75)".format(*(int(term["background"][i:i + 2], 16) for i in (1, 3, 5)))],
-        ".config/kitty/themes/current.conf": [term["background"], term["foreground"], *term["colors"]],
-        ".config/ghostty/themes/current": [term["background"], *(f"{i}={c}" for i, c in enumerate(term["colors"]))],
+        ".config/ghostty/themes/current": [term["background"], term["foreground"], *(f"{i}={c}" for i, c in enumerate(term["colors"]))],
         ".config/btop/themes/current.theme": [f'theme[main_bg]="{term["background"]}"'],
         ".config/themes/current-env.sh": [f"fg:{term['foreground']}", f"hl:{ui['accent']}"],
         ".config/gtk-3.0/gtk.css": [f"@define-color window_bg_color {gtk['window']};"],
@@ -238,7 +237,6 @@ def test_font_set(home):
     assert run(home, "font-set").stdout == "  Foo Nerd Font\n"  # sin Mono/Propo ni Bar Sans
     run(home, "font-set", "Foo Nerd Font")
     assert read(home, ".local/state/font") == "Foo Nerd Font\n"
-    assert "font_family Foo Nerd Font\n" in read(home, ".config/kitty/font.conf")
     assert "font-family = Foo Nerd Font\n" in read(home, ".config/ghostty/font.ghostty")
     assert read(home, ".config/hypr/font.conf").endswith("\nFoo Nerd Font Propo\n")
     assert json.loads(run(home, "font-set", "--list").stdout) == {"font": "Foo Nerd Font", "cur": True}
@@ -269,16 +267,16 @@ def test_contrast_set(home):
 def test_contrast_terminals(home, theme):
     # Con el modo, las terminales llevan más contraste y Neovim tiene su tema aparte;
     # al quitarlo, todo vuelve a lo del theme.json
-    kitty, nv = ".config/kitty/themes/current.conf", home / ".local/state/increased-contrast.json"
+    term, nv = ".config/ghostty/themes/current", home / ".local/state/increased-contrast.json"
     run(home, "theme-set", theme)
-    before = read(home, kitty)
+    before = read(home, term)
     run(home, "contrast-set", "on")
     boosted = json.loads(nv.read_text())
-    assert boosted["term"]["background"] in read(home, kitty)
+    assert boosted["term"]["background"] in read(home, term)
     run(home, "theme-set", "--reapply")  # cambiar de tema con el modo puesto lo mantiene
-    assert boosted["term"]["background"] in read(home, kitty)
+    assert boosted["term"]["background"] in read(home, term)
     run(home, "contrast-set", "off")
-    assert read(home, kitty) == before and not nv.exists()
+    assert read(home, term) == before and not nv.exists()
 
 
 # ── background-set ───────────────────────────────────────────

@@ -23,14 +23,14 @@ Every folder with a `theme.json` is a theme. `current` is a link to the active o
 | `hypr.border` | Gradient of the active window border (2 or more colors) | Hyprland |
 | `hypr.inactive` | Border of inactive windows, accepts transparency `#rrggbbaa` | Hyprland |
 | `hypr.group` | Border of window groups | Hyprland |
-| `term` | Background, text, cursor, selection and the 16 ANSI colors (`colors[0..15]`) | kitty, btop, fzf, starship |
+| `term` | Background, text, cursor, selection and the 16 ANSI colors (`colors[0..15]`) | Ghostty, btop, fzf, starship |
 | `gtk` | Windows, header bars, cards and accent | GTK3/GTK4 apps |
 | `nvim` | Colorscheme name: `catppuccin-mocha`, `catppuccin-macchiato`, `catppuccin-frappe`, `catppuccin-latte`, `tokyonight`, `rose-pine`, `rose-pine-dawn`, `gruvbox`, `kanagawa-dragon`, `everforest`, `dracula` | Neovim |
 | `nvimColors.syn` | Syntax colors (string, fun, keyword, comment...) of the "tema" colorscheme; without them mini.hues is almost gray. Every theme has them, taken from its original palette | Neovim |
 | `nvimColors.ui` | Optional: overrides interface colors of "tema" (see below) | Neovim |
 | `light` | `true` for light themes (without it, dark): decides light or dark Mac mode and light or dark GTK (see below) | config-set |
 
-When the change shows up: Quickshell, Hyprland, kitty, Ghostty and open Neovims
+When the change shows up: Quickshell, Hyprland, Ghostty and open Neovims
 (theme-set sends them `background` and the colorscheme through their socket) right away; btop
 and GTK and Qt apps when reopened; fzf and fastfetch (the Pepe, tinted with the
 accent) in new terminals; hyprlock on the next lock.
@@ -53,10 +53,10 @@ The monospace font is separate from the theme: it isn't in `theme.json` and does
 change when switching themes or with `--reapply`. Pick it in the **Font** tab of Super+T
 (each row written in its font) or with `font-set "<family>"` (`font-set` alone
 lists the installed monospace Nerd Fonts, one per family). It's saved in
-`~/.local/state/font` and font-set writes `kitty/font.conf`, `ghostty/font.ghostty` and
+`~/.local/state/font` and font-set writes `ghostty/font.ghostty` and
 `hypr/font.conf` (hyprbars in Normal mode, with the "Propo" variant if it exists). With
-none chosen, each program keeps its own: GeistMono in kitty, Ghostty's default
-and JetBrains Mono in hyprbars. The Quickshell interface, hyprlock and
+none chosen, each program keeps its own: Ghostty's default and JetBrains
+Mono in hyprbars. The Quickshell interface, hyprlock and
 Mac mode keep theirs.
 
 ## Increase contrast
@@ -66,13 +66,13 @@ thicker, opaque window borders (the active one in the theme's text color), no bl
 pure black/white hyprbars text, more marked secondary text and bar borders in
 Quickshell, and GTK/libadwaita high contrast (`org.gnome.desktop.a11y.interface
 high-contrast`, which the portal passes on to GTK4 apps). Qt apps don't change.
-Terminals (kitty, Ghostty, btop, fzf) and Neovim get slightly stronger colors:
+Terminals (Ghostty, btop, fzf) and Neovim get slightly stronger colors:
 the background moves 30 % towards black (white in light themes), the text towards
 white (black), and every ANSI, syntax and UI text color that reads below 4.5:1
 against that background is nudged just enough to reach it (`boost_contrast()` in
 `themelib.py`). theme-set writes the boosted theme to
 `~/.local/state/increased-contrast.json`, which Neovim reads instead of the theme's
-`theme.json`. kitty, Ghostty and open Neovims change at once; btop and fzf when reopened.
+`theme.json`. Ghostty and open Neovims change at once; btop and fzf when reopened.
 Toggle it from the **Increase Contrast** tile of the Control Center (Mac mode), the
 contrast button of the bar next to Night light and Keep awake (Normal mode), or with
 `contrast-set on|off|toggle` (`contrast-set` alone prints `on` or `off`). It's saved in

@@ -114,7 +114,15 @@ local mason_bin = vim.fn.expand("~/.local/share/nvim-lazyvim/mason/bin")
 if vim.fn.isdirectory(mason_bin) == 1 then
   vim.env.PATH = mason_bin .. ":" .. vim.env.PATH
 end
-vim.lsp.config("lua_ls", { settings = { Lua = { workspace = { library = vim.api.nvim_get_runtime_file("", true) } } } })
+-- lua_ls: solo el runtime de Neovim y mini.nvim; indexar todo el runtimepath cuesta
+-- segundos de CPU y cientos de MB al abrir cualquier .lua
+local mini_dir = vim.fn.stdpath("data") .. "/site/pack/core/opt/mini.nvim"
+vim.lsp.config("lua_ls", {
+  settings = { Lua = { workspace = { checkThirdParty = false, library = { vim.env.VIMRUNTIME, mini_dir } } } },
+})
+-- clangd solo con errores: su log normal va por stderr y Neovim lo apunta como ERROR
+-- en lsp.log, que crece sin límite (bajar el nivel de vim.lsp.log no lo evita)
+vim.lsp.config("clangd", { cmd = { "clangd", "--log=error" } })
 vim.lsp.enable({ "clangd", "ruby_lsp", "lua_ls" })
 vim.diagnostic.config({ virtual_text = { spacing = 1, prefix = "●" }, severity_sort = true, float = { border = "rounded" } })
 vim.api.nvim_create_autocmd("LspAttach", {

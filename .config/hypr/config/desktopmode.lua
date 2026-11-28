@@ -266,12 +266,20 @@ end, { non_consuming = true, transparent = true, ignore_mods = true })
 -- Mientras se arrastra una ventana del modo escritorio el cursor no puede subir a la
 -- barra de arriba (zona reservada): se devuelve a su borde. Se activa al empezar el
 -- arrastre (DesktopUnsnap) y se apaga al soltar (clic o on_drag_end de hyprbars).
-local confine = hl.timer(function()
+-- Por si se pierde el soltar, se apaga solo sin ventana del modo escritorio o a los ~30 s.
+local confineTicks = 0
+local confine
+confine = hl.timer(function()
+	confineTicks = confineTicks + 1
+	if confineTicks > 1875 or not snapTarget() then -- 1875 × 16 ms = 30 s
+		confine:set_enabled(false)
+		return
+	end
 	local c, m = hl.get_cursor_pos(), hl.get_monitor_at_cursor()
 	if c and m and c.y < m.y + m.reserved.top then
 		hl.dispatch(hl.dsp.cursor.move({ x = c.x, y = m.y + m.reserved.top }))
 	end
-end, { timeout = 8, type = "repeat" })
+end, { timeout = 16, type = "repeat" })
 confine:set_enabled(false)
 
 -- Global para poder llamarla con `hyprctl eval 'DesktopSnap()'` desde hyprbars
@@ -309,6 +317,7 @@ end
 function DesktopUnsnap()
 	local w = snapTarget()
 	if w then
+		confineTicks = 0
 		confine:set_enabled(true)
 	end
 	local old = w and snapped[w.address]

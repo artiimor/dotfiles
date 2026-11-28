@@ -17,7 +17,7 @@
 --
 -- CONTRAST: "Aumentar contraste" (`~/.config/themes/contrast-set on|off|toggle`, que lo
 -- guarda en ~/.local/state/increased-contrast como "1" o "0" y hace `hyprctl reload`).
--- decorations.lua lo usa para bordes más gruesos y opacos sin blur, y desktopmode.lua
+-- decorations.lua lo usa para bordes más gruesos y opacos, y desktopmode.lua
 -- para el texto y los botones de hyprbars
 
 local util = require("config.util")

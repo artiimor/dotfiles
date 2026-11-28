@@ -1,7 +1,7 @@
 [General]
 ColorScheme=Theme
 Name=Miami Night
-TerminalApplication=kitty
+TerminalApplication=ghostty
 
 [Icons]
 Theme=Sur-Transparente

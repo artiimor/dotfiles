@@ -1,7 +1,9 @@
 # Una variable por línea, `export K=V`: hypr/config/environment.lua lee este archivo
-# para que la sesión "Hyprland" sin uwsm tenga las mismas (menos TERM).
-export BROWSER=firefox
-export TERM=xterm-kitty
+# para que la sesión "Hyprland" sin uwsm tenga las mismas. TERM no se fija aquí: lo pone cada terminal.
+export BROWSER=brave
+# Claude Code sin spinner en el título: lo cambiaba varias veces por segundo y hacía
+# redibujar hyprbars/Hyprland sin parar
+export CLAUDE_CODE_DISABLE_TERMINAL_TITLE=1
 export QT_QPA_PLATFORM="wayland;xcb"
 # Qt con qt6ct: estilo Breeze, iconos Sur-Transparente y colores mac-dark (qt6ct/colors/mac-dark.conf).
 # Las apps KDE (Dolphin) leen además ~/.config/kdeglobals. Plasma ya no está instalado.

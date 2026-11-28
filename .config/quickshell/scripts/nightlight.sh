@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Luz nocturna para la barra de Quickshell, habla con hyprsunset por IPC
-#   sin argumentos: estado en JSON
+#   sin argumentos: estado en JSON: class ("on" | "off" | "unavailable"),
+#                   temperature y next (epoch del próximo cambio del horario).
+#                   Los textos los pone (y traduce) Quickshell
 #   toggle:         activa/desactiva
 #   up / down:      más fría / más cálida
 #
@@ -13,33 +15,32 @@ step=250
 state="${XDG_RUNTIME_DIR:-/tmp}/nightlight-off"
 conf="$HOME/.config/hypr/hyprsunset.conf"
 
-# Traducción (ver themelib.py): t "Text %1" arg
-t() { python3 "$(dirname "$0")/../../themes/themelib.py" tr "$@"; }
-
 # Quickshell (services/NightLight.qml) vuelve a leer el estado tras cada acción
 
 current() {
     hyprctl hyprsunset temperature 2>/dev/null | grep -oE '^[0-9]+$'
 }
 
-# Epoch del último cambio de perfil del horario (hoy o ayer)
-last_profile_change() {
-    local now last=0 t ts day
+# Epoch del último y del próximo cambio de perfil del horario: "último próximo"
+profile_changes() {
+    local now last=0 next=0 t ts day
     now=$(date +%s)
     for t in $(sed -nE 's/^\s*time\s*=\s*([0-9]{1,2}:[0-9]{2}).*/\1/p' "$conf"); do
-        for day in today yesterday; do
+        for day in yesterday today tomorrow; do
             ts=$(date -d "$day $t" +%s)
             (( ts <= now && ts > last )) && last=$ts
+            (( ts > now && (next == 0 || ts < next) )) && next=$ts
         done
     done
-    echo "$last"
+    echo "$last $next"
 }
 
 is_on() {
-    local t=$1
+    local t=$1 changes
     [ "$t" -lt 6000 ] || return 1
-    [ -f "$state" ] && (( $(stat -c %Y "$state") > $(last_profile_change) )) && return 1
-    return 0
+    [ -f "$state" ] || return 0
+    read -ra changes < <(profile_changes)
+    (( $(stat -c %Y "$state") <= changes[0] ))
 }
 
 t=$(current)
@@ -60,11 +61,10 @@ case "$1" in
         t=$(( t < 2500 ? 2500 : t > 5750 ? 5750 : t ))
         hyprctl hyprsunset temperature "$t" >/dev/null ;;
     *)
-        if [ -z "$t" ]; then
-            echo "{\"text\": \"󰖙\", \"class\": \"unavailable\", \"tooltip\": \"$(t "hyprsunset is not running")\"}"
-        elif is_on "$t"; then
-            echo "{\"text\": \"󰖔\", \"class\": \"on\", \"tooltip\": \"$(t "Night light: %1 K" "$t")\\n$(t "Scroll: adjust · Click: turn off")\"}"
-        else
-            echo "{\"text\": \"󰖙\", \"class\": \"off\", \"tooltip\": \"$(t "Night light off")\\n$(t "Click: turn on")\"}"
-        fi ;;
+        if [ -z "$t" ]; then class=unavailable
+        elif is_on "$t"; then class=on
+        else class=off
+        fi
+        read -ra changes < <(profile_changes)
+        echo "{\"class\": \"$class\", \"temperature\": ${t:-0}, \"next\": ${changes[1]}}" ;;
 esac

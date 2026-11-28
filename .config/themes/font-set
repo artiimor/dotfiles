@@ -12,7 +12,6 @@
 # ~/.local/state/font y se escribe un archivo pequeño por programa, que su config
 # incluye después de su fuente por defecto (sin elegir ninguna, se queda esa):
 #
-#   kitty       kitty/font.conf     (globinclude en kitty.conf)        (al momento)
 #   Ghostty     ghostty/font.ghostty (config-file en config.ghostty)   (al momento)
 #   hyprbars    hypr/font.conf      (lo lee desktopmode.lua, Modo normal) (al momento)
 #
@@ -55,10 +54,9 @@ def families(fams):
 def apply(fam, fams):
     propo = f"{fam} Propo" if f"{fam} Propo" in fams else fam
     write(STATE, fam + "\n")
-    write(f"{CONF}/kitty/font.conf", f"# {HEADER}\nfont_family {fam}\n")
     write(f"{CONF}/ghostty/font.ghostty", f"# {HEADER}\nfont-family = {fam}\n")
     write(f"{CONF}/hypr/font.conf", f"# {HEADER}\n{propo}\n")
-    reload_terminals()  # kitty y Ghostty releen su config
+    reload_terminals()  # Ghostty relee su config
     run_quiet(["hyprctl", "reload"])  # hyprbars
     notify(tr("Font"), tr("Font"), fam)
 

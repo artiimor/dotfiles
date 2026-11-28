@@ -13,7 +13,6 @@
 #   Quickshell   lo lee directamente de themes/current/theme.json   (al momento)
 #   Hyprland     hypr/config/theme.lua                               (al momento)
 #   hyprlock     hypr/hyprlock-colors.conf                           (próximo bloqueo)
-#   kitty        kitty/themes/current.conf                           (al momento)
 #   Ghostty      ghostty/themes/current (config: theme = current)    (al momento)
 #   btop         btop/themes/current.theme                           (al abrirlo)
 #   fzf          themes/current-env.sh, cargado desde ~/.bashrc      (terminales nuevas)
@@ -95,31 +94,6 @@ $accent  = {c("accent")}
 $accent2 = {c("accent2")}
 $yellow  = {c("yellow")}
 $red     = {c("red")}
-""")
-
-
-def gen_kitty(name, t):
-    term, ui = t["term"], t["ui"]
-    cols = "\n".join(f"color{i:<2} {c}" for i, c in enumerate(term["colors"]))
-    bg = term["background"]
-    write(f"{CONF}/kitty/themes/current.conf", f"""# {HEADER.format(name)}
-{cols}
-
-background            {bg}
-foreground            {term["foreground"]}
-cursor                {term["cursor"]}
-cursor_text_color     {bg}
-cursor_trail_color    {term["cursor"]}
-selection_background  {term["selection_background"]}
-selection_foreground  {term["selection_foreground"]}
-url_color             {term["colors"][6]}
-
-active_border_color   {ui["accent"]}
-inactive_border_color {term["colors"][8]}
-active_tab_foreground   {bg}
-active_tab_background   {ui["accent"]}
-inactive_tab_foreground {term["colors"][8]}
-inactive_tab_background {bg}
 """)
 
 
@@ -299,7 +273,7 @@ def gen_fastfetch(name, t):
 GENERATORS = [gen_hyprland, gen_hyprlock, gen_gtk, gen_qt, gen_fastfetch]
 # Los de las terminales van por gen_terminals(): con "Aumentar contraste" reciben el
 # tema pasado por boost_contrast() (contrast-set los vuelve a llamar al cambiarlo)
-TERMINAL_GENERATORS = [gen_kitty, gen_ghostty, gen_btop, gen_fzf]
+TERMINAL_GENERATORS = [gen_ghostty, gen_btop, gen_fzf]
 
 
 def gen_terminals(name, t):

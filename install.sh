@@ -13,7 +13,8 @@
 #   4. Tema de colores (theme-set) y perfil Modo Mac / Modo normal (config-set)
 #   5. Plugin hyprbars con los parches del modo escritorio (y quita los botones propios de GTK/Brave)
 #   6. Sistema (sudo): greetd + ReGreet, Plymouth "sobrio", keyd (ThinkPad), zona horaria
-#      automática, más intentos de contraseña antes del bloqueo (faillock), servicios
+#      automática, más intentos de contraseña antes del bloqueo (faillock), perfil de
+#      energía según la corriente (udev), servicios
 #
 # Ejecútalo como tu usuario, no como root: pide sudo cuando lo necesita.
 # Se puede repetir sin miedo: pacman usa --needed, lo que se sobrescribe va a ~/.dotfiles-old
@@ -55,17 +56,16 @@ DESKTOP=(
 )
 # Terminal, shell y Neovim
 TERMINAL=(
-	ghostty kitty starship btop fastfetch bash-completion fzf eza bat
+	ghostty starship btop fastfetch bash-completion fzf eza bat
 	neovim lazygit ripgrep tree-sitter-cli nodejs npm micro
 	python python-defusedxml git base-devel rsync
 )
 FONTS=(
 	ttf-jetbrains-mono-nerd otf-geist-mono-nerd inter-font cantarell-fonts
 	# Más Nerd Fonts monoespaciadas para font-set (Super+T, Fuente)
-	ttf-firacode-nerd ttf-hack-nerd ttf-cascadia-code-nerd ttf-iosevka-nerd
-	ttf-meslo-nerd ttf-sourcecodepro-nerd ttf-ubuntu-mono-nerd ttf-victor-mono-nerd
-	otf-commit-mono-nerd ttf-mononoki-nerd ttf-zed-mono-nerd ttf-ibmplex-mono-nerd
-	otf-monaspace-nerd ttf-0xproto-nerd ttf-martian-mono-nerd ttf-roboto-mono-nerd
+	ttf-firacode-nerd ttf-hack-nerd ttf-cascadia-code-nerd ttf-sourcecodepro-nerd
+	ttf-ubuntu-mono-nerd otf-commit-mono-nerd ttf-mononoki-nerd ttf-ibmplex-mono-nerd
+	ttf-0xproto-nerd ttf-martian-mono-nerd ttf-roboto-mono-nerd
 	noto-fonts noto-fonts-emoji noto-fonts-cjk
 )
 # Login y arranque
@@ -513,6 +513,13 @@ fi
 # faillock: 10 fallos seguidos bloquean la cuenta 10 min (por defecto 3); afecta a sudo y al bloqueo
 if ask "$(t "Allow 10 password attempts before locking the account (instead of 3)?")"; then
 	install_sys "$S/etc/security/faillock.conf" /etc/security/faillock.conf
+fi
+
+# Perfil de energía automático: ahorro con batería, equilibrado enchufado (solo en portátiles)
+if grep -qsx Battery /sys/class/power_supply/*/type &&
+	ask "$(t "Power saver profile on battery and balanced when plugged in?")"; then
+	install_sys "$S/etc/udev/rules.d/90-power-profile.rules" /etc/udev/rules.d/90-power-profile.rules
+	sudo udevadm control --reload
 fi
 
 if ask "$(t "Enable services (NetworkManager, bluetooth, power-profiles-daemon)?")"; then

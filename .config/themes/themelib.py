@@ -85,8 +85,8 @@ def theme_light():
 
 
 # ── Aumentar contraste (contrast-set) ────────────────────────
-# Con el modo activo, theme-set escribe los colores de las terminales (kitty, Ghostty,
-# btop, fzf) pasados por boost_contrast() y deja el tema entero así en CONTRAST_THEME,
+# Con el modo activo, theme-set escribe los colores de las terminales (Ghostty, btop,
+# fzf) pasados por boost_contrast() y deja el tema entero así en CONTRAST_THEME,
 # que Neovim lee en vez de themes/current/theme.json (nvim/lua/tema/theme.lua).
 
 CONTRAST_STATE = f"{HOME}/.local/state/increased-contrast"
@@ -213,8 +213,7 @@ def qs_theme_reload():
 
 
 def reload_terminals():
-    run_quiet(["pkill", "-USR1", "-x", "kitty"])  # kitty relee su config
-    run_quiet(["pkill", "-USR2", "-x", "ghostty"])  # ghostty también (SIGUSR2)
+    run_quiet(["pkill", "-USR2", "-x", "ghostty"])  # Ghostty relee su config
 
 
 def notify(app, title, body):
