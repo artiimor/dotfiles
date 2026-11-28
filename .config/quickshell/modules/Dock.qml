@@ -1,10 +1,10 @@
-// Dock del modo escritorio (config/desktopmode.lua en Hyprland). Solo aparece
-// en las pantallas cuyo workspace activo está en modo escritorio.
-// Enseña las ventanas de ese workspace y las minimizadas (más apagadas).
-//   clic en una ventana        la trae al frente
-//   clic en la ventana activa  la minimiza
-//   clic en una minimizada     la recupera en este workspace
-// Se oculta solo: aparece al dejar el ratón un ratillo en el borde de abajo.
+// Desktop-mode dock (config/desktopmode.lua in Hyprland). It only shows
+// on screens whose active workspace is in desktop mode.
+// Shows that workspace's windows and the minimized ones (dimmer).
+//   click on a window          brings it to the front
+//   click on the active window minimizes it
+//   click on a minimized one   restores it on this workspace
+// Auto-hides: appears when the mouse rests a moment on the bottom edge.
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
@@ -29,15 +29,15 @@ Variants {
         screen: modelData
         visible: workspace !== null && DesktopMode.workspaces.includes(workspace.name)
         anchors.bottom: true
-        // Margen extra alrededor del dock: visible, el ratón puede salirse un poco sin que se esconda
+        // Extra margin around the dock: while visible, the mouse can stray a bit without hiding it
         readonly property int slack: 40
         implicitWidth: box.width + Theme.gap * 2 + slack * 2
         implicitHeight: box.height + Theme.gap * 2 + slack
         color: "transparent"
         WlrLayershell.namespace: "quickshell-dock"
-        // Oculto no reserva hueco: las ventanas usan toda la pantalla
+        // Hidden it reserves no space: windows use the whole screen
         exclusionMode: ExclusionMode.Ignore
-        // Escondido solo captura la tira del borde; el resto deja pasar el ratón
+        // Hidden it only captures the edge strip; the rest lets the mouse through
         mask: Region { item: dock.shown ? area : edge }
 
         property bool shown: false
@@ -54,7 +54,7 @@ Variants {
             onTriggered: dock.shown = false
         }
 
-        // Solo sirve de máscara: escondido, areaHover solo ve el ratón en esta tira
+        // Only a mask: when hidden, areaHover only sees the mouse in this strip
         Item {
             id: edge
             anchors.bottom: parent.bottom
@@ -62,8 +62,8 @@ Variants {
             height: 2
         }
 
-        // El dock va dentro de area: así su HoverHandler sigue activo aunque
-        // el ratón esté sobre los botones (sus MouseArea no le roban el hover)
+        // The dock goes inside area: so its HoverHandler stays active even when
+        // the mouse is over the buttons (their MouseAreas don't steal the hover)
         Item {
             id: area
             anchors.fill: parent
@@ -91,7 +91,7 @@ Variants {
                     spacing: 4
 
                     Repeater {
-                        // ScriptModel conserva los delegados de las ventanas que siguen
+                        // ScriptModel keeps the delegates of the windows that remain
                         model: ScriptModel { values: dock.windows }
 
                         Item {
@@ -121,7 +121,7 @@ Variants {
                                 opacity: app.minimized ? 0.4 : 1
                             }
 
-                            // Rayita debajo: más larga en la ventana activa
+                            // Small line below: longer on the active window
                             Rectangle {
                                 visible: !app.minimized
                                 anchors.horizontalCenter: parent.horizontalCenter

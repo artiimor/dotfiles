@@ -1,5 +1,5 @@
-// Memoria y temperatura, leídas de /proc y /sys cada 15 segundos, o cada 2
-// mientras se ven (fast: el cajón de la barra abierto, lo pone Status.qml).
+// Memory and temperature, read from /proc and /sys every 15 seconds, or every 2
+// while visible (fast: the bar drawer open, set by Status.qml).
 pragma Singleton
 
 import QtQuick
@@ -20,7 +20,7 @@ Singleton {
         thermal.reload();
     }
 
-    // Al abrir el cajón se lee ya, sin esperar al siguiente disparo
+    // When the drawer opens it reads right away, without waiting for the next tick
     onFastChanged: if (fast) refresh()
 
     Timer {
@@ -41,10 +41,10 @@ Singleton {
         }
     }
 
-    // Sensor de la CPU: hwmon de coretemp (Intel) o k10temp/zenpower (AMD); si no,
-    // la zona térmica x86_pkg_temp y, como último recurso, thermal_zone0 (suele ser
-    // acpitz, que no es la CPU). Los números de hwmonN cambian entre arranques,
-    // así que se busca al iniciar en vez de fijar una ruta.
+    // CPU sensor: coretemp hwmon (Intel) or k10temp/zenpower (AMD); otherwise
+    // the x86_pkg_temp thermal zone and, as a last resort, thermal_zone0 (usually
+    // acpitz, which isn't the CPU). hwmonN numbers change between boots,
+    // so it's looked up at start-up instead of hardcoding a path.
     Process {
         running: true
         command: ["sh", "-c", `

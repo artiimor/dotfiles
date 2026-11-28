@@ -8,7 +8,7 @@ import Quickshell.Services.Pipewire
 import Quickshell.Services.Mpris
 import Quickshell.Services.UPower
 
-// Estado del sistema compartido por la barra y sus popups.
+// System state shared by the bar and its popups.
 Singleton {
     id: sys
 
@@ -19,10 +19,10 @@ Singleton {
     readonly property var wifiNetwork: wifiDevice ? wifiDevice.networks.values.find(n => n.connected) ?? null : null
     readonly property bool wifiOn: Networking.wifiEnabled
     readonly property int wifiLevel: wifiNetwork ? wifiBars(wifiNetwork.signalStrength) : 0
-    // barras del icono Wi‑Fi (1–3) para una señal de 0 a 1
+    // Wi‑Fi icon bars (1–3) for a signal from 0 to 1
     function wifiBars(s) { return Math.max(1, Math.ceil(s * 3)); }
-    // El escaneo Wi‑Fi sigue activo mientras haya abierto algo que muestre la lista
-    // de redes (popup Wi‑Fi, ventana Network): cada uno suma 1 mientras se ve
+    // The Wi‑Fi scan stays active while something showing the network list
+    // is open (Wi‑Fi popup, Network window): each one adds 1 while visible
     property int scanUsers: 0
     Binding {
         when: sys.wifiDevice !== null
@@ -47,24 +47,24 @@ Singleton {
         sink.audio.volume = v;
     }
     function toggleMute() { if (sink && sink.audio) sink.audio.muted = !sink.audio.muted; }
-    // rueda de la barra: ±d con la misma regla que la barra normal (Theme.wheelStep de la
-    // config raíz): subiendo se para en 100 % y no toca un volumen que ya pase de 100 %
+    // bar wheel: ±d with the same rule as the normal bar (Theme.wheelStep from the
+    // root config): going up it stops at 100 % and doesn't touch a volume already above 100 %
     function stepVolume(d) {
         if (!sink || !sink.audio) return;
         const v = sink.audio.volume;
         sink.audio.volume = d > 0 ? (v < 1 ? Math.min(1, v + d) : v) : Math.max(0, v + d);
     }
-    // nombre visible de un nodo de Pipewire
+    // display name of a Pipewire node
     function nodeName(n) { return n ? (n.description || n.nickname || n.name) : ""; }
 
-    // ── multimedia ──
-    // playerctld es un proxy de playerctl, no un reproductor: fuera (como en la barra normal)
+    // ── media ──
+    // playerctld is a playerctl proxy, not a player: out (like in the normal bar)
     readonly property var player: {
         const ps = Mpris.players.values.filter(p => !p.dbusName.includes("playerctld"));
         return ps.find(p => p.isPlaying) ?? ps[0] ?? null;
     }
 
-    // ── batería ──
+    // ── battery ──
     readonly property var battery: UPower.displayDevice
     readonly property bool hasBattery: battery && battery.isLaptopBattery
     readonly property real batteryFraction: battery ? battery.percentage : 1
@@ -72,11 +72,11 @@ Singleton {
                                                 || battery.state === UPowerDeviceState.FullyCharged
                                                 || battery.state === UPowerDeviceState.PendingCharge)
 
-    // ── brillo (brightnessctl, pasa por logind) ──
-    // Solo con panel retroiluminado (portátil); en un sobremesa no hay
-    // /sys/class/backlight y el Control Center esconde el slider. El panel lo elige
-    // el mismo script que usa la barra normal (scripts/backlight-device de la config
-    // raíz) y se le pasa a brightnessctl con -d (sin él podría coger un LED).
+    // ── brightness (brightnessctl, goes through logind) ──
+    // Only with a backlit panel (laptop); on a desktop there is no
+    // /sys/class/backlight and the Control Center hides the slider. The panel is picked by
+    // the same script the normal bar uses (scripts/backlight-device from the root
+    // config) and passed to brightnessctl with -d (without it, it could pick an LED).
     property string backlightDevice: ""          // p. ej. "intel_backlight"
     readonly property bool hasBacklight: backlightDevice !== ""
     property real brightness: 1
@@ -108,7 +108,7 @@ Singleton {
         id: getProc
         command: ["brightnessctl", "-m", "-d", sys.backlightDevice]
         stdout: StdioCollector {
-            // "<panel>,backlight,<valor>,<porcentaje>%,<máximo>"
+            // "<panel>,backlight,<value>,<percent>%,<max>"
             onStreamFinished: {
                 const f = text.trim().split(",");
                 if (f.length >= 4) sys.brightness = parseInt(f[3]) / 100;
@@ -117,11 +117,11 @@ Singleton {
     }
     function refreshBrightness() { if (hasBacklight && !getProc.running) getProc.running = true; }
 
-    // Rueda de la barra: pasos de 5 % a través del Brightness de la config raíz
-    // (`qs ipc call brightness step <subir> <n>`), así sale su OSD y los dos quedan de
-    // acuerdo. Los pasos que llegan mientras corre una llamada se juntan en la
-    // siguiente. Si la config raíz no responde "true" (no está, o no ve panel), se
-    // cambia aquí directamente.
+    // Bar wheel: 5 % steps through the root config's Brightness
+    // (`qs ipc call brightness step <up> <n>`), so its OSD shows and both stay in
+    // sync. Steps arriving while a call is running are merged into the
+    // next one. If the root config doesn't answer "true" (not running, or no panel), it is
+    // changed here directly.
     property int _brightSteps: 0
     function stepBrightness(n) {
         if (!hasBacklight) return;
@@ -132,7 +132,7 @@ Singleton {
         if (_brightSteps === 0) { brightRefresh.restart(); return; }
         brightIpc.steps = _brightSteps;
         _brightSteps = 0;
-        // sube/baja y cuántos pasos por separado: un número negativo lo tomaría por opción
+        // up/down and how many steps separately: a negative number would be taken as an option
         brightIpc.command = ["qs", "ipc", "call", "brightness", "step",
             String(brightIpc.steps > 0), String(Math.abs(brightIpc.steps))];
         brightIpc.running = true;
@@ -147,24 +147,24 @@ Singleton {
             }
         }
     }
-    // brightnessctl de la config raíz tarda un poco en aplicar el valor
+    // the root config's brightnessctl takes a moment to apply the value
     Timer { id: brightRefresh; interval: 300; onTriggered: sys.refreshBrightness() }
 
-    // ── luz nocturna (Night Shift) ──
-    // Mismo script que la barra normal (scripts/nightlight.sh de la config raíz, habla
-    // con hyprsunset y guarda el apagado manual en $XDG_RUNTIME_DIR): el estado vive en
-    // hyprsunset, así que no hay nada que sincronizar.
+    // ── night light (Night Shift) ──
+    // Same script as the normal bar (scripts/nightlight.sh from the root config, talks
+    // to hyprsunset and saves manual off in $XDG_RUNTIME_DIR): the state lives in
+    // hyprsunset, so there's nothing to sync.
     readonly property string nightScript: Quickshell.shellDir + "/../scripts/nightlight.sh"
     property string nightState: "unavailable"    // "on" | "off" | "unavailable"
     readonly property bool nightOn: nightState === "on"
-    // Cada acción sube _nightGen: una lectura empezada antes se descarta (traería el
-    // estado viejo) y, si se pidió otra mientras corría, se repite al terminar
+    // Each action bumps _nightGen: a read started earlier is discarded (it would bring the
+    // old state) and, if another was requested while it ran, it repeats when done
     property int _nightGen: 0
     property bool _nightAgain: false
     function toggleNight() {
         if (nightAct.running || nightState === "unavailable") return;
         _nightGen++;
-        nightState = nightOn ? "off" : "on";   // optimista; se confirma al releer
+        nightState = nightOn ? "off" : "on";   // optimistic; confirmed on re-read
         nightAct.exec([nightScript, "toggle"]);
     }
     function refreshNight() {
@@ -185,24 +185,24 @@ Singleton {
         }
         onExited: if (sys._nightAgain) { sys._nightAgain = false; sys.refreshNight(); }
     }
-    // Sin sondeo: se lee al arrancar (onCompleted, abajo) y al abrir el panel de
-    // pantalla y el centro de control, los únicos que lo enseñan (shell.qml)
+    // No polling: read at start-up (onCompleted, below) and when opening the
+    // display panel and the control center, the only ones showing it (shell.qml)
 
-    // ── aumentar contraste ──
-    // contrast-set (scripts de temas) guarda el estado en un archivo que Theme vigila:
-    // aquí solo se lanza, el estado es Theme.contrast
+    // ── increase contrast ──
+    // contrast-set (theme scripts) saves the state in a file that Theme watches:
+    // here it's only launched, the state is Theme.contrast
     function toggleContrast() {
         if (!contrastAct.running)
             contrastAct.exec([Quickshell.env("HOME") + "/.config/themes/contrast-set", "toggle"]);
     }
     Process { id: contrastAct }
 
-    // ── cafeína (sin suspensión automática) ──
-    // El inhibidor lo tiene la config raíz (services/Idle.qml, que sigue en marcha en el
-    // Modo Mac): aquí no se crea otro. Se cambia con `qs ipc call idle toggle` y el estado
-    // se pregunta siempre con `qs ipc call idle get`: al arrancar, tras cada cambio desde
-    // aquí y cuando cambia el archivo que Idle reescribe en cada cambio (solo sirve de
-    // aviso). Si la config raíz no está, get no contesta "true" y el botón sale apagado.
+    // ── caffeine (no automatic suspend) ──
+    // The inhibitor belongs to the root config (services/Idle.qml, which keeps running in
+    // Mac Mode): no other one is created here. It is toggled with `qs ipc call idle toggle` and the state
+    // is always queried with `qs ipc call idle get`: at start-up, after each change from
+    // here and when the file Idle rewrites on every change changes (it only serves as a
+    // notice). If the root config isn't running, get doesn't answer "true" and the button shows off.
     property bool caffeine: false
     property bool _caffeineAgain: false
     function toggleCaffeine() { if (!idleToggle.running) idleToggle.running = true; }
@@ -222,7 +222,7 @@ Singleton {
         onExited: if (sys._caffeineAgain) { sys._caffeineAgain = false; sys.syncCaffeine(); }
     }
     property FileView _idleFile: FileView {
-        // sin XDG_RUNTIME_DIR no hay archivo (Idle tampoco lo escribe)
+        // without XDG_RUNTIME_DIR there's no file (Idle doesn't write it either)
         path: Quickshell.env("XDG_RUNTIME_DIR") ? Quickshell.env("XDG_RUNTIME_DIR") + "/qs-idle-inhibited" : ""
         watchChanges: path !== ""
         preload: false
@@ -231,12 +231,12 @@ Singleton {
     }
     Component.onCompleted: { syncCaffeine(); refreshNight(); }
 
-    // ── memoria y temperatura (como services/SysStats.qml de la config raíz) ──
+    // ── memory and temperature (like the root config's services/SysStats.qml) ──
     property real memUsed: 0     // GiB
     property real memTotal: 0    // GiB
     property int temp: 0         // °C
     readonly property int tempCritical: 80
-    // cada 15 s, o cada 2 s mientras se ve el popup de sistema (lo pone shell.qml)
+    // every 15 s, or every 2 s while the system popup is visible (set by shell.qml)
     property bool statsFast: false
     function refreshStats() { meminfo.reload(); if (thermal.path !== "") thermal.reload(); }
     onStatsFastChanged: if (statsFast) refreshStats()
@@ -253,7 +253,7 @@ Singleton {
             sys.memUsed = sys.memTotal - get("MemAvailable");
         }
     }
-    // sensor de la CPU: coretemp / k10temp / zenpower, si no x86_pkg_temp y si no thermal_zone0
+    // CPU sensor: coretemp / k10temp / zenpower, else x86_pkg_temp, else thermal_zone0
     Process {
         running: true
         command: ["sh", "-c", `

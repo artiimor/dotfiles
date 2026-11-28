@@ -1,9 +1,9 @@
-// Estado: una sola isla a la derecha con lo de siempre a la vista (audio,
-// brillo, red, bluetooth, batería; brillo y batería solo si el equipo los
-// tiene, así en un sobremesa no salen). Al pasar el ratón se despliega hacia la
-// izquierda el resto (como el reloj: el cajón cuelga por fuera, así lo fijo
-// no se mueve): memoria, temperatura, perfil de energía y apagado.
-// La campana solo aparece si hay notificaciones (Super+A abre el panel igual).
+// Status: a single island on the right with the usual things in view (audio,
+// brightness, network, bluetooth, battery; brightness and battery only if the machine
+// has them, so they don't show on a desktop). On hover the rest slides out to the
+// left (like the clock: the drawer hangs outside, so the fixed part
+// doesn't move): memory, temperature, power profile and shutdown.
+// The bell only shows if there are notifications (Super+A opens the panel anyway).
 import QtQuick
 import Quickshell
 import Quickshell.Bluetooth
@@ -15,10 +15,10 @@ import qs.services
 Item {
     id: status
 
-    // Se abre el cajón: Bar.qml lo usa para esconder la bandeja que queda debajo
+    // The drawer opens: Bar.qml uses it to hide the tray underneath
     readonly property bool drawerOpen: drawer.open
 
-    // Memoria y temperatura más a menudo mientras se ven
+    // Memory and temperature more often while visible
     Binding {
         target: SysStats
         property: "fast"
@@ -26,11 +26,11 @@ Item {
         when: drawer.open
     }
 
-    // Solo cuenta lo fijo; el cajón sobresale hacia la izquierda
+    // Only the fixed part counts; the drawer sticks out to the left
     implicitWidth: fixed.implicitWidth
     implicitHeight: Theme.barHeight
 
-    // ── Cajón: lo que no hace falta ver siempre ───────────
+    // ── Drawer: what doesn't need to be always visible ───────────
     Drawer {
         id: drawer
         anchors.right: fixed.left
@@ -55,7 +55,7 @@ Item {
             tooltip: `${SysStats.temp}°C`
         }
 
-        // Perfil de energía · Clic: menú de perfiles
+        // Power profile · Click: profiles menu
         BarIcon {
             cell: Theme.iconCell
             padding: 4
@@ -72,7 +72,7 @@ Item {
             onClicked: Launcher.toggle("profiles")
         }
 
-        // Apagado · Clic: menú de energía (también con Super+Escape)
+        // Shutdown · Click: power menu (also with Super+Escape)
         BarIcon {
             cell: Theme.iconCell
             padding: 4
@@ -82,7 +82,7 @@ Item {
             onClicked: Launcher.toggle("power")
         }
 
-        // Separador fino entre el cajón y lo fijo
+        // Thin separator between the drawer and the fixed part
         Item {
             implicitWidth: 9
             implicitHeight: Theme.barHeight
@@ -122,8 +122,8 @@ Item {
             }
         }
 
-        // ── Brillo ────────────────────────────────────────────
-        // Rueda: brillo ±5% · Solo con panel retroiluminado (portátil)
+        // ── Brightness ────────────────────────────────────────
+        // Wheel: brightness ±5% · Only with a backlit panel (laptop)
         BarIcon {
             cell: Theme.iconCell
             padding: 4
@@ -155,7 +155,7 @@ Item {
 
             onClicked: Quickshell.execDetached(["networkmanager_dmenu"])
 
-            // La velocidad solo se mide mientras se ve el tooltip
+            // Speed is only measured while the tooltip is visible
             Binding {
                 target: Net
                 property: "measuring"
@@ -165,7 +165,7 @@ Item {
         }
 
         // ── Bluetooth ─────────────────────────────────────────
-        // Clic: bzmenu (con el lanzador de Quickshell como menú)
+        // Click: bzmenu (with the Quickshell launcher as menu)
         readonly property BluetoothAdapter adapter: Bluetooth.defaultAdapter
         readonly property var btConnected: adapter?.devices.values.filter(d => d.connected) ?? []
 
@@ -184,8 +184,8 @@ Item {
                 `${Quickshell.shellDir}/scripts/dmenu-qs -p '{hint}'`])
         }
 
-        // ── Batería ───────────────────────────────────────────
-        // Solo si UPower ve una batería de portátil (en un sobremesa no hay)
+        // ── Battery ───────────────────────────────────────────
+        // Only if UPower sees a laptop battery (there's none on a desktop)
         function formatTime(seconds) {
             if (!seconds)
                 return "";

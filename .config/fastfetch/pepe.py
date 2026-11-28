@@ -1,27 +1,27 @@
 #!/usr/bin/env python3
-# Pepes en ASCII con color para fastfetch, sacados de imágenes.
-# Genera pepe-<nombre>.txt; theme-set hace la versión teñida con el tema
-# (fastfetch/themed/), y config.jsonc usa la del mago.
+# Colored ASCII Pepes for fastfetch, made from images.
+# Generates pepe-<name>.txt; theme-set makes the theme-tinted version
+# (fastfetch/themed/), and config.jsonc uses the wizard one.
 #
-# Idea: las líneas oscuras del dibujo y el borde de la silueta se convierten en
-# caracteres que siguen su dirección ( - _ / \ | ) en un tono claro, para que se
-# vean sobre fondo oscuro; el relleno usa una rampa de densidad ( .:-=+*#%@ ) según
-# el brillo, con el color de la imagen. Así se mantienen los rasgos de cada Pepe.
+# Idea: the dark lines of the drawing and the silhouette edge become
+# characters following their direction ( - _ / \ | ) in a light tone, so they
+# show on a dark background; the fill uses a density ramp ( .:-=+*#%@ ) by
+# brightness, with the image color. This keeps each Pepe's features.
 #
-# Uso: python3 pepe.py            → todos
-#      python3 pepe.py hype 50    → solo uno, con otro ancho en columnas
+# Usage: python3 pepe.py          → all of them
+#        python3 pepe.py hype 50  → just one, with another width in columns
 import subprocess, sys, numpy as np
 from pathlib import Path
 
 BG = Path.home() / ".config/backgrounds"
-ASPECT = 2.1                 # alto/ancho de una celda de la terminal
-RAMP = " .:-=+*#%@"          # de menos a más denso
+ASPECT = 2.1                 # height/width of a terminal cell
+RAMP = " .:-=+*#%@"          # from least to most dense
 STROKE_RGB = np.array([200, 196, 226])
 
-# crop = (x, y, w, h) en la imagen original; bg = cómo se separa del fondo:
-#   ("flood", fuzz%) → se borra el color de la esquina (fondo liso)
-#   "blue"           → se borra lo azulado conectado con el borde (fondo de galaxia)
-# ink = brillo por debajo del cual un píxel es trazo
+# crop = (x, y, w, h) in the original image; bg = how it is separated from the background:
+#   ("flood", fuzz%) → the corner color is erased (flat background)
+#   "blue"           → bluish areas connected to the edge are erased (galaxy background)
+# ink = brightness below which a pixel is a stroke
 PEPES = {
     "hype":    dict(src=BG / "pepe-hype.jpg",    crop=(40, 40, 520, 520),  cols=46, bg=("flood", 12), ink=30),
     "mago":    dict(src=BG / "pepe-mago.png",    crop=(30, 190, 486, 760), cols=40, bg=("flood", 8),  ink=45),
@@ -56,7 +56,7 @@ def render(name, cfg, cols):
     lum = img @ [0.299, 0.587, 0.114]
     h, w = mask.shape
 
-    # Trazos: píxeles oscuros + el borde de la silueta (el contorno exterior se perdería en fondo oscuro)
+    # Strokes: dark pixels + the silhouette edge (the outer outline would get lost on a dark background)
     inner = mask.copy()
     for _ in range(max(1, w // 200)):
         inner &= np.roll(inner, 1, 0) & np.roll(inner, -1, 0) & np.roll(inner, 1, 1) & np.roll(inner, -1, 1)
@@ -68,7 +68,7 @@ def render(name, cfg, cols):
     rows = round((y1 - y0) / (cw * ASPECT))
     ch = (y1 - y0) / rows
 
-    # Dirección de los trazos: tensor de estructura del brillo suavizado (fuera de la silueta = negro)
+    # Stroke direction: structure tensor of the smoothed brightness (outside the silhouette = black)
     blur = np.where(mask, lum, 0)
     for _ in range(2):
         blur = (np.roll(blur, 1, 0) + np.roll(blur, -1, 0) + np.roll(blur, 1, 1) + np.roll(blur, -1, 1) + blur) / 5
@@ -78,7 +78,7 @@ def render(name, cfg, cols):
         sx, sy = gx[sl], gy[sl]
         jxx, jyy, jxy = (sx * sx).sum(), (sy * sy).sum(), (sx * sy).sum()
         coh = np.sqrt((jxx - jyy) ** 2 + 4 * jxy ** 2) / (jxx + jyy + 1e-9)
-        if coh < 0.35:                       # cruce o mancha sin dirección
+        if coh < 0.35:                       # crossing or blob without direction
             return "*"
         ang = (-(0.5 * np.degrees(np.arctan2(2 * jxy, jxx - jyy)) + 90)) % 180  # 0 = horizontal
         if ang < 22 or ang >= 158:
@@ -86,7 +86,7 @@ def render(name, cfg, cols):
             return "_" if py.mean() > lp.shape[0] * 0.6 else "-"
         return "/" if ang < 68 else "|" if ang < 112 else "\\"
 
-    # rango de brillo del relleno: percentiles de la propia figura, para usar toda la rampa
+    # fill brightness range: percentiles of the figure itself, to use the whole ramp
     lo, hi = np.percentile(lum[mask & ~line_px], (8, 97))
     lines = []
     for r in range(rows):
@@ -98,15 +98,15 @@ def render(name, cfg, cols):
                 line += " "
                 continue
             lp = line_px[sl] & m
-            bright = (lum[sl][m] > 200).mean()   # blancos de los ojos: mandan sobre el trazo
+            bright = (lum[sl][m] > 200).mean()   # whites of the eyes: they win over the stroke
             if lp.sum() / m.sum() > 0.2 and bright < 0.3:
                 char, rgb = stroke_char(sl, lp), STROKE_RGB
             else:
                 fill = img[sl][m & ~lp] if (m & ~lp).any() else img[sl][m]
-                # las zonas planas del dibujo caen en la mitad densa de la rampa, no en puntos
+                # flat areas of the drawing fall in the dense half of the ramp, not in dots
                 t = 0.45 + 0.55 * np.clip(((fill @ [0.299, 0.587, 0.114]).mean() - lo) / (hi - lo), 0, 1)
                 char = RAMP[1 + round(t * (len(RAMP) - 2))]
-                rgb = 255 * (fill.mean(0) / 255) ** 0.7          # algo más claro para fondo oscuro
+                rgb = 255 * (fill.mean(0) / 255) ** 0.7          # a bit lighter for a dark background
             code = "\x1b[38;2;%d;%d;%dm" % tuple(np.clip(rgb, 0, 255).astype(int))
             line += (code if code != last else "") + char
             last = code

@@ -9,21 +9,21 @@ alias ls='ls --color=auto'
 alias grep='grep --color=auto'
 PS1='[\u@\h \W]\$ '
 
-# Colores de bat y fzf a juego con kitty (fzf sale del tema activo: ~/.config/themes)
+# bat and fzf colors matching kitty (fzf comes from the active theme: ~/.config/themes)
 export BAT_THEME="ansi"
 [ -f ~/.config/themes/current-env.sh ] && . ~/.config/themes/current-env.sh
 
-# Prompt: starship (config en ~/.config/starship.toml)
+# Prompt: starship (config in ~/.config/starship.toml)
 command -v starship >/dev/null && eval "$(starship init bash)"
 
-# Historial grande, sin duplicados y compartido entre terminales
+# Large history, no duplicates and shared between terminals
 HISTSIZE=10000
 HISTFILESIZE=20000
 HISTCONTROL=ignoreboth:erasedups
 shopt -s histappend cdspell
 PROMPT_COMMAND="history -a${PROMPT_COMMAND:+; $PROMPT_COMMAND}"
 
-# ls con git (eza) y cat con colores (bat)
+# ls with git (eza) and cat with colors (bat)
 if command -v eza >/dev/null; then
     alias ls='eza --group-directories-first'
     alias ll='eza -l --group-directories-first --git --no-user --time-style=relative'
@@ -32,8 +32,8 @@ if command -v eza >/dev/null; then
 fi
 command -v bat >/dev/null && alias cat='bat --paging=never --style=plain'
 
-# fzf: Ctrl+R historial, Ctrl+T archivos, Alt+C carpetas (colores del tema activo)
+# fzf: Ctrl+R history, Ctrl+T files, Alt+C folders (active theme colors)
 command -v fzf >/dev/null && eval "$(fzf --bash)"
 
-# Neovim: `nvim` es la config sobria con mini.nvim; `lazyvim` abre la de LazyVim
+# Neovim: `nvim` is the sober mini.nvim config; `lazyvim` opens the LazyVim one
 lazyvim() { NVIM_APPNAME=nvim-lazyvim nvim "$@"; }

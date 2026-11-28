@@ -6,32 +6,32 @@ import Quickshell.Hyprland
 import Quickshell.Io
 import Quickshell.Wayland
 
-// Mitad izquierda de la barra superior: workspaces 1-5 y luego el nombre de la app enfocada
-// en negrita, donde iría el menú global.
-// Los workspaces flotantes (modo escritorio: todos en los perfiles mac, ver desktopmode.lua) llevan
-// el número dentro de una cajita redondeada; los de tiling, el número sin más.
+// Left half of the top bar: workspaces 1-5 and then the focused app's name
+// in bold, where the global menu would go.
+// Floating workspaces (desktop mode: all of them in the mac profiles, see desktopmode.lua) have
+// the number inside a small rounded box; tiling ones, just the number.
 Row {
     id: lh
     required property var screen
     spacing: 10
 
     readonly property HyprlandMonitor monitor: (screen ? Hyprland.monitorFor(screen) : null) ?? Hyprland.focusedMonitor
-    // los ids de Hyprland son monitor*10 + n (wsFor en binds.lua)
+    // Hyprland ids are monitor*10 + n (wsFor in binds.lua)
     readonly property int base: (monitor?.id ?? 0) * 10
     readonly property int activeId: monitor?.activeWorkspace?.id ?? -1
 
-    // ids de los workspaces en modo escritorio (flotantes), uno por línea
+    // ids of the desktop-mode (floating) workspaces, one per line
     property var floatingIds: []
     FileView {
         path: Quickshell.env("HOME") + "/.local/state/desktop-workspaces"
         watchChanges: true
-        printErrors: false   // no existe hasta que se usa el modo escritorio una vez
+        printErrors: false   // doesn't exist until desktop mode is used once
         onFileChanged: reload()
         onLoaded: lh.floatingIds = text().split("\n").filter(l => l !== "")
         onLoadFailed: lh.floatingIds = []
     }
 
-    // ids de los workspaces con al menos una ventana
+    // ids of the workspaces with at least one window
     readonly property var busyIds: Hyprland.toplevels.values.map(t => t.workspace?.id ?? -1)
 
     readonly property var slots: {
@@ -41,7 +41,7 @@ Row {
     }
 
     function goTo(target) {
-        // la config de Hyprland es Lua, así que dispatch usa la sintaxis hl.dsp
+        // the Hyprland config is Lua, so dispatch uses the hl.dsp syntax
         Quickshell.execDetached(["hyprctl", "dispatch", `hl.dsp.focus({ workspace = "${target}" })`]);
     }
 
@@ -54,7 +54,7 @@ Row {
             id: wsRow
             anchors.verticalCenter: parent.verticalCenter
             Repeater {
-                // ScriptModel conserva los delegados de los huecos que siguen
+                // ScriptModel keeps the delegates of the slots that remain
                 model: ScriptModel { values: lh.slots }
                 delegate: MouseArea {
                     id: ws
@@ -76,7 +76,7 @@ Row {
                         font.bold: ws.active
                         font.pointSize: 10
                     }
-                    // workspace flotante: número dentro de una caja redondeada, como una ventanita
+                    // floating workspace: number inside a rounded box, like a small window
                     Rectangle {
                         visible: ws.floating
                         anchors.centerIn: label
@@ -88,7 +88,7 @@ Row {
                         border.color: label.color
                         opacity: label.opacity
                     }
-                    // puntito bajo los workspaces que tienen ventanas
+                    // small dot under the workspaces that have windows
                     Rectangle {
                         visible: ws.busy
                         width: 3; height: 3; radius: 1.5
@@ -107,7 +107,7 @@ Row {
         }
     }
 
-    // nombre de la app enfocada, en negrita, como la primera entrada de la barra de menús de macOS
+    // focused app name, in bold, like the first entry of the macOS menu bar
     Text {
         anchors.verticalCenter: parent.verticalCenter
         readonly property var win: ToplevelManager.activeToplevel

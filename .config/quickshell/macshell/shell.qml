@@ -12,24 +12,24 @@ ShellRoot {
     id: root
 
     // ── estado compartido ──
-    property var popups: []          // notificaciones que se ven ahora como banners
+    property var popups: []          // notifications currently shown as banners
     property bool centerOpen: false
     property bool dnd: false
     property string popupKind: ""    // "", "cc", "wifi", "battery", "clip", "sound", "display", "system", "tray"
-    property var popupItem: null     // SystemTrayItem para "tray"
-    property real popupRight: 6      // distancia de popWin al borde derecho de la pantalla
-    readonly property int popupMargin: 8   // margen transparente de popWin alrededor de la tarjeta
+    property var popupItem: null     // SystemTrayItem for "tray"
+    property real popupRight: 6      // distance from popWin to the screen's right edge
+    readonly property int popupMargin: 8   // transparent margin of popWin around the card
 
     onCenterOpenChanged: if (centerOpen) popups = []
 
     function hidePopup(n) { popups = popups.filter(p => p && p !== n); }
 
-    // sin botón (desde IPC) se pega a la derecha de la pantalla
+    // without a button (from IPC) it sticks to the right of the screen
     function openPopup(kind, button, item) {
         centerOpen = false;
         popupItem = item ?? null;
-        // el borde derecho de la tarjeta queda a popupRight + popupMargin de la pantalla:
-        // así sobresale 6 px a la derecha del botón
+        // the card's right edge ends up popupRight + popupMargin from the screen edge:
+        // so it sticks out 6 px to the right of the button
         popupRight = button ? Math.max(6, button.rightDistance() - popupMargin - 6) : 6;
         popupKind = kind;
     }
@@ -40,7 +40,7 @@ ShellRoot {
     function closeAll() { popupKind = ""; popupItem = null; centerOpen = false; }
     function toggleCenter() { popupKind = ""; popupItem = null; centerOpen = !centerOpen; }
     function clearNotifications() { server.trackedNotifications.values.slice().forEach(n => n.dismiss()); }
-    // memoria y temperatura más a menudo mientras se ven
+    // memory and temperature more often while visible
     Binding { target: Sys; property: "statsFast"; value: root.popupKind === "system" }
 
     // ───────────── notificaciones ─────────────
@@ -76,7 +76,7 @@ ShellRoot {
     IpcHandler {
         target: "bar"
         // qs -p ~/.config/quickshell/macshell ipc call bar open cc|wifi|battery|clip|sound|display|system
-        // ("tray" necesita un SystemTrayItem, así que no se acepta)
+        // ("tray" needs a SystemTrayItem, so it isn't accepted)
         function open(kind: string): void {
             if (["cc", "wifi", "battery", "clip", "sound", "display", "system"].includes(kind)) root.openPopup(kind);
         }
@@ -108,7 +108,7 @@ ShellRoot {
         function close(): void { if (netLoader.item) netLoader.item.visible = false; }
     }
 
-    // ventana de Red (se abre poco): se construye la primera vez
+    // Network window (rarely opened): built the first time
     LazyLoader { id: netLoader; NetworkSettings {} }
     function openNetwork() { netLoader.active = true; netLoader.item.show(); }
 
@@ -119,16 +119,16 @@ ShellRoot {
         function close(): void { if (appearanceLoader.item) appearanceLoader.item.visible = false; }
     }
 
-    // ventana de Apariencia, igual que la de Red
+    // Appearance window, same as the Network one
     LazyLoader { id: appearanceLoader; AppearanceSettings {} }
     function openAppearance() { closeAll(); appearanceLoader.active = true; appearanceLoader.item.show(); }
 
-    // ───────────── barra superior ─────────────
+    // ───────────── top bar ─────────────
     PanelWindow {
         id: bar
         anchors { top: true; right: true; left: true }
         exclusionMode: ExclusionMode.Auto
-        // capa Top para que las ventanas a pantalla completa la tapen
+        // Top layer so fullscreen windows cover it
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.namespace: "macshell-bar"
         WlrLayershell.keyboardFocus: WlrKeyboardFocus.None
@@ -136,13 +136,13 @@ ShellRoot {
         implicitHeight: 26
         implicitWidth: barRow.implicitWidth + 16
 
-        // ── fondo del panel + mitad izquierda ──
+        // ── panel background + left half ──
         BackgroundEffect.blurRegion: barBlur
         Region { id: barBlur; item: barBg }
         Rectangle {
             id: barBg
             anchors.fill: parent
-            color: Theme.panel   // panel translúcido de Sur-Oscuro (claro en mac-light)
+            color: Theme.panel   // Sur-Oscuro translucent panel (light in mac-light)
             MouseArea { anchors.fill: parent; onClicked: root.closeAll() }
         }
 
@@ -156,7 +156,7 @@ ShellRoot {
             anchors { right: parent.right; rightMargin: 10; verticalCenter: parent.verticalCenter }
             spacing: 4
 
-            // iconos de bandeja de las apps (StatusNotifierItems)
+            // apps' tray icons (StatusNotifierItems)
             Repeater {
                 model: SystemTray.items
                 delegate: BarButton {
@@ -179,8 +179,8 @@ ShellRoot {
                 }
             }
 
-            // Ahora suena (MPRIS): solo con reproductor. Muestra lo que hará el clic
-            // (como la barra normal). Clic: pausa · Rueda: canción siguiente / anterior
+            // Now Playing (MPRIS): only with a player. Shows what the click will do
+            // (like the normal bar). Click: pause · Wheel: next / previous song
             BarButton {
                 visible: Sys.player !== null
                 scrollable: true
@@ -210,16 +210,16 @@ ShellRoot {
                 onScrolled: steps => steps > 0 ? Sys.player.previous() : Sys.player.next()
             }
 
-            // Cafeína: solo se ve mientras está activa (como Amphetamine); se activa
-            // desde el Control Center. Clic: desactivar
+            // Caffeine: only visible while active (like Amphetamine); enabled
+            // from the Control Center. Click: disable
             BarButton {
                 visible: Sys.caffeine
                 Glyph { width: 15; height: 15; name: "cup" }
                 onClicked: Sys.toggleCaffeine()
             }
 
-            // Sistema: memoria, temperatura, perfil de energía y apagado (el cajón de la
-            // barra normal). El icono se pone rojo con la CPU a temperatura crítica
+            // System: memory, temperature, power profile and shutdown (the normal bar's
+            // drawer). The icon turns red with the CPU at critical temperature
             BarButton {
                 id: sysBtn
                 active: root.popupKind === "system"
@@ -238,8 +238,8 @@ ShellRoot {
                 onClicked: root.togglePopup("clip", clipBtn)
             }
 
-            // Bluetooth · Clic: bzmenu con el lanzador de la config raíz (como la barra
-            // normal) · Clic derecho: encender / apagar
+            // Bluetooth · Click: bzmenu with the root config's launcher (like the normal
+            // bar) · Right click: turn on / off
             BarButton {
                 visible: Sys.bt !== null
                 Glyph {
@@ -267,8 +267,8 @@ ShellRoot {
                 onClicked: root.togglePopup("wifi", wifiBtn)
             }
 
-            // Brillo: solo con panel retroiluminado · Rueda: ±5 % · Clic: menú de
-            // Pantalla (brillo y Night Shift)
+            // Brightness: only with a backlit panel · Wheel: ±5 % · Click: Display
+            // menu (brightness and Night Shift)
             BarButton {
                 id: brightBtn
                 visible: Sys.hasBacklight
@@ -279,7 +279,7 @@ ShellRoot {
                 onScrolled: steps => Sys.stepBrightness(steps)
             }
 
-            // Sonido · Clic: menú de sonido · Clic derecho: silenciar · Rueda: ±5 %
+            // Sound · Click: sound menu · Right click: mute · Wheel: ±5 %
             BarButton {
                 id: soundBtn
                 active: root.popupKind === "sound"
@@ -339,11 +339,11 @@ ShellRoot {
         }
     }
 
-    // ───────────── captura de clics fuera ─────────────
+    // ───────────── outside click capture ─────────────
     PanelWindow {
         visible: root.centerOpen || root.popupKind !== ""
         anchors { top: true; bottom: true; left: true; right: true }
-        // deja la barra al descubierto para que sus botones sigan funcionando
+        // leaves the bar uncovered so its buttons keep working
         exclusionMode: ExclusionMode.Normal
         WlrLayershell.layer: WlrLayer.Top
         WlrLayershell.namespace: "macshell-catcher"
@@ -351,7 +351,7 @@ ShellRoot {
         MouseArea { anchors.fill: parent; onClicked: root.closeAll() }
     }
 
-    // ───────────── popups de la barra ─────────────
+    // ───────────── bar popups ─────────────
     PanelWindow {
         id: popWin
         visible: root.popupKind !== ""
@@ -417,7 +417,7 @@ ShellRoot {
         Component {
             id: systemComp
             SystemPanel {
-                // el menú de perfiles es el lanzador de la config raíz (sale junto a la barra)
+                // the profiles menu is the root config's launcher (shows next to the bar)
                 onOpenProfiles: { root.closeAll(); Quickshell.execDetached(["qs", "ipc", "call", "launcher", "profiles"]); }
                 onOpenPower: { root.closeAll(); spotlight.close(); powerMenu.show(); }
             }
@@ -425,7 +425,7 @@ ShellRoot {
         Component { id: trayComp; TrayMenu { item: root.popupItem; onDone: root.closeAll() } }
     }
 
-    // ───────────── banners (arriba a la derecha) ─────────────
+    // ───────────── banners (top right) ─────────────
     PanelWindow {
         visible: true
         anchors { top: true; right: true }
@@ -475,7 +475,7 @@ ShellRoot {
         }
     }
 
-    // ───────────── centro de notificaciones ─────────────
+    // ───────────── notification center ─────────────
     NotificationCenter {
         open: root.centerOpen
         notifications: server.trackedNotifications.values

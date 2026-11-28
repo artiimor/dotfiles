@@ -1,7 +1,7 @@
-// Workspaces de Hyprland de ESTA pantalla, numerados 1..10 (en Hyprland son
-// id = monitor*10 + n, ver wsFor en binds.lua). Clic para ir, rueda para
-// pasar al siguiente/anterior. Los de modo escritorio llevan el número en un
-// recuadro, como una ventanita.
+// Hyprland workspaces of THIS screen, numbered 1..10 (in Hyprland they are
+// id = monitor*10 + n, see wsFor in binds.lua). Click to go, wheel to
+// move to the next/previous. Desktop-mode ones have the number in a
+// box, like a small window.
 import QtQuick
 import Quickshell
 import Quickshell.Hyprland
@@ -17,14 +17,14 @@ Island {
     required property ShellScreen screen
     readonly property HyprlandMonitor monitor: Hyprland.monitorFor(screen)
 
-    // (no se puede llamar focus: lo taparía la propiedad focus de Item)
+    // (can't be called focus: Item's focus property would shadow it)
     function goTo(target) {
         Hypr.dispatch(`hl.dsp.focus({ workspace = "${target}" })`);
     }
 
     Repeater {
-        // Los workspaces especiales (scratchpad) tienen id negativo: fuera.
-        // ScriptModel conserva los delegados de los que siguen
+        // Special workspaces (scratchpad) have a negative id: out.
+        // ScriptModel keeps the delegates of the ones that remain
         model: ScriptModel {
             values: Hyprland.workspaces.values.filter(w => w.id > 0 && w.monitor?.name === root.screen.name)
         }
@@ -32,8 +32,8 @@ Island {
         Item {
             id: ws
             required property HyprlandWorkspace modelData
-            // En el portátil (su pantalla es eDP-…), los 11..20 (huérfanos del
-            // monitor externo) muestran su número real
+            // On the laptop (its screen is eDP-…), 11..20 (orphans of the
+            // external monitor) show their real number
             readonly property int num: root.screen.name.startsWith("eDP") ? modelData.id : (modelData.id - 1) % 10 + 1
             readonly property bool active: modelData.id === root.monitor?.activeWorkspace?.id
             readonly property bool hovered: mouse.containsMouse
@@ -41,10 +41,10 @@ Island {
 
             anchors.verticalCenter: parent.verticalCenter
             implicitHeight: Theme.barHeight - 8
-            // Ancho fijo (como mínimo): el 1 y el 3 no miden lo mismo y quedaban desiguales
+            // Fixed width (at least): 1 and 3 aren't the same width and looked uneven
             implicitWidth: Math.max(24, label.implicitWidth + 14)
 
-            // El activo no lleva pastilla: solo una rayita debajo del número
+            // The active one has no pill: just a small line under the number
             Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
                 anchors.bottom: parent.bottom
@@ -71,7 +71,7 @@ Island {
 
             Text {
                 id: label
-                // Centrado y redondeado a píxeles enteros (si no, sale borroso)
+                // Centered and rounded to whole pixels (otherwise it's blurry)
                 x: Math.round((ws.width - implicitWidth) / 2)
                 y: Math.round((ws.height - implicitHeight) / 2)
                 text: ws.num
@@ -91,7 +91,7 @@ Island {
         }
     }
 
-    // La rueda funciona en toda la isla, no solo encima de un número
+    // The wheel works on the whole island, not only over a number
     WheelHandler {
         parent: root
         acceptedDevices: PointerDevice.Mouse | PointerDevice.TouchPad

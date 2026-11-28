@@ -1,7 +1,7 @@
-// Brillo de la pantalla (lee /sys, cambia con brightnessctl). Solo hay algo
-// que controlar si existe un panel con retroiluminación (/sys/class/backlight):
-// en un sobremesa no lo hay y `available` queda en false, así la barra, el
-// panel de notificaciones y el OSD esconden el brillo.
+// Screen brightness (reads /sys, changes with brightnessctl). There's only something
+// to control if a backlit panel exists (/sys/class/backlight):
+// on a desktop there's none and `available` stays false, so the bar, the
+// notification panel and the OSD hide brightness.
 pragma Singleton
 
 import QtQuick
@@ -11,40 +11,40 @@ import Quickshell.Io
 Singleton {
     id: root
 
-    // Panel de /sys/class/backlight, por tipo raw > platform > firmware (así no se coge
-    // un acpi_video0 muerto si hay intel_backlight); "" si no hay ninguno
+    // Panel from /sys/class/backlight, by type raw > platform > firmware (so a dead
+    // acpi_video0 isn't picked if there's intel_backlight); "" if there's none
     property string device: ""
     readonly property bool available: device !== ""
     property int percent: 0
-    // Icono según el nivel (tres tramos, como el del volumen)
+    // Icon by level (three ranges, like the volume one)
     readonly property string icon: ["󰃞", "󰃟", "󰃠"][Math.min(2, Math.floor(percent / 100 * 3))]
 
     function raise() { set(percent + 5); }
     function lower() { set(percent - 5); }
 
-    // Valor (en %) que falta por aplicar: al arrastrar llegan valores mientras
-    // brightnessctl aún corre; se guarda el último y se aplica al terminar
+    // Value (in %) still to apply: while dragging, values arrive while
+    // brightnessctl is still running; the last one is kept and applied when it finishes
     property int pending: -1
 
     function set(p) {
         if (!available)
             return;
-        // percent cambia ya, así la barra sigue al ratón y las teclas se acumulan
+        // percent changes right away, so the bar follows the mouse and key presses add up
         percent = pending = Math.max(1, Math.min(100, Math.round(p)));
         if (!setter.running)
             apply();
     }
 
     function apply() {
-        // -d: siempre el panel detectado (sin él brightnessctl podría coger un LED)
+        // -d: always the detected panel (without it brightnessctl could pick an LED)
         setter.command = ["brightnessctl", "-d", device.split("/").pop(), "--min-value=1", "set", pending + "%"];
         pending = -1;
         setter.running = true;
     }
 
-    // Para las teclas de brillo de Hyprland: qs ipc call brightness up/down.
-    // step: n pasos de 5 % de una vez, hacia arriba o abajo (la rueda de macshell);
-    // devuelve si hay panel, así macshell sabe si tiene que cambiarlo por su cuenta
+    // For Hyprland's brightness keys: qs ipc call brightness up/down.
+    // step: n steps of 5 % at once, up or down (macshell's wheel);
+    // returns whether there's a panel, so macshell knows if it has to change it on its own
     IpcHandler {
         target: "brightness"
         function up(): void { root.raise(); }
@@ -55,7 +55,7 @@ Singleton {
         }
     }
 
-    // Busca el panel una vez al arrancar (el mismo script que usa macshell)
+    // Looks for the panel once at start-up (the same script macshell uses)
     Process {
         running: true
         command: [Quickshell.shellDir + "/scripts/backlight-device"]
@@ -69,21 +69,21 @@ Singleton {
         onExited: root.pending >= 0 ? root.apply() : current.reload()
     }
 
-    // sysfs no se puede vigilar, pero el kernel avisa de cada cambio del panel con un
-    // uevent "change" (también cuando lo cambia otro, p. ej. brightnessctl a mano):
-    // se relee en cada línea de udevadm en vez de consultar cada pocos segundos
+    // sysfs can't be watched, but the kernel reports every panel change with a
+    // "change" uevent (also when someone else changes it, e.g. brightnessctl by hand):
+    // it is re-read on every udevadm line instead of polling every few seconds
     Process {
         running: root.available
         command: ["udevadm", "monitor", "-k", "-s", "backlight"]
         stdout: SplitParser {
-            // Mientras se aplica un cambio no (al arrastrar, percent va por delante);
-            // setter relee al terminar
+            // Not while a change is being applied (when dragging, percent is ahead);
+            // setter re-reads when done
             onRead: if (!setter.running) current.reload()
         }
     }
 
-    // blockLoading: si no, `current` puede cargar antes que `max`, percent
-    // quedaría en 0 y una tecla de subir pondría el brillo al 5 %
+    // blockLoading: otherwise `current` may load before `max`, percent
+    // would stay at 0 and an up key would set brightness to 5 %
     FileView {
         id: max
         path: root.available ? root.device + "/max_brightness" : ""

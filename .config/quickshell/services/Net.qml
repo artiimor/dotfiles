@@ -1,6 +1,6 @@
-// Red: qué conexión hay (wifi o cable), la señal, la IP y la velocidad de
-// bajada/subida (midiendo cuántos bytes pasan por la interfaz cada segundo,
-// solo mientras alguien la enseña: measuring, el tooltip de la barra).
+// Network: which connection there is (wifi or cable), the signal, the IP and the
+// download/upload speed (measuring how many bytes go through the interface each second,
+// only while something shows it: measuring, the bar tooltip).
 pragma Singleton
 
 import QtQuick
@@ -16,14 +16,14 @@ Singleton {
     readonly property var wired: devices.find(d => d.type === DeviceType.Wired && d.connected) ?? null
     readonly property var wifiNetwork: wifi?.networks.values.find(n => n.connected) ?? null
 
-    // Según el backend, la señal viene como 0–1 o 0–100. Es var y no int: al
-    // recargar, el Net viejo a medio destruir puede dar undefined y un int avisa
+    // Depending on the backend, the signal comes as 0–1 or 0–100. It's var and not int: on
+    // reload, the half-destroyed old Net may give undefined and an int warns
     readonly property var signal: {
         const s = wifiNetwork?.signalStrength ?? 0;
         return Math.round(s > 1 ? s : s * 100);
     }
 
-    // Interfaz en uso (el cable manda si están los dos)
+    // Interface in use (cable wins if both are up)
     readonly property string iface: wired?.name ?? wifi?.name ?? ""
 
     property string ip: ""       // "192.168.1.10/24"
@@ -46,7 +46,7 @@ Singleton {
         ip = "";
         _last = null;
         down = up = 0;
-        // exec mata la lectura de la interfaz anterior, si sigue en marcha
+        // exec kills the read of the previous interface, if still running
         if (iface)
             readIp();
         else
@@ -66,8 +66,8 @@ Singleton {
         }
     }
 
-    // La IP puede cambiar sin cambiar de interfaz (DHCP): se relee cada 5 min
-    // y al empezar a enseñarla, o cada 2 s mientras no hay ninguna (recién conectado)
+    // The IP can change without changing interface (DHCP): re-read every 5 min
+    // and when it starts being shown, or every 2 s while there's none (just connected)
     Timer {
         interval: root.ip ? 300000 : 2000
         running: root.iface !== ""
@@ -78,8 +78,8 @@ Singleton {
     // ── Velocidad ─────────────────────────────────────────
     property var _last: null
 
-    // Al dejar de medir se olvida la última muestra: si no, la primera medida de
-    // la vez siguiente sería la media de todo el rato sin mirar
+    // When measuring stops the last sample is forgotten: otherwise the first measurement
+    // next time would be the average of the whole unwatched period
     onMeasuringChanged: {
         _last = null;
         down = up = 0;

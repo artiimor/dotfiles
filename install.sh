@@ -1,36 +1,36 @@
 #!/usr/bin/env bash
-# Instala este escritorio sobre un CachyOS recién instalado.
+# Installs this desktop on a freshly installed CachyOS.
 #
 #   git clone https://github.com/artiimor/dotfiles.git ~/dotfiles
-#   ~/dotfiles/install.sh            pregunta antes de cada paso
-#   ~/dotfiles/install.sh --yes      lo hace todo sin preguntar
+#   ~/dotfiles/install.sh            asks before each step
+#   ~/dotfiles/install.sh --yes      does everything without asking
 #
-# Pasos (cada uno se puede saltar):
-#   1. Paquetes del escritorio (pacman) y los de AUR (bzmenu, iconos WhiteSur) con makepkg
-#   1b. Gráfica: drivers que falten y variables de NVIDIA si es la principal (no en híbridos)
-#   2. Apps extra (Firefox, Brave, Spotify, Discord, Proton...)
-#   3. Dotfiles: .config (con macshell), .bashrc, webapps, iconos Sur -> ~ (lo que pisa va a ~/.dotfiles-old/<fecha>) y bash como shell
-#   4. Tema de colores (theme-set) y perfil Modo Mac / Modo normal (config-set)
-#   5. Plugin hyprbars con los parches del modo escritorio (y quita los botones propios de GTK/Brave)
-#   6. Sistema (sudo): greetd + ReGreet, Plymouth "sobrio", keyd (ThinkPad), zona horaria
-#      automática, más intentos de contraseña antes del bloqueo (faillock), perfil de
-#      energía según la corriente (udev), servicios
+# Steps (each one can be skipped):
+#   1. Desktop packages (pacman) and AUR ones (bzmenu, WhiteSur icons) with makepkg
+#   1b. GPU: missing drivers and NVIDIA variables if it's the primary one (not on hybrids)
+#   2. Extra apps (Firefox, Brave, Spotify, Discord, Proton...)
+#   3. Dotfiles: .config (with macshell), .bashrc, webapps, Sur icons -> ~ (whatever gets replaced goes to ~/.dotfiles-old/<date>) and bash as shell
+#   4. Color theme (theme-set) and Mac Mode / Normal Mode profile (config-set)
+#   5. hyprbars plugin with the desktop-mode patches (and removes GTK/Brave's own buttons)
+#   6. System (sudo): greetd + ReGreet, Plymouth "sobrio", keyd (ThinkPad), automatic
+#      time zone, more password attempts before lockout (faillock), power profile
+#      based on the power source (udev), services
 #
-# Ejecútalo como tu usuario, no como root: pide sudo cuando lo necesita.
-# Se puede repetir sin miedo: pacman usa --needed, lo que se sobrescribe va a ~/.dotfiles-old
-# y monitors.lua, variables.lua, inputs.lua, los archivos user.* y el tema elegido se respetan si ya existen.
+# Run it as your user, not as root: it asks for sudo when needed.
+# Safe to re-run: pacman uses --needed, whatever is overwritten goes to ~/.dotfiles-old
+# and monitors.lua, variables.lua, inputs.lua, the user.* files and the chosen theme are kept if they already exist.
 
 set -euo pipefail
 
 REPO="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-# Tema de colores: el que ya tengas (al repetir la instalación no se pierde), si no grafito
+# Color theme: the one you already have (not lost when re-running the install), otherwise grafito
 THEME="$(basename "$(readlink "$HOME/.config/themes/current" 2>/dev/null)" 2>/dev/null)"
 [[ -f "$REPO/.config/themes/$THEME/theme.json" ]] || THEME="grafito"
 YES=0
 [[ "${1:-}" == "--yes" || "${1:-}" == "-y" ]] && YES=1
 
-# Traducción de los mensajes con el themelib.py del repo (puede que ~/.config/themes
-# aún no exista): t "Text %1" arg. Sin python3, en inglés con los %N cambiados aquí
+# Messages are translated with the repo's themelib.py (~/.config/themes may
+# not exist yet): t "Text %1" arg. Without python3, in English with the %N replaced here
 t() {
 	python3 "$REPO/.config/themes/themelib.py" tr "$@" 2>/dev/null && return
 	local s="$1" i=1 a
@@ -39,10 +39,10 @@ t() {
 	printf '%s' "$s"
 }
 
-# ---------------------------------------------------------------- paquetes
+# ---------------------------------------------------------------- packages
 
-# Escritorio: Hyprland + Quickshell y lo que usan los binds y la barra
-# (fd, libqalculate y python-gobject: Spotlight y portapapeles de macshell)
+# Desktop: Hyprland + Quickshell and what the binds and the bar use
+# (fd, libqalculate and python-gobject: macshell's Spotlight and clipboard)
 DESKTOP=(
 	hyprland quickshell uwsm xdg-desktop-portal-hyprland
 	hypridle hyprlock hyprsunset hyprshot hyprpicker grim slurp
@@ -54,7 +54,7 @@ DESKTOP=(
 	qt6ct breeze nwg-look adw-gtk-theme papirus-icon-theme
 	fd libqalculate python-gobject
 )
-# Terminal, shell y Neovim
+# Terminal, shell and Neovim
 TERMINAL=(
 	ghostty starship btop fastfetch bash-completion fzf eza bat
 	neovim lazygit ripgrep tree-sitter-cli nodejs npm micro
@@ -62,21 +62,21 @@ TERMINAL=(
 )
 FONTS=(
 	ttf-jetbrains-mono-nerd otf-geist-mono-nerd inter-font cantarell-fonts
-	# Más Nerd Fonts monoespaciadas para font-set (Super+T, Fuente)
+	# More monospace Nerd Fonts for font-set (Super+T, Font)
 	ttf-firacode-nerd ttf-hack-nerd ttf-cascadia-code-nerd ttf-sourcecodepro-nerd
 	ttf-ubuntu-mono-nerd otf-commit-mono-nerd ttf-mononoki-nerd ttf-ibmplex-mono-nerd
 	ttf-0xproto-nerd ttf-martian-mono-nerd ttf-roboto-mono-nerd
 	noto-fonts noto-fonts-emoji noto-fonts-cjk
 )
-# Login y arranque
+# Login and boot
 SYSTEM=(greetd greetd-regreet cage plymouth keyd)
-# No están en los repos: se compilan desde AUR
-# whitesur-icon-theme: base de los iconos Sur del Modo Mac
+# Not in the repos: built from AUR
+# whitesur-icon-theme: base of the Mac Mode Sur icons
 AUR=(bzmenu whitesur-icon-theme)
 # Opcionales
 APPS=(firefox brave-bin spotify-launcher discord proton-pass proton-vpn-gtk-app claude-code github-cli)
 
-# ---------------------------------------------------------------- utilidades
+# ---------------------------------------------------------------- utilities
 
 bold=$'\e[1m' dim=$'\e[2m' accent=$'\e[35m' red=$'\e[31m' reset=$'\e[0m'
 
@@ -84,7 +84,7 @@ step() { printf '\n%s==>%s %s%s%s\n' "$accent" "$reset" "$bold" "$*" "$reset"; }
 info() { printf '    %s%s%s\n' "$dim" "$*" "$reset"; }
 warn() { printf '    %s!%s %s\n' "$red" "$reset" "$*"; }
 
-# ask "pregunta" -> 0 si sí (Enter = sí)
+# ask "question" -> 0 if yes (Enter = yes)
 ask() {
 	((YES)) && return 0
 	local r
@@ -104,35 +104,35 @@ fi
 BACKUP="$HOME/.dotfiles-old/$(date +%Y%m%d-%H%M%S)"
 ME="$(id -un)"
 
-# Pide sudo una vez y lo mantiene vivo (las compilaciones de AUR pueden tardar)
+# Asks for sudo once and keeps it alive (AUR builds can take a while)
 sudo -v
 while sleep 60; do sudo -n true; done 2>/dev/null &
 SUDO_KEEPALIVE=$!
 trap 'kill "$SUDO_KEEPALIVE" 2>/dev/null' EXIT
 
-# Archivos de config que se editan a mano: si ya existen no se pisan al repetir
+# Config files edited by hand: if they already exist they aren't overwritten on re-runs
 KEEP=(hypr/config/monitors.lua hypr/config/variables.lua hypr/config/inputs.lua themes/current
 	hypr/config/user.lua ghostty/user.ghostty nvim/lua/user.lua)
 
-# Copia de un archivo de /etc (o similar) antes de sobrescribirlo
+# Backup of a file from /etc (or similar) before overwriting it
 backup_sys() {
 	local f
 	for f; do
-		# sudo solo para leer: la copia es del usuario
+		# sudo only for reading: the copy belongs to the user
 		# shellcheck disable=SC2024
 		[[ -e "$f" ]] && mkdir -p "$BACKUP/system${f%/*}" && sudo cat "$f" >"$BACKUP/system$f"
 	done
 	return 0
 }
 
-# install_sys SRC DST: instala un archivo del sistema (644) guardando antes el que hubiera
+# install_sys SRC DST: installs a system file (644), first backing up whatever was there
 install_sys() {
 	backup_sys "$2"
 	sudo install -Dm644 "$1" "$2"
 }
 
-# Instala con pacman lo que esté en los repos; lo que no, avisa (p. ej. paquetes
-# solo de CachyOS en un Arch puro) y si hay un helper de AUR lo intenta por ahí
+# Installs with pacman whatever is in the repos; for the rest it warns (e.g. packages
+# only in CachyOS on plain Arch) and tries an AUR helper if there is one
 pacman_install() {
 	local p ok=() missing=()
 	for p; do
@@ -148,7 +148,7 @@ pacman_install() {
 	return 0
 }
 
-# Copia src -> dst; lo que se sobrescriba se guarda en $BACKUP con la misma ruta
+# Copies src -> dst; whatever is overwritten is saved in $BACKUP with the same path
 copy_tree() {
 	local src="$1" dst="$2" rel="${2#"$HOME"/}" k excl=()
 	mkdir -p "$dst"
@@ -158,8 +158,8 @@ copy_tree() {
 	rsync -a --backup --backup-dir="$BACKUP/$rel" "${excl[@]}" "$src/" "$dst/"
 }
 
-# Los pocos archivos que necesitan una ruta absoluta llevan @HOME@: se cambia por tu $HOME.
-# Solo se tocan los que trae el repo, nada más de ~/.config
+# The few files that need an absolute path contain @HOME@: it is replaced with your $HOME.
+# Only the ones shipped by the repo are touched, nothing else in ~/.config
 fix_home() {
 	local f home="${HOME//&/\\&}"
 	while IFS= read -rd '' f; do
@@ -168,10 +168,10 @@ fix_home() {
 	return 0
 }
 
-# gen_monitors ARCHIVO: escribe un monitors.lua con una regla por pantalla conectada.
-# Las salidas salen de hyprctl si Hyprland está en marcha y si no de /sys/class/drm.
-# Escala a ojo por resolución (panel interno eDP/LVDS/DSI = portátil); si no divide
-# exacto la resolución, "auto". Si no detecta nada no toca el archivo (queda la regla general)
+# gen_monitors FILE: writes a monitors.lua with one rule per connected screen.
+# Outputs come from hyprctl if Hyprland is running, otherwise from /sys/class/drm.
+# Scale guessed by resolution (internal eDP/LVDS/DSI panel = laptop); if it doesn't divide
+# the resolution exactly, "auto". If nothing is detected the file is left alone (the general rule stays)
 gen_monitors() {
 	local out="$1" f name mode w h s rules=""
 	local -A seen=()
@@ -199,10 +199,10 @@ gen_monitors() {
 	[[ -n "$rules" ]] || return 0
 	cat >"$out" <<-EOF
 		-- Monitor wiki https://wiki.hypr.land/Configuring/Basics/Monitors/
-		-- Creado por install.sh con las pantallas que había en la primera instalación;
-		-- a partir de aquí es tuyo (nombres: hyprctl monitors all). Escala calculada a ojo.
+		-- Created by install.sh with the screens present at the first install;
+		-- from here on it's yours (names: hyprctl monitors all). Scale is a rough guess.
 
-		-- Regla general (output "" = cualquier pantalla, p. ej. una que se enchufe luego)
+		-- General rule (output "" = any screen, e.g. one plugged in later)
 		hl.monitor({ output = "", mode = "preferred", position = "auto", scale = "auto" })
 		$rules
 	EOF
@@ -230,10 +230,10 @@ aur_install() {
 	return 0
 }
 
-# Gráfica: detecta las GPU por PCI (clase 0x03xx) y ofrece los drivers que faltan.
-# NVIDIA solo recibe variables de entorno si es la principal (única, o la que usó el
-# firmware al arrancar: boot_vga). En un híbrido (iGPU + NVIDIA) forzarlas rompe la sesión.
-# Las variables van a ~/.config/uwsm/env.d/gpu, que se regenera en cada ejecución.
+# GPU: detects GPUs over PCI (class 0x03xx) and offers the missing drivers.
+# NVIDIA only gets environment variables if it's the primary one (the only one, or the one the
+# firmware used at boot: boot_vga). On a hybrid (iGPU + NVIDIA) forcing them breaks the session.
+# The variables go to ~/.config/uwsm/env.d/gpu, regenerated on every run.
 gpu_setup() {
 	local d nvidia=0 intel=0 amd=0 primary=0 pkgs=() nv=() k r=""
 	local env="$HOME/.config/uwsm/env.d/gpu" mark="# Generado por install.sh: NVIDIA es la gráfica principal"
@@ -247,29 +247,29 @@ gpu_setup() {
 	done
 	((nvidia && !intel && !amd)) && primary=1
 	info "$(t "detected:%1" "$( ((nvidia)) && printf ' NVIDIA')$( ((intel)) && printf ' Intel')$( ((amd)) && printf ' AMD')")"
-	((intel)) && pkgs+=(intel-media-driver) # VA-API de Intel (AMD ya lo trae mesa)
+	((intel)) && pkgs+=(intel-media-driver) # Intel VA-API (mesa already ships AMD's)
 	if ((nvidia)); then
 		if pacman -Qq nvidia-utils &>/dev/null; then
 			info "$(t "NVIDIA drivers already installed (%1)" "$(pacman -Q nvidia-utils)")"
 		elif command -v chwd >/dev/null; then
-			# CachyOS: chwd elige el driver adecuado para la tarjeta
+			# CachyOS: chwd picks the right driver for the card
 			ask "$(t "Install the NVIDIA drivers with chwd?")" && { sudo chwd -a || warn "$(t "%1 failed" chwd)"; }
 		else
-			# Arch: módulo abierto (Turing/RTX 20 o posterior; las anteriores necesitan
-			# el driver propietario de su rama) con las cabeceras de cada kernel instalado
+			# Arch: open module (Turing/RTX 20 or later; older ones need
+			# the proprietary driver of their branch) with the headers of each installed kernel
 			nv=(nvidia-open-dkms nvidia-utils egl-wayland libva-nvidia-driver)
-			# solo cabeceras que estén en los repos: nada derivado del sistema va a AUR
+			# only headers that are in the repos: nothing derived from the system goes to AUR
 			for k in /usr/lib/modules/*/pkgbase; do
 				[[ -r "$k" ]] && pacman -Si "$(<"$k")-headers" &>/dev/null && nv+=("$(<"$k")-headers")
 			done
-			# Se pregunta aunque haya --yes: en una tarjeta anterior a Turing el módulo
-			# abierto no funciona y nvidia-utils bloquea nouveau (sin gráficos al reiniciar)
+			# Asked even with --yes: on a pre-Turing card the open
+			# module doesn't work and nvidia-utils blacklists nouveau (no graphics after reboot)
 			read -rp "    $(t "Install %1? (RTX 20/GTX 16 or newer only) [y/N]" "${nv[*]}") " r || r=""
 			[[ "$r" =~ ^[sSyY] ]] && { sudo pacman -S --needed --noconfirm "${nv[@]}" || warn "$(t "could not install the NVIDIA drivers")"; }
 		fi
 	fi
 	((${#pkgs[@]})) && ask "$(t "Install %1?" "${pkgs[*]}")" && pacman_install "${pkgs[@]}"
-	# Sin el driver propietario instalado, las variables romperían GLX y VA-API (nouveau)
+	# Without the proprietary driver installed, the variables would break GLX and VA-API (nouveau)
 	if ((primary)) && ! pacman -Qq nvidia-utils &>/dev/null; then
 		warn "$(t "NVIDIA without the proprietary driver: its environment variables are not set")"
 		primary=0
@@ -277,19 +277,19 @@ gpu_setup() {
 
 	if ((primary)); then
 		mkdir -p "${env%/*}"
-		[[ -L "$env" ]] && rm -f "$env" # no escribir a través de un enlace (stow...)
+		[[ -L "$env" ]] && rm -f "$env" # don't write through a symlink (stow...)
 		printf '%s\n' "$mark" "export LIBVA_DRIVER_NAME=nvidia" \
 			"export __GLX_VENDOR_LIBRARY_NAME=nvidia" "export NVD_BACKEND=direct" >"$env"
 		info "$(t "NVIDIA variables in %1" "~/.config/uwsm/env.d/gpu")"
 	else
 		((nvidia)) && info "$(t "NVIDIA in a hybrid: no global variables (the iGPU draws the desktop)")"
-		# solo se borra si lo generó este script
+		# only deleted if this script generated it
 		[[ -f "$env" ]] && head -1 "$env" | grep -qxF "$mark" && rm -f "$env"
 	fi
 	return 0
 }
 
-# ---------------------------------------------------------------- 1. paquetes
+# ---------------------------------------------------------------- 1. packages
 
 step "$(t "1. Desktop packages")"
 info "$(t "%1 desktop, %2 terminal, %3 fonts, %4 login/boot, AUR: %5" "${#DESKTOP[@]}" "${#TERMINAL[@]}" "${#FONTS[@]}" "${#SYSTEM[@]}" "${AUR[*]}")"
@@ -317,25 +317,25 @@ info "$(t "%1 -> ~/.config, .bashrc, .bash_profile, .profile, webapps, Sur icons
 info "$(t "whatever gets overwritten is saved in %1" "$BACKUP")"
 if ask "$(t "Copy them?")"; then
 	command -v rsync >/dev/null || sudo pacman -S --needed --noconfirm rsync
-	# monitors.lua: si aún no existe (primera instalación) se genera con las pantallas detectadas
+	# monitors.lua: if it doesn't exist yet (first install) it is generated with the detected screens
 	mon="$HOME/.config/hypr/config/monitors.lua"
 	[[ -e "$mon" ]] && mon=""
 	copy_tree "$REPO/.config" "$HOME/.config"
 	[[ -z "$mon" ]] || gen_monitors "$mon"
 	copy_tree "$REPO/.local/share/applications" "$HOME/.local/share/applications"
 	copy_tree "$REPO/.local/share/icons" "$HOME/.local/share/icons"
-	# Caché de iconos: sin ella, cada app GTK recorre todos sus directorios al arrancar
+	# Icon cache: without it, every GTK app walks all its directories at start-up
 	if command -v gtk-update-icon-cache >/dev/null; then
 		for d in "$REPO"/.local/share/icons/*/; do
 			gtk-update-icon-cache -q -f -t "$HOME/.local/share/icons/$(basename "$d")" || true
 		done
 	fi
-	# -c: como copy_tree, pero solo se guarda copia si el contenido cambia (no por la fecha)
+	# -c: like copy_tree, but a backup is only kept if the content changes (not the date)
 	rsync -ac --backup --backup-dir="$BACKUP" "$REPO"/{.bashrc,.bash_profile,.profile} "$HOME/"
 	fix_home
 	chmod +x "$HOME/.config/themes/theme-set" "$HOME/.config/themes/config-set" "$HOME/.config/themes/background-set" "$HOME/.config/themes/font-set" "$HOME/.config/themes/contrast-set" "$HOME/.config/quickshell/scripts/"* 2>/dev/null || true
-	# Cursor: la flecha negra de macOS (apple_cursor, no está en los repos de Arch).
-	# Si no se puede descargar se queda Adwaita. ~/.icons/default es para apps X11
+	# Cursor: the black macOS arrow (apple_cursor, not in the Arch repos).
+	# If it can't be downloaded Adwaita stays. ~/.icons/default is for X11 apps
 	cursor=Adwaita
 	cursor_dir="$HOME/.local/share/icons/macOS"
 	cursor_sha=9c6e5e13b068ce51a9e90a9abd6ce232ec7d25d4ceb05aa8ac76efbb99c76762
@@ -355,7 +355,7 @@ if ask "$(t "Copy them?")"; then
 			warn "$(t "could not download the macOS cursor; using Adwaita")"
 			sed -i 's/^gtk-cursor-theme-name=macOS/gtk-cursor-theme-name=Adwaita/' \
 				"$HOME/.config/gtk-3.0/settings.ini" "$HOME/.config/gtk-4.0/settings.ini"
-			# hypr/config/environment.lua lee uwsm/env: basta con cambiarlo aquí
+			# hypr/config/environment.lua reads uwsm/env: changing it here is enough
 			sed -i 's/^export XCURSOR_THEME="macOS".*/export XCURSOR_THEME="Adwaita"/' "$HOME/.config/uwsm/env"
 		fi
 		rm -f "$tmp"
@@ -367,20 +367,20 @@ if ask "$(t "Copy them?")"; then
 	[[ -d "$BACKUP" ]] && info "$(t "backups of the previous files in %1" "$BACKUP")"
 fi
 
-# CachyOS pone fish de shell por defecto; la config de este repo es la de bash (.bashrc)
+# CachyOS sets fish as the default shell; this repo's config is for bash (.bashrc)
 if [[ "$(getent passwd "$ME" | cut -d: -f7)" != */bash ]] && ask "$(t "Use bash as your shell (instead of fish)?")"; then
 	sudo chsh -s /bin/bash "$ME"
 	info "$(t "shell changed to bash: takes effect on your next login")"
 fi
 
-# ---------------------------------------------------------------- 4. tema
+# ---------------------------------------------------------------- 4. theme
 
 step "$(t "4. Color theme")"
 if [[ -x "$HOME/.config/themes/theme-set" ]] && ask "$(t "Apply the %1 theme?" "$THEME")"; then
 	"$HOME/.config/themes/theme-set" "$THEME" || warn "$(t "%1 failed; run it again inside Hyprland" theme-set)"
 fi
-# Perfil del escritorio (Super+Shift+T): el que ya tuvieras; en una instalación nueva, "mac".
-# Ajusta iconos GTK/Qt y qt6ct a ese perfil (el repo los trae como en "mac")
+# Desktop profile (Super+Shift+T): the one you already had; on a fresh install, "mac".
+# Adjusts GTK/Qt icons and qt6ct to that profile (the repo ships them as in "mac")
 if [[ -x "$HOME/.config/themes/config-set" ]]; then
 	"$HOME/.config/themes/config-set" --reapply || warn "$(t "%1 failed; run it again inside Hyprland" config-set)"
 fi
@@ -393,15 +393,15 @@ if command -v Hyprland >/dev/null && ask "$(t "Build hyprbars?")"; then
 	ver="$(Hyprland --version 2>/dev/null | grep -oP 'Hyprland \K[0-9]+\.[0-9]+\.[0-9]+' | head -1)" || true
 	[[ -n "$ver" ]] || { warn "$(t "can't tell the Hyprland version; trying the one from pacman")"; ver="$(pacman -Q hyprland 2>/dev/null | awk '{print $2}' | cut -d- -f1)" || true; }
 	dir="$(mktemp -d)"
-	# hyprland-plugins solo etiqueta algunas versiones (v0.57.0 vale para 0.57.1).
-	# Los parches se aplican en orden alfabético (hover-icon, on-drag-end, resize-top-edge)
+	# hyprland-plugins only tags some versions (v0.57.0 works for 0.57.1).
+	# The patches are applied in alphabetical order (hover-icon, on-drag-end, resize-top-edge)
 	if git clone https://github.com/hyprwm/hyprland-plugins "$dir/hp" &&
 		{ git -C "$dir/hp" checkout -q "v$ver" 2>/dev/null ||
 			git -C "$dir/hp" checkout -q "v${ver%.*}.0"; } &&
 		git -C "$dir/hp" apply "$REPO"/.config/hypr/hyprbars-*.patch &&
 		make -C "$dir/hp/hyprbars" all; then
-		# a un nombre temporal y mv (inodo nuevo): Hyprland tiene el .so viejo mapeado
-		# con dlopen y sobrescribirlo en su sitio lo puede tumbar (SIGBUS)
+		# to a temporary name and mv (new inode): Hyprland has the old .so mapped
+		# with dlopen and overwriting it in place can crash it (SIGBUS)
 		install -Dm755 "$dir/hp/hyprbars/hyprbars.so" "$HOME/.local/lib/hyprland/.hyprbars.so.new"
 		mv -f "$HOME/.local/lib/hyprland/.hyprbars.so.new" "$HOME/.local/lib/hyprland/hyprbars.so"
 		info "$(t "hyprbars v%1 installed in %2" "$ver" "~/.local/lib/hyprland")"
@@ -412,13 +412,13 @@ if command -v Hyprland >/dev/null && ask "$(t "Build hyprbars?")"; then
 	rm -rf "$dir"
 fi
 
-# Los botones de cerrar/minimizar/maximizar los pone hyprbars (estilo macOS):
-# se quitan los que dibujan las propias apps para que no salgan dos veces
+# The close/minimize/maximize buttons come from hyprbars (macOS style):
+# the ones drawn by the apps themselves are removed so they don't show twice
 if ask "$(t "Remove the window buttons drawn by GTK and Brave (keeping only the hyprbars ones)?")"; then
-	# GTK 4 / libadwaita lo lee de aquí; GTK 3 de gtk-3.0/settings.ini (paso 3)
+	# GTK 4 / libadwaita reads it from here; GTK 3 from gtk-3.0/settings.ini (step 3)
 	gsettings set org.gnome.desktop.wm.preferences button-layout 'appmenu:' 2>/dev/null || true
-	# Brave: "Usar la barra de título y los bordes del sistema" (brave://settings/appearance).
-	# Con Brave abierto el cambio se pierde al cerrarlo, así que solo se toca si está cerrado
+	# Brave: "Use system title bar and borders" (brave://settings/appearance).
+	# With Brave open the change is lost when it closes, so it's only touched when closed
 	prefs="$HOME/.config/BraveSoftware/Brave-Browser/Default/Preferences"
 	if pgrep -x brave >/dev/null; then
 		warn "$(t "Brave is open: close it and repeat this step, or enable it in brave://settings/appearance")"
@@ -440,7 +440,7 @@ if ask "$(t "Remove the window buttons drawn by GTK and Brave (keeping only the 
 	fi
 fi
 
-# ---------------------------------------------------------------- 6. sistema
+# ---------------------------------------------------------------- 6. system
 
 step "$(t "6. System (sudo)")"
 S="$REPO/system"
@@ -450,8 +450,8 @@ if ask "$(t "Log in with greetd + ReGreet (replaces SDDM or whatever login manag
 		install_sys "$S/etc/greetd/$f" "/etc/greetd/$f"
 	done
 	sudo install -Dm644 "$S/usr/share/backgrounds/greeter.jpg" /usr/share/backgrounds/greeter.jpg
-	# Saludo: el hostname. Idioma del reloj: el de las fechas del sistema (localectl: LC_TIME
-	# o, si no, LANG) sin ".UTF-8", p. ej. "es_ES", y su formato traducido a ese idioma
+	# Greeting: the hostname. Clock language: the system date locale (localectl: LC_TIME
+	# or, if not set, LANG) without ".UTF-8", e.g. "es_ES", and its format translated to that language
 	loc="$(localectl status 2>/dev/null | grep -oP '\b(LC_TIME|LANG)=\S+' | sort -r | head -1)" || true
 	loc="${loc#*=}"
 	loc="${loc:-${LC_TIME:-${LANG:-}}}"
@@ -460,7 +460,7 @@ if ask "$(t "Log in with greetd + ReGreet (replaces SDDM or whatever login manag
 	clock="$(LC_ALL="" LC_MESSAGES="" LANG="$loc" t "%A, %B %d  ·  %H:%M" 2>/dev/null)"
 	sudo sed -i -e "s|^greeting_msg = .*|greeting_msg = \"$(cat /etc/hostname 2>/dev/null || echo cachyos)\"|" \
 		-e "s|^format = .*|format = \"$clock\"|" -e "s|^locale = .*|locale = \"$loc\"|" /etc/greetd/regreet.toml
-	# El login que esté activo (sea cual sea) se desactiva para que greetd ocupe display-manager.service
+	# Whatever login manager is active is disabled so greetd takes display-manager.service
 	cur="$(basename "$(readlink /etc/systemd/system/display-manager.service 2>/dev/null)" .service)"
 	if [[ -n "$cur" && "$cur" != greetd ]]; then
 		sudo systemctl disable "$cur" || warn "$(t "could not disable %1" "$cur")"
@@ -482,9 +482,9 @@ if ask "$(t "Plymouth boot theme \"sobrio\" (neutral grey)?")"; then
 	fi
 fi
 
-# keyd: thinkpad.conf es para el teclado interno del ThinkPad. Se detecta por DMI: en un
-# ThinkPad la respuesta por defecto es sí; en otro equipo es no (también con --yes).
-# hypr/config/keyd.lua solo cambia keyd si existe /etc/keyd/thinkpad.conf.
+# keyd: thinkpad.conf is for the ThinkPad internal keyboard. Detected via DMI: on a
+# ThinkPad the default answer is yes; on other machines it's no (also with --yes).
+# hypr/config/keyd.lua only changes keyd if /etc/keyd/thinkpad.conf exists.
 KEYD_Q="$(t "Laptop keyboard with keyd: swap Alt and Super, and CapsLock as Control (made for ThinkPad)?")"
 KEYD=0
 if grep -qsi thinkpad /sys/class/dmi/id/product_version /sys/class/dmi/id/product_family; then
@@ -499,29 +499,29 @@ fi
 if ((KEYD)); then
 	install_sys "$S/etc/keyd/thinkpad.conf" /etc/keyd/thinkpad.conf
 	sudo systemctl enable --now keyd
-	# hypr/config/keyd.lua cambia el mapa con "keyd bind": hace falta el grupo keyd
+	# hypr/config/keyd.lua changes the map with "keyd bind": the keyd group is required
 	if getent group keyd >/dev/null && ! id -nG "$ME" | grep -qw keyd; then
 		sudo usermod -aG keyd "$ME"
 		info "$(t "added to the keyd group: takes effect on your next login")"
 	fi
 fi
 
-# Al conectarse a una red, NetworkManager pone la zona horaria de la ubicación (ver la cabecera del script)
+# When connecting to a network, NetworkManager sets the location's time zone (see the script header)
 info "$(t "automatic time zone: sends your public IP to ipinfo.io when you connect (not over VPN)")"
 if ask "$(t "Automatic time zone based on the network?")"; then
 	backup_sys /etc/NetworkManager/dispatcher.d/90-timezone
-	# NetworkManager solo ejecuta scripts de root que nadie más pueda escribir
+	# NetworkManager only runs root scripts nobody else can write
 	sudo install -Dm755 "$S/etc/NetworkManager/dispatcher.d/90-timezone" /etc/NetworkManager/dispatcher.d/90-timezone
-	# En Arch el servicio que ejecuta esos scripts no viene activado
+	# On Arch the service that runs those scripts isn't enabled by default
 	sudo systemctl enable NetworkManager-dispatcher.service
 fi
 
-# faillock: 10 fallos seguidos bloquean la cuenta 10 min (por defecto 3); afecta a sudo y al bloqueo
+# faillock: 10 failures in a row lock the account for 10 min (default 3); affects sudo and the lock screen
 if ask "$(t "Allow 10 password attempts before locking the account (instead of 3)?")"; then
 	install_sys "$S/etc/security/faillock.conf" /etc/security/faillock.conf
 fi
 
-# Perfil de energía automático: ahorro con batería, equilibrado enchufado (solo en portátiles)
+# Automatic power profile: power-saver on battery, balanced when plugged in (laptops only)
 if grep -qsx Battery /sys/class/power_supply/*/type &&
 	ask "$(t "Power saver profile on battery and balanced when plugged in?")"; then
 	install_sys "$S/etc/udev/rules.d/90-power-profile.rules" /etc/udev/rules.d/90-power-profile.rules
@@ -532,7 +532,7 @@ if ask "$(t "Enable services (NetworkManager, bluetooth, power-profiles-daemon)?
 	sudo systemctl enable --now NetworkManager bluetooth power-profiles-daemon
 fi
 
-# ---------------------------------------------------------------- fin
+# ---------------------------------------------------------------- end
 
 step "$(t "Done")"
 [[ -d "$BACKUP" ]] && info "$(t "backups of what was overwritten (including /etc) in %1" "$BACKUP")"

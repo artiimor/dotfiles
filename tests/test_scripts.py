@@ -1,9 +1,9 @@
-# Tests de los scripts de .config/themes (theme-set, config-set, font-set,
-# background-set, contrast-set). Cada test copia el .config del repo a un HOME temporal y
-# ejecuta los scripts ahí con THEMES_NO_RELOAD=1. En PATH van delante unos stubs
-# (qs, hyprctl, gsettings...) que solo apuntan su llamada: al terminar cada test
-# se comprueba que no se ha avisado a nada de fuera. Si el interruptor fallara,
-# los stubs también evitan tocar el escritorio del usuario.
+# Tests for the .config/themes scripts (theme-set, config-set, font-set,
+# background-set, contrast-set). Each test copies the repo's .config to a temporary HOME and
+# runs the scripts there with THEMES_NO_RELOAD=1. Some stubs go first in PATH
+# (qs, hyprctl, gsettings...) that only record their call: at the end of each test
+# it checks that nothing outside was notified. If the switch failed,
+# the stubs also avoid touching the user's desktop.
 import json
 import os
 import shutil
@@ -14,10 +14,10 @@ import pytest
 
 from conftest import CONFIG, THEMES, load_theme
 
-# Programas con efecto fuera de los archivos (y fc-list, que solo lee)
+# Programs with effects outside the files (and fc-list, which only reads)
 STUBS = ("qs", "hyprctl", "gsettings", "notify-send", "nvim", "ghostty", "pkill",
          "fc-list")
-# Lo que devuelve el fc-list falso a font-set: "familia\tspacing"
+# What the fake fc-list returns to font-set: "family\tspacing"
 FONTS = "Foo Nerd Font\t100\nFoo Nerd Font Propo\t0\nFoo Nerd Font Mono\t100\nBar Sans\t0\n"
 
 LIGHT = sorted(n for n in THEMES if load_theme(n).get("light"))
@@ -29,16 +29,16 @@ def home(tmp_path):
     shutil.copytree(CONFIG, tmp_path / ".config", symlinks=True)
     state = tmp_path / ".local/state"
     state.mkdir(parents=True)
-    # Con perfil guardado: si no, el primer theme-set pasa a Modo Mac
+    # With a saved profile: otherwise the first theme-set switches to Mac Mode
     (state / "desktop-profile").write_text("default\n")
-    # Un "Neovim abierto": sin el interruptor, theme-set le mandaría el tema nuevo
+    # An "open Neovim": without the switch, theme-set would send it the new theme
     (tmp_path / "run").mkdir()
     (tmp_path / "run/nvim.1.0").touch()
     stubs = tmp_path / "stubs"
     stubs.mkdir()
     for name in STUBS:
         out = f"printf '{FONTS}'\n" if name == "fc-list" else ""
-        # Una línea por llamada (los argumentos pueden llevar saltos de línea)
+        # One line per call (arguments may contain line breaks)
         log = f'"{tmp_path}/calls.log"'
         (stubs / name).write_text(f'#!/bin/sh\necho "{name} $*" | tr "\\n" " " >> {log}\n'
                                   f'echo >> {log}\n{out}')
@@ -49,7 +49,7 @@ def home(tmp_path):
 
 
 def calls(home):
-    # Programas a los que han llamado los scripts (primera palabra de cada línea)
+    # Programs called by the scripts (first word of each line)
     log = home / "calls.log"
     return {l.split()[0] for l in log.read_text().splitlines()} if log.exists() else set()
 
@@ -57,7 +57,7 @@ def calls(home):
 def run(home, script, *args, check=True, reload=False):
     env = {**os.environ, "HOME": str(home), "PATH": f"{home}/stubs:{os.environ['PATH']}",
            "XDG_RUNTIME_DIR": str(home / "run"), "LC_ALL": "C",
-           # Como dentro de Hyprland: restart_shell() de config-set tiene que respetar el interruptor
+           # As inside Hyprland: config-set's restart_shell() must respect the switch
            "HYPRLAND_INSTANCE_SIGNATURE": "test"}
     env.pop("THEMES_NO_RELOAD", None)
     if not reload:
@@ -87,7 +87,7 @@ def hypr(c):
 def test_theme_set(home, theme):
     name, t = theme
     ui, term, gtk = t["ui"], t["term"], t["gtk"]
-    # Cada archivo generado con algún color del tema que debe llevar
+    # Each generated file with some theme color it must contain
     files = {
         ".config/hypr/config/theme.lua": [hypr(ui["bg"]), hypr(ui["fg"]), hypr(ui["accent"])],
         ".config/hypr/hyprlock-colors.conf": [
@@ -100,7 +100,7 @@ def test_theme_set(home, theme):
         ".config/qt6ct/colors/current.conf": [gtk["card"], gtk["fg"]],
         ".local/share/color-schemes/Theme.colors": ["[Colors:Window]"],
     }
-    # Se borran antes: el repo ya trae los de un tema
+    # Deleted first: the repo already ships one theme's files
     for f in files:
         (home / f).unlink(missing_ok=True)
     shutil.rmtree(home / ".config/fastfetch/themed")
@@ -116,7 +116,7 @@ def test_theme_set(home, theme):
     assert "[Colors:Window]" in read(home, ".config/kdeglobals")
     pepes = sorted(p.name for p in (home / ".config/fastfetch").glob("pepe-*.txt"))
     assert pepes and sorted(p.name for p in (home / ".config/fastfetch/themed").iterdir()) == pepes
-    # fastfetch usa el logo teñido
+    # fastfetch uses the tinted logo
     assert '"source": "~/.config/fastfetch/themed/pepe-' in read(home, ".config/fastfetch/config.jsonc")
 
 
@@ -135,7 +135,7 @@ def test_theme_set_unknown(home):
 
 
 def test_theme_set_reapply(home):
-    # El flujo de la cabecera: se cambia el theme.json y --reapply lo regenera
+    # The header's workflow: theme.json is changed and --reapply regenerates it
     name = DARK[0]
     run(home, "theme-set", name)
     path = home / ".config/themes" / name / "theme.json"
@@ -148,8 +148,8 @@ def test_theme_set_reapply(home):
 
 
 def test_sin_interruptor_avisa(home):
-    # Comprueba que los stubs detectan las llamadas: sin THEMES_NO_RELOAD, theme-set
-    # avisa a Quickshell, Hyprland, terminales, Neovim, GTK y notificaciones
+    # Checks that the stubs detect the calls: without THEMES_NO_RELOAD, theme-set
+    # notifies Quickshell, Hyprland, terminals, Neovim, GTK and notifications
     run(home, "theme-set", DARK[0], reload=True)
     assert {"qs", "hyprctl", "pkill", "nvim", "gsettings", "notify-send"} <= calls(home)
     (home / "calls.log").unlink()
@@ -172,8 +172,8 @@ def test_config_set_mac_dark(home):
 
 
 def test_config_set_mac_light(home):
-    # Con un tema claro, "mac" se guarda como mac-light, con su gtk.css claro fijo;
-    # al volver a un tema oscuro, theme-set lo pasa a mac con el gtk.css del tema
+    # With a light theme, "mac" is saved as mac-light, with its fixed light gtk.css;
+    # going back to a dark theme, theme-set switches it to mac with the theme's gtk.css
     run(home, "theme-set", LIGHT[0])
     run(home, "config-set", "mac")
     assert profile(home) == "mac-light"
@@ -187,8 +187,8 @@ def test_config_set_mac_light(home):
 
 
 def test_mac_light_sin_reiniciar(home):
-    # Entre mac y mac-light no se reinicia Quickshell (la ventana Appearance de macshell
-    # seguiría abierta): solo la recarga normal de theme-set
+    # Between mac and mac-light Quickshell isn't restarted (macshell's Appearance window
+    # would stay open): only theme-set's normal reload
     run(home, "theme-set", DARK[0])
     run(home, "config-set", "mac")
     run(home, "theme-set", LIGHT[0], reload=True)
@@ -200,8 +200,8 @@ def test_mac_light_sin_reiniciar(home):
 
 
 def test_cambio_de_perfil_reinicia(home):
-    # Al cambiar de perfil de verdad sí se reinicia Quickshell desde Hyprland (con
-    # macshell en Modo Mac). El qs falso no lista instancias, así que no hay qs kill.
+    # On a real profile change Quickshell is restarted from Hyprland (with
+    # macshell in Mac Mode). The fake qs lists no instances, so there's no qs kill.
     run(home, "theme-set", DARK[0])
     run(home, "config-set", "mac")
     run(home, "config-set", "default", reload=True)
@@ -227,7 +227,7 @@ def test_config_set_default(home):
     assert "style=Fusion" in qt6ct(home) and "colors/current.conf" in qt6ct(home)
     assert "[Fonts]" not in qt6ct(home)
     assert "icon_theme=Papirus-Dark" in qt6ct(home)
-    # Modo normal con un tema claro: GTK e iconos claros
+    # Normal Mode with a light theme: light GTK and icons
     run(home, "theme-set", LIGHT[0])
     assert profile(home) == "default" and "icon_theme=Papirus-Light" in qt6ct(home)
     assert run(home, "config-set", "no-existe", check=False).returncode != 0
@@ -236,7 +236,7 @@ def test_config_set_default(home):
 # ── font-set ─────────────────────────────────────────────────
 
 def test_font_set(home):
-    assert run(home, "font-set").stdout == "  Foo Nerd Font\n"  # sin Mono/Propo ni Bar Sans
+    assert run(home, "font-set").stdout == "  Foo Nerd Font\n"  # no Mono/Propo or Bar Sans
     run(home, "font-set", "Foo Nerd Font")
     assert read(home, ".local/state/font") == "Foo Nerd Font\n"
     assert "font-family = Foo Nerd Font\n" in read(home, ".config/ghostty/font.ghostty")
@@ -249,7 +249,7 @@ def test_font_set(home):
 
 def test_contrast_set(home):
     state = ".local/state/increased-contrast"
-    assert run(home, "contrast-set").stdout == "off\n"  # sin archivo de estado
+    assert run(home, "contrast-set").stdout == "off\n"  # no state file
     run(home, "contrast-set", "on")
     assert read(home, state) == "1\n" and run(home, "contrast-set").stdout == "on\n"
     run(home, "contrast-set", "toggle")
@@ -259,7 +259,7 @@ def test_contrast_set(home):
     run(home, "contrast-set", "off")
     assert read(home, state) == "0\n"
     assert run(home, "contrast-set", "no-existe", check=False).returncode != 0
-    # Sin el interruptor: alto contraste de GTK, terminales, Neovim, hyprctl reload y aviso
+    # Without the switch: GTK high contrast, terminals, Neovim, hyprctl reload and notice
     run(home, "contrast-set", "on", reload=True)
     assert calls(home) == {"gsettings", "pkill", "nvim", "hyprctl", "notify-send"}
     (home / "calls.log").unlink()
@@ -267,15 +267,15 @@ def test_contrast_set(home):
 
 @pytest.mark.parametrize("theme", ["grafito", "terminal-clasico"])
 def test_contrast_terminals(home, theme):
-    # Con el modo, las terminales llevan más contraste y Neovim tiene su tema aparte;
-    # al quitarlo, todo vuelve a lo del theme.json
+    # With the mode on, terminals get more contrast and Neovim has its own theme;
+    # when it's removed, everything goes back to the theme.json values
     term, nv = ".config/ghostty/themes/current", home / ".local/state/increased-contrast.json"
     run(home, "theme-set", theme)
     before = read(home, term)
     run(home, "contrast-set", "on")
     boosted = json.loads(nv.read_text())
     assert boosted["term"]["background"] in read(home, term)
-    run(home, "theme-set", "--reapply")  # cambiar de tema con el modo puesto lo mantiene
+    run(home, "theme-set", "--reapply")  # changing theme with the mode on keeps it
     assert boosted["term"]["background"] in read(home, term)
     run(home, "contrast-set", "off")
     assert read(home, term) == before and not nv.exists()
@@ -295,12 +295,12 @@ def test_background_set(home):
     def listing():
         return [l.split("\t") for l in run(home, "background-set").stdout.splitlines()]
 
-    # Los del tema por orden y los Pepes al final; sin elegir, el primero
+    # The theme's ones in order and the Pepes last; with no choice, the first one
     assert listing() == [["a.jpg", f"{d}/a.jpg", "1"], ["b.png", f"{d}/b.png", "0"], ["pepes", pepes, "0"]]
     run(home, "background-set", "pepes")
     assert run(home, "background-set", "--path").stdout == pepes + "\n"
     assert json.loads(read(home, ".local/state/theme-backgrounds")) == {name: "pepes"}
-    run(home, "background-set", "--next")  # vuelve al principio
+    run(home, "background-set", "--next")  # wraps back to the start
     assert run(home, "background-set", "--path").stdout == f"{d}/a.jpg\n"
     run(home, "background-set", "--next")
     assert [r[0] for r in listing() if r[2] == "1"] == ["b.png"]
