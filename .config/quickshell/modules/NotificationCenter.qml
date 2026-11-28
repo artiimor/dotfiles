@@ -145,6 +145,7 @@ PanelWindow {
                             source: Player.player?.trackArtUrl ?? ""
                             fillMode: Image.PreserveAspectCrop
                             asynchronous: true
+                            sourceSize: Qt.size(112, 112) // twice the painted size (56 px)
                         }
                         Text {
                             anchors.centerIn: parent
