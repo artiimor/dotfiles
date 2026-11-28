@@ -475,7 +475,7 @@ def test_update(update_repo):
     # Nothing new: no install.sh, but pacman -Syu without asking
     r = subprocess.run(update, env=env, capture_output=True, text=True)
     assert r.returncode == 0, r.stdout + r.stderr
-    assert "already up to date" in r.stdout
+    assert "Already up to date." in r.stdout
     assert (tmp / "calls.log").read_text().splitlines() == ["sudo pacman -Syu --noconfirm"]
     # A new commit upstream: pull, its log and install.sh --update
     (src / "new.txt").write_text("x\n")
@@ -495,7 +495,7 @@ def test_update(update_repo):
     (tmp / "calls.log").unlink()
     r = subprocess.run(update, env=env, capture_output=True, text=True)
     assert r.returncode == 0, r.stdout + r.stderr
-    assert "already up to date" in r.stdout
+    assert "Already up to date." in r.stdout
     assert (tmp / "calls.log").read_text().splitlines() == [
         "sudo pacman -Syu --noconfirm", "install.sh --update"]
     # A pull that isn't fast-forward: warns and stops before pacman

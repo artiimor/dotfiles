@@ -125,7 +125,6 @@
   "System packages": "Paquetes del sistema",
   "Update the system packages (pacman -Syu)?": "¿Actualizar los paquetes del sistema (pacman -Syu)?",
   "Updating wasdjy": "Actualizando wasdjy",
-  "already up to date": "ya está al día",
   "git pull failed (local changes or a diverged branch?): nothing was updated": "git pull falló (¿cambios locales o una rama que diverge?): no se ha actualizado nada",
   "migration %1": "migración %1",
   "migration %1 failed: not marked as applied, it will be retried": "la migración %1 falló: no se marca como aplicada, se reintentará",

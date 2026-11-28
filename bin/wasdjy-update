@@ -41,11 +41,8 @@ main() {
 		return 1
 	fi
 	new="$(git -C "$REPO" rev-parse HEAD)"
-	if [[ "$old" == "$new" ]]; then
-		info "$(t "already up to date")"
-	else
-		git -C "$REPO" --no-pager log --oneline "$old..$new"
-	fi
+	# Nothing new: git already says "Already up to date."
+	[[ "$old" == "$new" ]] || git -C "$REPO" --no-pager log --oneline "$old..$new"
 
 	step "$(t "System packages")"
 	local noconfirm=()
