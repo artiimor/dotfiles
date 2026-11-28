@@ -324,6 +324,12 @@ if ask "$(t "Copy them?")"; then
 	[[ -z "$mon" ]] || gen_monitors "$mon"
 	copy_tree "$REPO/.local/share/applications" "$HOME/.local/share/applications"
 	copy_tree "$REPO/.local/share/icons" "$HOME/.local/share/icons"
+	# Caché de iconos: sin ella, cada app GTK recorre todos sus directorios al arrancar
+	if command -v gtk-update-icon-cache >/dev/null; then
+		for d in "$REPO"/.local/share/icons/*/; do
+			gtk-update-icon-cache -q -f -t "$HOME/.local/share/icons/$(basename "$d")" || true
+		done
+	fi
 	# -c: como copy_tree, pero solo se guarda copia si el contenido cambia (no por la fecha)
 	rsync -ac --backup --backup-dir="$BACKUP" "$REPO"/{.bashrc,.bash_profile,.profile} "$HOME/"
 	fix_home
